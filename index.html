@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>J.A.R.V.I.S.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#050708;
+    --panel:#070d0f;
+    --cyan:#00e5ff;
+    --cyan-dim:#0a2a30;
+    --cyan-mid:#0e4a56;
+    --cyan-glow:rgba(0,229,255,0.55);
+    --amber:#ffb020;
+    --red:#ff3b30;
+    --mint:#3affc4;
+    --text-dim:#5fa8b0;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
+  #app{position:relative;width:100vw;height:100vh;background:var(--void);}
+
+  #camLayer{position:absolute;top:50px;right:16px;width:160px;height:120px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:none;}
+  #camLayer.on{display:block;}
+  #camVideo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:100%;min-height:100%;width:auto;height:auto;object-fit:cover;filter:grayscale(0.25) contrast(1.1) brightness(0.75) saturate(1.2) hue-rotate(150deg);}
+  #camScrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);pointer-events:none;}
+  #camLabel{position:absolute;bottom:3px;left:6px;font-family:'JetBrains Mono';font-size:9px;color:var(--cyan);letter-spacing:1px;text-shadow:0 0 4px #000;}
+
+  #hexbg{position:absolute;inset:0;opacity:0.06;pointer-events:none;
+    background-image:
+      linear-gradient(30deg, var(--cyan) 1px, transparent 1px),
+      linear-gradient(150deg, var(--cyan) 1px, transparent 1px),
+      linear-gradient(90deg, var(--cyan) 1px, transparent 1px);
+    background-size: 60px 104px;
+  }
+
+  #scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg, transparent, var(--cyan-glow), transparent);opacity:0.5;pointer-events:none;z-index:5;animation:scan 6s linear infinite;}
+  @keyframes scan{0%{top:-2px;}100%{top:100%;}}
+
+  .hud-label{font-family:'Orbitron',sans-serif;font-weight:500;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+  .hud-value{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--cyan);font-variant-numeric:tabular-nums;}
+  .hud-panel{position:absolute;z-index:10;pointer-events:none;}
+  .panel-inner{border:1px solid var(--cyan-dim);background:linear-gradient(135deg, rgba(0,229,255,0.05), rgba(0,229,255,0.01));backdrop-filter:blur(2px);padding:10px 14px;position:relative;}
+  .panel-inner::before{content:'';position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);}
+  .panel-inner::after{content:'';position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan);}
+
+  #bootOverlay{position:absolute;inset:0;background:var(--void);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity 1s ease;}
+  #bootRing{width:180px;height:180px;border-radius:50%;border:1px solid var(--cyan-dim);position:relative;display:flex;align-items:center;justify-content:center;}
+  #bootRing::before{content:'';position:absolute;inset:-20px;border-radius:50%;border:1px solid var(--cyan-mid);border-top-color:var(--cyan);animation:spin 2s linear infinite;}
+  #bootRing::after{content:'';position:absolute;inset:-40px;border-radius:50%;border:1px dashed var(--cyan-dim);animation:spin 6s linear infinite reverse;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #bootText{font-family:'Orbitron',sans-serif;color:var(--cyan);font-size:13px;letter-spacing:3px;margin-top:36px;text-transform:uppercase;}
+  #bootSub{font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:11px;margin-top:10px;letter-spacing:1px;min-height:16px;}
+  #bootLogo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;color:var(--cyan);letter-spacing:6px;}
+
+  #startGate{position:absolute;inset:0;background:var(--void);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;text-align:center;padding:24px;}
+  #startGate h1{font-family:'Orbitron';color:var(--cyan);letter-spacing:6px;font-size:20px;margin:0;}
+  #startGate p{color:var(--text-dim);font-family:'Rajdhani';font-size:14px;max-width:360px;margin:0;line-height:1.5;}
+  .startBtn{font-family:'Orbitron';background:transparent;border:1px solid var(--cyan);color:var(--cyan);padding:14px 32px;letter-spacing:3px;font-size:12px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+  .startBtn:hover{background:var(--cyan);color:#00151a;box-shadow:0 0 24px var(--cyan-glow);}
+
+  /* TOP NAV BAR */
+  #topBar{top:0;left:76px;right:170px;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;}
+  #compassWrap{display:flex;flex-direction:column;align-items:center;}
+  #compassTicks{width:280px;height:22px;overflow:hidden;position:relative;}
+  #compassStrip{display:flex;position:absolute;left:50%;transform:translateX(-50%);transition:transform .3s ease;}
+  .tick{width:35px;text-align:center;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);flex-shrink:0;}
+  .tick.card{color:var(--cyan);font-weight:700;}
+  #headingVal{font-family:'Orbitron';color:var(--cyan);font-size:14px;letter-spacing:2px;margin-top:2px;}
+  #clockBlock{text-align:right;margin-right:8px;}
+  #clockTime{font-family:'JetBrains Mono';color:var(--cyan);font-size:18px;letter-spacing:1px;white-space:nowrap;}
+  #clockDate{font-family:'Rajdhani';color:var(--text-dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+
+  /* LEFT DIAGNOSTICS */
+  #leftPanel{top:110px;left:16px;width:190px;display:flex;flex-direction:column;gap:10px;}
+  .metric-row{display:flex;flex-direction:column;gap:3px;}
+  .metric-top{display:flex;justify-content:space-between;align-items:baseline;}
+  .bar-track{height:5px;background:rgba(0,229,255,0.08);position:relative;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--cyan);box-shadow:0 0 8px var(--cyan-glow);transition:width .6s ease;}
+  .bar-fill.warn{background:var(--amber);box-shadow:0 0 8px rgba(255,176,32,0.5);}
+  .bar-fill.crit{background:var(--red);box-shadow:0 0 8px rgba(255,59,48,0.5);}
+
+  /* RIGHT EQUIPMENT */
+  #rightPanel{top:200px;right:16px;width:190px;display:flex;flex-direction:column;gap:8px;}
+  .tile{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);}
+  .tile-name{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
+  .tile-stat{font-family:'JetBrains Mono';font-size:12px;color:var(--cyan);}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint);display:inline-block;margin-right:6px;}
+  .dot.off{background:#3a4a4d;box-shadow:none;}
+
+  /* CENTER RETICLE / VOICE VISUALIZER */
+  #reticleWrap{top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;display:flex;align-items:center;justify-content:center;}
+  #reticleSvg{width:100%;height:100%;overflow:visible;}
+  .ring{fill:none;stroke:var(--cyan-dim);}
+  .ring-active{fill:none;stroke:var(--cyan);}
+  #wakeLabel{position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);font-family:'Orbitron';font-size:10px;letter-spacing:3px;color:var(--text-dim);white-space:nowrap;text-transform:uppercase;}
+
+  /* BOTTOM TELEMETRY / CAPTION */
+  #bottomBar{bottom:0;left:0;right:0;padding:12px 20px 16px;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  #captionBox{max-width:640px;width:100%;min-height:20px;text-align:center;font-family:'Rajdhani';font-size:15px;color:var(--cyan);letter-spacing:0.5px;transition:opacity .3s;}
+  #tickerRow{display:flex;gap:26px;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);flex-wrap:wrap;justify-content:center;}
+  #tickerRow span b{color:var(--cyan);font-weight:500;}
+
+  #micBtn{position:absolute;z-index:20;bottom:18px;right:20px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:all .2s;}
+  #micBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
+  #micBtn svg{width:22px;height:22px;}
+  #micBtn.live svg{stroke:#00151a;}
+  #micBtn svg{stroke:var(--cyan);}
+
+  #camBtn{position:absolute;z-index:20;bottom:18px;right:82px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:all .2s;}
+  #camBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
+  #camBtn svg{width:22px;height:22px;stroke:var(--cyan);}
+  #camBtn.live svg{stroke:#00151a;}
+
+  #settingsBtn{position:absolute;z-index:30;top:16px;left:16px;width:34px;height:34px;pointer-events:auto;border:1px solid var(--cyan-dim);background:var(--void);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--cyan-dim);}
+  #settingsBtn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  #memPanel{position:absolute;z-index:50;top:16px;left:60px;width:300px;background:var(--void);border:1px solid var(--cyan);box-shadow:0 0 30px rgba(0,229,255,0.15);padding:16px;display:none;pointer-events:auto;max-height:80vh;overflow-y:auto;}
+  #memPanel h3{font-family:'Orbitron';color:var(--cyan);font-size:11px;letter-spacing:2px;margin:0 0 10px;text-transform:uppercase;}
+  #memList{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+  .memItem{font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-dim);border-left:2px solid var(--cyan-dim);padding:4px 8px;line-height:1.4;}
+  #memEmpty{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);font-style:italic;}
+  .smallBtn{font-family:'Orbitron';font-size:10px;letter-spacing:1px;background:transparent;border:1px solid var(--cyan-dim);color:var(--text-dim);padding:6px 10px;cursor:pointer;text-transform:uppercase;}
+  .smallBtn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  #permBadges{position:absolute;z-index:20;top:16px;right:16px;display:flex;gap:4px;pointer-events:none;width:140px;justify-content:flex-end;flex-wrap:wrap;}
+  .permBadge{font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim);border:1px solid var(--cyan-dim);padding:3px 7px;letter-spacing:1px;}
+  .permBadge.on{color:var(--mint);border-color:var(--mint);}
+
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-thumb{background:var(--cyan-dim);}
+
+  @media (max-width:640px){
+    #leftPanel, #rightPanel{width:150px;font-size:11px;}
+    #compassTicks{width:180px;}
+    #reticleWrap{width:200px;height:200px;}
+    .hud-label{font-size:9px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="camLayer">
+    <video id="camVideo" autoplay muted playsinline></video>
+    <div id="camScrim"></div>
+    <div id="camLabel">OPTIC FEED</div>
+  </div>
+  <div id="hexbg"></div>
+  <div id="scanline"></div>
+
+  <div id="startGate">
+    <div id="bootLogo">J.A.R.V.I.S.</div>
+    <h1>Interface Standby</h1>
+    <p>Grant access to camera, microphone, motion and location sensors for the full HUD experience. Anything denied just falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning and vision commands like "Jarvis, what am I looking at."</p>
+    <p id="secWarning" style="display:none;color:var(--amber);font-family:'JetBrains Mono';font-size:11px;max-width:380px;"></p>
+    <button class="startBtn" id="initBtn">Initialize System</button>
+  </div>
+
+  <div id="bootOverlay" style="display:none;">
+    <div id="bootRing"></div>
+    <div id="bootText">J.A.R.V.I.S.</div>
+    <div id="bootSub">— booting —</div>
+  </div>
+
+  <!-- TOP -->
+  <div class="hud-panel" id="topBar">
+    <div id="compassWrap">
+      <div id="compassTicks"><div id="compassStrip"></div></div>
+      <div id="headingVal">--°</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="hud-label" style="letter-spacing:4px;">Stark-Class Assistant</div>
+    </div>
+    <div id="clockBlock">
+      <div id="clockTime">--:--:--</div>
+      <div id="clockDate">-- --- ----</div>
+    </div>
+  </div>
+
+  <div id="permBadges">
+    <div class="permBadge" id="badgeCam">CAM</div>
+    <div class="permBadge" id="badgeMic">MIC</div>
+    <div class="permBadge" id="badgeGeo">GPS</div>
+  </div>
+
+  <div id="settingsBtn" title="Memory log">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.63.77 1.05 1.42 1.05H21a2 2 0 010 4h-.09c-.65 0-1.22.42-1.51 1z"/></svg>
+  </div>
+
+  <div id="memPanel">
+    <h3>Memory Log</h3>
+    <div id="memList"></div>
+    <button class="smallBtn" id="clearMemBtn">Purge memory</button>
+    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
+      <h3 style="margin-bottom:6px;">Anthropic API key</h3>
+      <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Stored only in this browser. Enables real reasoning and vision commands like "Jarvis, what am I looking at."</p>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
+      <div style="display:flex;gap:6px;">
+        <button class="smallBtn" id="saveKeyBtn">Save key</button>
+        <button class="smallBtn" id="clearKeyBtn">Remove key</button>
+      </div>
+      <div id="keyStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- LEFT -->
+  <div class="hud-panel" id="leftPanel">
+    <div class="panel-inner" style="display:flex;flex-direction:column;gap:12px;">
+      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;">Diagnostics</div>
+
+      <div class="metric-row">
+        <div class="metric-top"><span class="hud-label">CPU load</span><span class="hud-value" id="cpuVal">--%</span></div>
+        <div class="bar-track"><div class="bar-fill" id="cpuBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-top"><span class="hud-label">Memory</span><span class="hud-value" id="memVal">-- GB</span></div>
+        <div class="bar-track"><div class="bar-fill" id="memBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-top"><span class="hud-label">Power cell</span><span class="hud-value" id="battVal">--%</span></div>
+        <div class="bar-track"><div class="bar-fill" id="battBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-top"><span class="hud-label">Uplink</span><span class="hud-value" id="netVal">--</span></div>
+        <div class="bar-track"><div class="bar-fill" id="netBar" style="width:0%"></div></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--cyan-dim);padding-top:8px;">
+        <div class="metric-top"><span class="hud-label">Cores</span><span class="hud-value" id="coreVal">--</span></div>
+        <div class="metric-top"><span class="hud-label">Latency</span><span class="hud-value" id="pingVal">-- ms</span></div>
+        <div class="metric-top"><span class="hud-label">Viewport</span><span class="hud-value" id="viewportVal">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="hud-panel" id="rightPanel">
+    <div class="panel-inner" style="display:flex;flex-direction:column;gap:8px;">
+      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;margin-bottom:2px;">Systems</div>
+      <div class="tile"><span class="tile-name"><span class="dot" id="dotCam"></span>Optic feed</span><span class="tile-stat" id="statCam">OFF</span></div>
+      <div class="tile"><span class="tile-name"><span class="dot" id="dotMic"></span>Audio link</span><span class="tile-stat" id="statMic">OFF</span></div>
+      <div class="tile"><span class="tile-name"><span class="dot" id="dotGeo"></span>Geo-lock</span><span class="tile-stat" id="statGeo">OFF</span></div>
+      <div class="tile"><span class="tile-name"><span class="dot" id="dotOrient"></span>Gyro array</span><span class="tile-stat" id="statOrient">OFF</span></div>
+      <div class="tile"><span class="tile-name"><span class="dot on"></span>Neural core</span><span class="tile-stat">ONLINE</span></div>
+      <div class="tile"><span class="tile-name"><span class="dot" id="dotVoice"></span>Voice synth</span><span class="tile-stat" id="statVoice">--</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="hud-panel" id="reticleWrap">
+    <svg id="reticleSvg" viewBox="0 0 260 260">
+      <circle class="ring" cx="130" cy="130" r="118" stroke-width="0.6" stroke-dasharray="2 6"/>
+      <circle class="ring" cx="130" cy="130" r="95" stroke-width="1"/>
+      <circle class="ring-active" id="audioRing" cx="130" cy="130" r="70" stroke-width="1.5" stroke-dasharray="440" stroke-dashoffset="110"/>
+      <circle class="ring" cx="130" cy="130" r="46" stroke-width="0.6"/>
+      <g id="tickMarks"></g>
+      <line x1="130" y1="6" x2="130" y2="20" stroke="var(--cyan)" stroke-width="1.5"/>
+      <line x1="130" y1="254" x2="130" y2="240" stroke="var(--cyan)" stroke-width="1.5"/>
+      <line x1="6" y1="130" x2="20" y2="130" stroke="var(--cyan)" stroke-width="1.5"/>
+      <line x1="254" y1="130" x2="240" y2="130" stroke="var(--cyan)" stroke-width="1.5"/>
+      <circle id="pupil" cx="130" cy="130" r="4" fill="var(--cyan)"/>
+    </svg>
+    <div id="wakeLabel">Say "Jarvis" to wake</div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="hud-panel" id="bottomBar">
+    <div id="captionBox"></div>
+    <div id="tickerRow">
+      <span>LOC <b id="tickerLoc">acquiring</b></span>
+      <span>TIME ONLINE <b id="tickerUptime">00:00:00</b></span>
+      <span>ENTRIES LOGGED <b id="tickerMem">0</b></span>
+      <span>MODE <b id="tickerMode">STANDBY</b></span>
+    </div>
+  </div>
+
+  <div id="camBtn" title="Toggle camera">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+  </div>
+
+  <canvas id="captureCanvas" style="display:none;"></canvas>
+
+  <div id="micBtn" title="Push to talk">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  var state = {
+    booted:false,
+    listening:false,
+    awake:false,
+    speaking:false,
+    perms:{cam:false, mic:false, geo:false, orient:false},
+    startTime:Date.now(),
+    heading:0,
+    memory:[],
+  };
+
+  var MEM_KEY = 'jarvis_memory_log_v1';
+  try{
+    var saved = JSON.parse(localStorage.getItem(MEM_KEY) || '[]');
+    if(Array.isArray(saved)) state.memory = saved;
+  }catch(e){ state.memory = []; }
+
+  function renderMemory(){
+    var list = document.getElementById('memList');
+    var tickerMem = document.getElementById('tickerMem');
+    tickerMem.textContent = state.memory.length;
+    if(state.memory.length === 0){
+      list.innerHTML = '<div id="memEmpty">No entries yet. Memory grows as we talk.</div>';
+      return;
+    }
+    list.innerHTML = state.memory.slice().reverse().map(function(m){
+      return '<div class="memItem">' + m.time + ' — ' + escapeHtml(m.text) + '</div>';
+    }).join('');
+  }
+  function escapeHtml(s){
+    var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+  }
+  function remember(text){
+    var entry = { time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), text: text };
+    state.memory.push(entry);
+    if(state.memory.length > 200) state.memory.shift();
+    try{ localStorage.setItem(MEM_KEY, JSON.stringify(state.memory)); }catch(e){}
+    renderMemory();
+  }
+
+  var API_KEY_STORAGE = 'jarvis_api_key_v1';
+  var apiKey = null;
+  try{ apiKey = localStorage.getItem(API_KEY_STORAGE) || null; }catch(e){}
+
+  function refreshKeyStatus(){
+    var el = document.getElementById('keyStatus');
+    if(apiKey){
+      el.textContent = 'Key saved (' + apiKey.slice(0,8) + '…' + apiKey.slice(-4) + '). Vision and reasoning are active.';
+      el.style.color = 'var(--mint)';
+    } else {
+      el.textContent = 'No key saved. Running on local commands only.';
+      el.style.color = 'var(--text-dim)';
+    }
+  }
+  document.getElementById('saveKeyBtn').addEventListener('click', function(){
+    var val = document.getElementById('apiKeyInput').value.trim();
+    if(val.length < 10){
+      document.getElementById('keyStatus').textContent = 'That doesn\'t look like a valid key.';
+      document.getElementById('keyStatus').style.color = 'var(--amber)';
+      return;
+    }
+    apiKey = val;
+    try{ localStorage.setItem(API_KEY_STORAGE, apiKey); }catch(e){}
+    document.getElementById('apiKeyInput').value = '';
+    refreshKeyStatus();
+  });
+  document.getElementById('clearKeyBtn').addEventListener('click', function(){
+    apiKey = null;
+    try{ localStorage.removeItem(API_KEY_STORAGE); }catch(e){}
+    refreshKeyStatus();
+  });
+  refreshKeyStatus();
+
+  function callClaudeText(userText, cb){
+    if(!apiKey){ cb(null, 'no_key'); return; }
+    fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:300,
+        system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, plain spoken text only.',
+        messages:[{role:'user', content:userText}]
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.content){
+        var textBlocks = data.content.filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; });
+        cb(textBlocks.join(' ').trim(), null);
+      } else {
+        cb(null, (data && data.error && data.error.message) || 'unknown_error');
+      }
+    }).catch(function(err){ cb(null, err.message || 'network_error'); });
+  }
+
+  function callClaudeVision(userText, base64Jpeg, cb){
+    if(!apiKey){ cb(null, 'no_key'); return; }
+    fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:300,
+        system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user\'s camera. Answer in 1-3 short spoken sentences. No markdown, plain spoken text only.',
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image', source:{type:'base64', media_type:'image/jpeg', data: base64Jpeg}},
+            {type:'text', text: userText || 'What am I looking at?'}
+          ]
+        }]
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.content){
+        var textBlocks = data.content.filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; });
+        cb(textBlocks.join(' ').trim(), null);
+      } else {
+        cb(null, (data && data.error && data.error.message) || 'unknown_error');
+      }
+    }).catch(function(err){ cb(null, err.message || 'network_error'); });
+  }
+
+  function captureFrameBase64(){
+    var video = document.getElementById('camVideo');
+    if(!camStream || !video.videoWidth){ return null; }
+    var canvas = document.getElementById('captureCanvas');
+    var maxW = 640;
+    var scale = Math.min(1, maxW / video.videoWidth);
+    canvas.width = video.videoWidth * scale;
+    canvas.height = video.videoHeight * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+    return dataUrl.split(',')[1];
+  }
+
+  var visionTriggers = ['what am i looking at','what do you see','identify this','what is this','read this','explain this','what is in front of me','look at this','can you see'];
+  function isVisionCommand(cmd){
+    for(var i=0;i<visionTriggers.length;i++){
+      if(cmd.includes(visionTriggers[i])) return true;
+    }
+    return false;
+  }
+
+  document.getElementById('settingsBtn').addEventListener('click', function(){
+    var p = document.getElementById('memPanel');
+    p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+  });
+  document.getElementById('clearMemBtn').addEventListener('click', function(){
+    state.memory = [];
+    try{ localStorage.removeItem(MEM_KEY); }catch(e){}
+    renderMemory();
+  });
+  renderMemory();
+
+  // ---------- Clock ----------
+  function tickClock(){
+    var now = new Date();
+    document.getElementById('clockTime').textContent = now.toLocaleTimeString([], {hour12:false});
+    document.getElementById('clockDate').textContent = now.toLocaleDateString([], {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
+    var up = Date.now() - state.startTime;
+    var h = String(Math.floor(up/3600000)).padStart(2,'0');
+    var m = String(Math.floor((up%3600000)/60000)).padStart(2,'0');
+    var s = String(Math.floor((up%60000)/1000)).padStart(2,'0');
+    document.getElementById('tickerUptime').textContent = h+':'+m+':'+s;
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  // ---------- Compass ticks ----------
+  var dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  var stripEl = document.getElementById('compassStrip');
+  function buildStrip(){
+    var html = '';
+    for(var loop=0; loop<3; loop++){
+      for(var i=0;i<dirs.length;i++){
+        var isCard = (i%4===0);
+        html += '<div class="tick'+(isCard?' card':'')+'">'+dirs[i]+'</div>';
+      }
+    }
+    stripEl.innerHTML = html;
+  }
+  buildStrip();
+  function updateCompass(deg){
+    state.heading = deg;
+    var tickWidth = 35;
+    var totalTicks = dirs.length * 3;
+    var offset = (deg/360) * dirs.length * tickWidth;
+    var centerSet = dirs.length * tickWidth;
+    stripEl.style.transform = 'translateX(calc(-50% - ' + (centerSet + offset - (7*tickWidth)) + 'px))';
+    document.getElementById('headingVal').textContent = Math.round(deg) + '° ' + dirs[Math.round(deg/22.5)%16];
+  }
+  updateCompass(0);
+
+  // ---------- Reticle idle rotation ----------
+  var ticksG = document.getElementById('tickMarks');
+  var tickHtml = '';
+  for(var t=0;t<24;t++){
+    var ang = (t/24)*360;
+    tickHtml += '<line x1="130" y1="24" x2="130" y2="'+(t%6===0?32:29)+'" stroke="var(--cyan-dim)" stroke-width="1" transform="rotate('+ang+' 130 130)"/>';
+  }
+  ticksG.innerHTML = tickHtml;
+
+  var rotDeg = 0;
+  function idleSpin(){
+    rotDeg += 0.15;
+    ticksG.setAttribute('transform','rotate('+rotDeg+' 130 130)');
+    requestAnimationFrame(idleSpin);
+  }
+  idleSpin();
+
+  // ---------- Boot sequence ----------
+  var bootLines = [
+    'Loading neural core…',
+    'Calibrating sensor array…',
+    'Establishing telemetry link…',
+    'Warming reticle systems…',
+    'All systems nominal.'
+  ];
+  function runBoot(cb){
+    document.getElementById('bootOverlay').style.display = 'flex';
+    var i=0;
+    var sub = document.getElementById('bootSub');
+    var iv = setInterval(function(){
+      sub.textContent = bootLines[i];
+      i++;
+      if(i>=bootLines.length){
+        clearInterval(iv);
+        setTimeout(function(){
+          document.getElementById('bootOverlay').style.opacity='0';
+          setTimeout(function(){
+            document.getElementById('bootOverlay').style.display='none';
+            cb && cb();
+          }, 1000);
+        }, 500);
+      }
+    }, 480);
+  }
+
+  // ---------- Permissions + sensors ----------
+  function setBadge(id, on){
+    document.getElementById(id).classList.toggle('on', !!on);
+  }
+
+  function isSecureCtx(){
+    return window.isSecureContext === true;
+  }
+
+  var camStream = null;
+  function initCamera(){
+    if(!isSecureCtx()){
+      document.getElementById('statCam').textContent = 'NEEDS HTTPS';
+      speak('Camera access needs a secure connection. This page must be served over https, or from localhost, not opened as a local file.');
+      return;
+    }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      document.getElementById('statCam').textContent = 'UNSUPPORTED';
+      return;
+    }
+    if(camStream){
+      showCamera();
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(function(stream){
+      camStream = stream;
+      var v = document.getElementById('camVideo');
+      v.srcObject = stream;
+      state.perms.cam = true;
+      setBadge('badgeCam', true);
+      document.getElementById('dotCam').classList.add('on');
+      document.getElementById('statCam').textContent = 'LIVE';
+      showCamera();
+    }).catch(function(err){
+      if(err.name === 'NotAllowedError'){
+        if(isInIframe()){
+          document.getElementById('statCam').textContent = 'IFRAME BLOCKED';
+          setCaption('Camera access is blocked because this is running in an embedded preview. Open the file directly in its own browser tab instead.');
+        } else {
+          document.getElementById('statCam').textContent = 'BLOCKED';
+          setCaption('Camera is blocked for this site. Click the lock or camera icon in the address bar, allow camera access, then reload.');
+        }
+      } else {
+        document.getElementById('statCam').textContent = err.name || 'ERROR';
+      }
+    });
+  }
+  function showCamera(){
+    document.getElementById('camLayer').classList.add('on');
+    document.getElementById('camBtn').classList.add('live');
+  }
+  function hideCamera(){
+    document.getElementById('camLayer').classList.remove('on');
+    document.getElementById('camBtn').classList.remove('live');
+  }
+  function toggleCamera(){
+    var layer = document.getElementById('camLayer');
+    if(layer.classList.contains('on')){
+      hideCamera();
+    } else if(camStream){
+      showCamera();
+    } else {
+      initCamera();
+    }
+  }
+  document.getElementById('camBtn').addEventListener('click', toggleCamera);
+
+  var audioCtx, analyser, micStream, dataArray;
+  function initMic(){
+    if(!isSecureCtx()){
+      document.getElementById('statMic').textContent = 'NEEDS HTTPS';
+      return;
+    }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      document.getElementById('statMic').textContent = 'UNSUPPORTED';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      micStream = stream;
+      state.perms.mic = true;
+      setBadge('badgeMic', true);
+      document.getElementById('dotMic').classList.add('on');
+      document.getElementById('statMic').textContent = 'LIVE';
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      var src = audioCtx.createMediaStreamSource(stream);
+      src.connect(analyser);
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      monitorAudio();
+      initSpeechRecognition();
+    }).catch(function(err){
+      if(err.name === 'NotAllowedError'){
+        if(isInIframe()){
+          document.getElementById('statMic').textContent = 'IFRAME BLOCKED';
+          setCaption('Microphone access is blocked because this is running in an embedded preview. Open the file directly in its own browser tab instead.');
+        } else {
+          document.getElementById('statMic').textContent = 'BLOCKED';
+          setCaption('Microphone is blocked for this site. Click the lock icon in the address bar, allow microphone access, then reload.');
+        }
+      } else {
+        document.getElementById('statMic').textContent = err.name || 'ERROR';
+      }
+    });
+  }
+
+  var audioRingEl = document.getElementById('audioRing');
+  var pupilEl = document.getElementById('pupil');
+  function monitorAudio(){
+    if(!analyser) return;
+    analyser.getByteFrequencyData(dataArray);
+    var sum=0;
+    for(var i=0;i<dataArray.length;i++) sum += dataArray[i];
+    var avg = sum/dataArray.length;
+    var level = Math.min(1, avg/70);
+    var circumference = 440;
+    var offset = circumference * (1 - (0.15 + level*0.75));
+    audioRingEl.style.transition = 'stroke-dashoffset 0.08s linear';
+    audioRingEl.setAttribute('stroke-dashoffset', offset);
+    var scale = 1 + level*0.6;
+    pupilEl.setAttribute('r', 4*scale);
+    requestAnimationFrame(monitorAudio);
+  }
+
+  function initGeo(){
+    if(!navigator.geolocation) return;
+    navigator.geolocation.watchPosition(function(pos){
+      state.perms.geo = true;
+      setBadge('badgeGeo', true);
+      document.getElementById('dotGeo').classList.add('on');
+      document.getElementById('statGeo').textContent = 'LOCK';
+      var lat = pos.coords.latitude.toFixed(3);
+      var lon = pos.coords.longitude.toFixed(3);
+      document.getElementById('tickerLoc').textContent = lat+', '+lon;
+    }, function(){
+      document.getElementById('statGeo').textContent = 'DENIED';
+      document.getElementById('tickerLoc').textContent = 'unavailable';
+    }, {enableHighAccuracy:false, maximumAge:30000});
+  }
+
+  function initOrientation(){
+    function handler(e){
+      if(e.alpha !== null && e.alpha !== undefined){
+        state.perms.orient = true;
+        setBadge('', true);
+        document.getElementById('dotOrient').classList.add('on');
+        document.getElementById('statOrient').textContent = 'LOCK';
+        updateCompass(360 - e.alpha);
+      }
+    }
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(function(res){
+        if(res === 'granted'){
+          window.addEventListener('deviceorientation', handler);
+        } else {
+          document.getElementById('statOrient').textContent = 'DENIED';
+          runFakeCompass();
+        }
+      }).catch(function(){ runFakeCompass(); });
+    } else if('DeviceOrientationEvent' in window){
+      window.addEventListener('deviceorientation', handler);
+      setTimeout(function(){
+        if(!state.perms.orient){
+          document.getElementById('statOrient').textContent = 'N/A';
+          runFakeCompass();
+        }
+      }, 1500);
+    } else {
+      document.getElementById('statOrient').textContent = 'N/A';
+      runFakeCompass();
+    }
+  }
+  function runFakeCompass(){
+    var h = 0;
+    setInterval(function(){
+      h = (h + (Math.random()*6-3) + 360) % 360;
+      updateCompass(h);
+    }, 2000);
+  }
+
+  // ---------- Browser-readable telemetry ----------
+  function updateTelemetry(){
+    var cores = navigator.hardwareConcurrency || 4;
+    document.getElementById('coreVal').textContent = cores + ' threads';
+
+    var loadPct = Math.min(100, Math.round((cores>0 ? (performance.now()%1000)/10 : 0)));
+    var simLoad = Math.round(18 + Math.random()*22 + (cores<=4?15:0));
+    setBar('cpuBar','cpuVal', simLoad, '%');
+
+    if(navigator.deviceMemory){
+      var usedApprox = Math.round(navigator.deviceMemory * (0.35+Math.random()*0.25) * 10)/10;
+      setBar('memBar','memVal', Math.round((usedApprox/navigator.deviceMemory)*100), '%', usedApprox+' / '+navigator.deviceMemory+' GB');
+    } else {
+      setBar('memBar','memVal', Math.round(30+Math.random()*20), '%', '~ N/A');
+    }
+
+    document.getElementById('viewportVal').textContent = window.innerWidth+'×'+window.innerHeight;
+
+    var connEst = performance.now() % 40 + 8;
+    document.getElementById('pingVal').textContent = Math.round(connEst) + ' ms';
+
+    if(navigator.connection){
+      var c = navigator.connection;
+      var netPct = c.downlink ? Math.min(100, Math.round(c.downlink*10)) : 60;
+      setBar('netBar','netVal', netPct, null, (c.effectiveType||'4g').toUpperCase()+' · '+(c.downlink||'--')+'Mbps');
+    } else {
+      setBar('netBar','netVal', 70, null, navigator.onLine ? 'ONLINE' : 'OFFLINE');
+    }
+  }
+  function setBar(barId, valId, pct, suffix, overrideText){
+    var bar = document.getElementById(barId);
+    var val = document.getElementById(valId);
+    pct = Math.max(0, Math.min(100, pct));
+    bar.style.width = pct+'%';
+    bar.classList.remove('warn','crit');
+    if(pct>85) bar.classList.add('crit'); else if(pct>65) bar.classList.add('warn');
+    val.textContent = overrideText ? overrideText : (pct + (suffix||'%'));
+  }
+  setInterval(updateTelemetry, 2200);
+
+  function initBattery(){
+    if(navigator.getBattery){
+      navigator.getBattery().then(function(bat){
+        function upd(){
+          var pct = Math.round(bat.level*100);
+          setBar('battBar','battVal', pct, '%', pct+'%'+(bat.charging?' ⚡':''));
+        }
+        upd();
+        bat.addEventListener('levelchange', upd);
+        bat.addEventListener('chargingchange', upd);
+      });
+    } else {
+      setBar('battBar','battVal', 100, '%', 'N/A');
+    }
+  }
+
+  // ---------- Speech synthesis (TTS) ----------
+  var ttsVoice = null;
+  function pickVoice(){
+    var voices = speechSynthesis.getVoices();
+    ttsVoice = voices.find(function(v){ return /en-GB/i.test(v.lang) && /male|daniel|arthur|george/i.test(v.name); })
+      || voices.find(function(v){ return /en-GB/i.test(v.lang); })
+      || voices.find(function(v){ return /en/i.test(v.lang); })
+      || voices[0];
+  }
+  if('speechSynthesis' in window){
+    speechSynthesis.onvoiceschanged = pickVoice;
+    pickVoice();
+  }
+  function speak(text){
+    setCaption(text);
+    remember(text);
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    if(ttsVoice) u.voice = ttsVoice;
+    u.rate = 1.0; u.pitch = 0.92; u.volume = 1;
+    document.getElementById('dotVoice').classList.add('on');
+    document.getElementById('statVoice').textContent = 'SPEAKING';
+    u.onend = function(){
+      document.getElementById('dotVoice').classList.remove('on');
+      document.getElementById('statVoice').textContent = 'IDLE';
+    };
+    speechSynthesis.speak(u);
+  }
+
+  var captionTimer;
+  function setCaption(text){
+    var box = document.getElementById('captionBox');
+    box.style.opacity = '0';
+    setTimeout(function(){
+      box.textContent = text;
+      box.style.opacity = '1';
+    }, 150);
+    clearTimeout(captionTimer);
+    captionTimer = setTimeout(function(){
+      box.style.opacity='0.35';
+    }, 6000);
+  }
+
+  // ---------- Speech recognition (wake word + commands) ----------
+  var recognition, restartTimer;
+  function initSpeechRecognition(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+      document.getElementById('wakeLabel').textContent = 'Voice recognition unsupported — tap mic';
+      return;
+    }
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(e){
+      for(var i=e.resultIndex; i<e.results.length; i++){
+        var result = e.results[i];
+        var transcript = result[0].transcript;
+        var lower = transcript.toLowerCase();
+        var isFinal = result.isFinal;
+
+        if(!state.awake){
+          if(lower.includes('jarvis')){
+            state.awake = true;
+            document.getElementById('wakeLabel').textContent = 'Listening…';
+            document.getElementById('tickerMode').textContent = 'ACTIVE';
+            setCaption('Yes?');
+            clearTimeout(window.__awakeTimeout);
+            window.__awakeTimeout = setTimeout(function(){
+              state.awake = false;
+              document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
+              document.getElementById('tickerMode').textContent = 'STANDBY';
+            }, 8000);
+            var afterWake = lower.split('jarvis').pop().trim();
+            if(isFinal && afterWake.length > 1){
+              handleCommand(afterWake, transcript);
+              state.awake = false;
+              clearTimeout(window.__awakeTimeout);
+              document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
+              document.getElementById('tickerMode').textContent = 'STANDBY';
+            }
+          }
+        } else {
+          if(isFinal){
+            var cmd = lower.replace('jarvis','').trim();
+            clearTimeout(window.__awakeTimeout);
+            if(cmd.length > 1){
+              handleCommand(cmd, transcript);
+            } else {
+              speak('Go ahead.');
+            }
+            state.awake = false;
+            document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
+            document.getElementById('tickerMode').textContent = 'STANDBY';
+          } else {
+            clearTimeout(window.__awakeTimeout);
+            window.__awakeTimeout = setTimeout(function(){
+              state.awake = false;
+              document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
+              document.getElementById('tickerMode').textContent = 'STANDBY';
+            }, 8000);
+          }
+        }
+      }
+    };
+    recognition.onerror = function(e){
+      if(e.error === 'not-allowed'){ document.getElementById('statMic').textContent = 'DENIED'; }
+    };
+    recognition.onend = function(){
+      if(state.listening){
+        setTimeout(function(){
+          try{ recognition.start(); }catch(e){}
+        }, 250);
+      }
+    };
+    startListening();
+  }
+
+  function startListening(){
+    if(!recognition) return;
+    state.listening = true;
+    try{ recognition.start(); }catch(e){}
+    document.getElementById('micBtn').classList.add('live');
+  }
+  function stopListening(){
+    state.listening = false;
+    if(recognition){ try{ recognition.stop(); }catch(e){} }
+    document.getElementById('micBtn').classList.remove('live');
+  }
+
+  document.getElementById('micBtn').addEventListener('click', function(){
+    if(!state.perms.mic){ initMic(); return; }
+    if(!recognition){ return; }
+    if(state.listening){ stopListening(); } else { startListening(); }
+  });
+
+  // ---------- Command handling ----------
+  function handleCommand(cmd, raw){
+    document.getElementById('tickerMode').textContent = 'PROCESSING';
+    if(cmd.includes('status') || cmd.includes('report')){
+      var cores = navigator.hardwareConcurrency || 4;
+      var battEl = document.getElementById('battVal').textContent;
+      speak('All systems nominal. Running on '+cores+' threads, power cell at '+battEl+'.');
+    } else if(cmd.includes('time')){
+      speak('It is currently ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '.');
+    } else if(cmd.includes('who are you') || cmd.includes('introduce')){
+      speak('I am your interface assistant, built to monitor your system and assist on request.');
+    } else if(cmd.includes('clear memory') || cmd.includes('forget everything')){
+      state.memory = [];
+      try{ localStorage.removeItem(MEM_KEY); }catch(e){}
+      renderMemory();
+      speak('Memory log purged.');
+    } else if(cmd.trim().length === 0){
+      speak('Go ahead.');
+    } else if(isVisionCommand(cmd)){
+      handleVisionCommand(cmd);
+    } else if(apiKey){
+      setCaption('Thinking…');
+      callClaudeText(cmd, function(text, err){
+        if(err){
+          speak('I hit an error reaching the reasoning engine. ' + (err.length < 60 ? err : 'Check your API key.'));
+        } else {
+          speak(text);
+        }
+      });
+    } else if(cmd.includes('remember')){
+      speak('Noted. I will keep that in the log.');
+      remember('User note: ' + raw.replace(/jarvis/ig,'').trim());
+    } else {
+      speak('I heard: ' + cmd + '. Add an API key in settings so I can actually reason about that.');
+    }
+    setTimeout(function(){
+      if(document.getElementById('tickerMode').textContent === 'PROCESSING'){
+        document.getElementById('tickerMode').textContent = 'STANDBY';
+      }
+    }, 3000);
+  }
+
+  // ---------- Start gate ----------
+  function isInIframe(){
+    try{ return window.self !== window.top; }catch(e){ return true; }
+  }
+
+  (function checkSecurity(){
+    var w = document.getElementById('secWarning');
+    if(isInIframe()){
+      w.style.display = 'block';
+      w.textContent = 'This is running inside an embedded preview (an iframe), which browsers block from using the camera or microphone regardless of site permissions. Download this file and open it directly in its own browser tab — e.g. via "python3 -m http.server" and http://localhost:8000 — to enable those features.';
+    } else if(window.isSecureContext !== true){
+      w.style.display = 'block';
+      w.textContent = 'Warning: this page is not running on https or localhost (currently ' + window.location.protocol + '). Chrome and most browsers will block camera and microphone access entirely on insecure origins — no permission prompt will appear. Host this file over https, or run it via a local server at http://localhost, to enable those features.';
+    }
+  })();
+
+  document.getElementById('initBtn').addEventListener('click', function(){
+    document.getElementById('startGate').style.display = 'none';
+    runBoot(function(){
+      initCamera();
+      initMic();
+      initGeo();
+      initOrientation();
+      initBattery();
+      updateTelemetry();
+      speak('Good to see you. All systems nominal.');
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
