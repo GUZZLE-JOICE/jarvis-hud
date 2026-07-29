@@ -23,8 +23,14 @@
   html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
   #app{position:relative;width:100vw;height:100vh;background:var(--void);}
 
-  #camLayer{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:320px;height:240px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:none;}
-  #camLayer.on{display:block;}
+  #camLayer{position:absolute;bottom:90px;left:50%;width:320px;height:240px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translateX(-50%) scale(0.85) translateY(12px);pointer-events:none;transition:opacity .28s cubic-bezier(.2,.8,.3,1), transform .32s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
+  #camLayer.on{opacity:1;transform:translateX(-50%) scale(1) translateY(0);pointer-events:auto;box-shadow:0 0 28px rgba(0,229,255,0.25);}
+  #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
+  #camLayer.pulse::before{animation:camPulse .6s ease-out;}
+  @keyframes camPulse{
+    0%{opacity:1;inset:-2px;}
+    100%{opacity:0;inset:-14px;}
+  }
   #camVideo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:100%;min-height:100%;width:auto;height:auto;object-fit:cover;filter:contrast(1.05) brightness(0.95);}
   #camTint{position:absolute;inset:0;background:var(--cyan);mix-blend-mode:overlay;opacity:0.12;pointer-events:none;}
   #camScrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);pointer-events:none;}
@@ -111,7 +117,8 @@
   #micBtn.live svg{stroke:#00151a;}
   #micBtn svg{stroke:var(--cyan);}
 
-  #camBtn{position:absolute;z-index:20;bottom:18px;right:82px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:all .2s;}
+  #camBtn{position:absolute;z-index:20;bottom:18px;right:82px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:transform .15s ease, background .2s, box-shadow .2s;}
+  #camBtn:active{transform:scale(0.88);}
   #camBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
   #camBtn svg{width:22px;height:22px;stroke:var(--cyan);}
   #camBtn.live svg{stroke:#00151a;}
@@ -199,11 +206,16 @@
     <div id="memList"></div>
     <button class="smallBtn" id="clearMemBtn">Purge memory</button>
     <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
+      <h3 style="margin-bottom:6px;">Voice</h3>
+      <select id="voiceSelect" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;box-sizing:border-box;"></select>
+    </div>
+    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
       <h3 style="margin-bottom:6px;">AI provider</h3>
       <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Stored only in this browser. Enables real reasoning and vision commands like "Jarvis, what am I looking at."</p>
       <div style="display:flex;gap:6px;margin-bottom:10px;">
         <button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button>
         <button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button>
+        <button class="smallBtn providerTab" data-provider="local" id="tabLocal">Local</button>
       </div>
       <div id="claudeKeySection">
         <input type="password" id="apiKeyInputClaude" placeholder="sk-ant-..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
@@ -211,8 +223,12 @@
       <div id="geminiKeySection" style="display:none;">
         <input type="password" id="apiKeyInputGemini" placeholder="AIza..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
       </div>
+      <div id="localKeySection" style="display:none;">
+        <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Runs on your own GPU via Ollama. Make sure "ollama serve" is running in the background.</p>
+        <input type="text" id="localModelInput" placeholder="llava:7b" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
+      </div>
       <div style="display:flex;gap:6px;">
-        <button class="smallBtn" id="saveKeyBtn">Save key</button>
+        <button class="smallBtn" id="saveKeyBtn">Save</button>
         <button class="smallBtn" id="clearKeyBtn">Remove key</button>
       </div>
       <div id="keyStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);margin-top:8px;"></div>
@@ -221,8 +237,8 @@
 
   <!-- LEFT -->
   <div class="hud-panel" id="leftPanel">
-    <div class="panel-inner" style="display:flex;flex-direction:column;gap:12px;">
-      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;">Diagnostics</div>
+    <div class="panel-inner" style="display:flex;flex-direction:column;gap:11px;">
+      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;font-size:11px;">Diagnostics</div>
 
       <div class="metric-row">
         <div class="metric-top"><span class="hud-label">CPU load</span><span class="hud-value" id="cpuVal">--%</span></div>
@@ -244,24 +260,31 @@
         <div class="bar-track"><div class="bar-fill" id="netBar" style="width:0%"></div></div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--cyan-dim);padding-top:8px;">
+      <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
         <div class="metric-top"><span class="hud-label">Cores</span><span class="hud-value" id="coreVal">--</span></div>
         <div class="metric-top"><span class="hud-label">Latency</span><span class="hud-value" id="pingVal">-- ms</span></div>
         <div class="metric-top"><span class="hud-label">Viewport</span><span class="hud-value" id="viewportVal">--</span></div>
+        <div class="metric-top"><span class="hud-label">Display</span><span class="hud-value" id="displayVal">--</span></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
+        <div class="metric-top"><span class="hud-label">Platform</span><span class="hud-value" id="platformVal" style="font-size:10px;">--</span></div>
+        <div class="metric-top"><span class="hud-label">Browser</span><span class="hud-value" id="browserVal" style="font-size:10px;">--</span></div>
       </div>
     </div>
   </div>
 
   <!-- RIGHT -->
   <div class="hud-panel" id="rightPanel">
-    <div class="panel-inner" style="display:flex;flex-direction:column;gap:8px;">
-      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;margin-bottom:2px;">Systems</div>
+    <div class="panel-inner" style="display:flex;flex-direction:column;gap:7px;">
+      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;margin-bottom:2px;font-size:11px;">Systems</div>
       <div class="tile"><span class="tile-name"><span class="dot" id="dotCam"></span>Optic feed</span><span class="tile-stat" id="statCam">OFF</span></div>
       <div class="tile"><span class="tile-name"><span class="dot" id="dotMic"></span>Audio link</span><span class="tile-stat" id="statMic">OFF</span></div>
       <div class="tile"><span class="tile-name"><span class="dot" id="dotGeo"></span>Geo-lock</span><span class="tile-stat" id="statGeo">OFF</span></div>
       <div class="tile"><span class="tile-name"><span class="dot" id="dotOrient"></span>Gyro array</span><span class="tile-stat" id="statOrient">OFF</span></div>
       <div class="tile"><span class="tile-name"><span class="dot on"></span>Neural core</span><span class="tile-stat">ONLINE</span></div>
       <div class="tile"><span class="tile-name"><span class="dot" id="dotVoice"></span>Voice synth</span><span class="tile-stat" id="statVoice">--</span></div>
+      <div class="tile" style="border-top:1px solid var(--cyan-dim);margin-top:2px;padding-top:9px;"><span class="tile-name">AI provider</span><span class="tile-stat" id="statProvider">CLAUDE</span></div>
     </div>
   </div>
 
@@ -350,31 +373,50 @@
 
   var CLAUDE_KEY_STORAGE = 'jarvis_claude_key_v1';
   var GEMINI_KEY_STORAGE = 'jarvis_gemini_key_v1';
+  var LOCAL_MODEL_STORAGE = 'jarvis_local_model_v1';
   var PROVIDER_STORAGE = 'jarvis_provider_v1';
-  var claudeKey = null, geminiKey = null;
+  var claudeKey = null, geminiKey = null, localModel = null;
   var activeProvider = 'claude';
   try{
     claudeKey = localStorage.getItem(CLAUDE_KEY_STORAGE) || null;
     geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || null;
+    localModel = localStorage.getItem(LOCAL_MODEL_STORAGE) || null;
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
   }catch(e){}
 
-  function currentKey(){ return activeProvider === 'gemini' ? geminiKey : claudeKey; }
+  function currentKey(){
+    if(activeProvider === 'gemini') return geminiKey;
+    if(activeProvider === 'local') return localModel || 'llava:7b';
+    return claudeKey;
+  }
 
   function setProviderTab(p){
     activeProvider = p;
     try{ localStorage.setItem(PROVIDER_STORAGE, p); }catch(e){}
     document.getElementById('tabClaude').classList.toggle('active', p==='claude');
     document.getElementById('tabGemini').classList.toggle('active', p==='gemini');
+    document.getElementById('tabLocal').classList.toggle('active', p==='local');
     document.getElementById('claudeKeySection').style.display = p==='claude' ? 'block' : 'none';
     document.getElementById('geminiKeySection').style.display = p==='gemini' ? 'block' : 'none';
+    document.getElementById('localKeySection').style.display = p==='local' ? 'block' : 'none';
+    if(p === 'local' && !document.getElementById('localModelInput').value){
+      document.getElementById('localModelInput').value = localModel || 'llava:7b';
+    }
     refreshKeyStatus();
+    if(typeof updateProviderBadge === 'function') updateProviderBadge();
   }
   document.getElementById('tabClaude').addEventListener('click', function(){ setProviderTab('claude'); });
   document.getElementById('tabGemini').addEventListener('click', function(){ setProviderTab('gemini'); });
+  document.getElementById('tabLocal').addEventListener('click', function(){ setProviderTab('local'); });
 
   function refreshKeyStatus(){
     var el = document.getElementById('keyStatus');
+    if(activeProvider === 'local'){
+      var m = localModel || 'llava:7b';
+      el.textContent = 'Using local model "' + m + '" via Ollama at localhost:11434. Make sure "ollama serve" is running.';
+      el.style.color = 'var(--mint)';
+      return;
+    }
     var key = currentKey();
     var providerName = activeProvider === 'gemini' ? 'Gemini' : 'Claude';
     if(key){
@@ -386,6 +428,13 @@
     }
   }
   document.getElementById('saveKeyBtn').addEventListener('click', function(){
+    if(activeProvider === 'local'){
+      var modelVal = document.getElementById('localModelInput').value.trim() || 'llava:7b';
+      localModel = modelVal;
+      try{ localStorage.setItem(LOCAL_MODEL_STORAGE, localModel); }catch(e){}
+      refreshKeyStatus();
+      return;
+    }
     var inputId = activeProvider === 'gemini' ? 'apiKeyInputGemini' : 'apiKeyInputClaude';
     var val = document.getElementById(inputId).value.trim();
     if(val.length < 10){
@@ -407,6 +456,10 @@
     if(activeProvider === 'gemini'){
       geminiKey = null;
       try{ localStorage.removeItem(GEMINI_KEY_STORAGE); }catch(e){}
+    } else if(activeProvider === 'local'){
+      localModel = null;
+      try{ localStorage.removeItem(LOCAL_MODEL_STORAGE); }catch(e){}
+      document.getElementById('localModelInput').value = '';
     } else {
       claudeKey = null;
       try{ localStorage.removeItem(CLAUDE_KEY_STORAGE); }catch(e){}
@@ -510,12 +563,57 @@
     }).catch(function(err){ cb(null, err.message || 'network_error'); });
   }
 
+  function callLocalText(userText, cb){
+    var model = localModel || 'llava:7b';
+    fetch('http://localhost:11434/api/generate', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: model,
+        prompt: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, plain spoken text only.\n\nUser: ' + userText,
+        stream: false
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.response){
+        cb(data.response.trim(), null);
+      } else {
+        cb(null, (data && data.error) || 'unknown_error');
+      }
+    }).catch(function(err){
+      cb(null, 'Could not reach Ollama on localhost. Make sure "ollama serve" is running.');
+    });
+  }
+
+  function callLocalVision(userText, base64Jpeg, cb){
+    var model = localModel || 'llava:7b';
+    fetch('http://localhost:11434/api/generate', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: model,
+        prompt: userText || 'What am I looking at? Describe it in 1-3 short spoken sentences, no markdown.',
+        images: [base64Jpeg],
+        stream: false
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.response){
+        cb(data.response.trim(), null);
+      } else {
+        cb(null, (data && data.error) || 'unknown_error');
+      }
+    }).catch(function(err){
+      cb(null, 'Could not reach Ollama on localhost. Make sure "ollama serve" is running.');
+    });
+  }
+
   function callAIText(userText, cb){
+    if(activeProvider === 'local'){ callLocalText(userText, cb); return; }
     if(!currentKey()){ cb(null, 'no_key'); return; }
     if(activeProvider === 'gemini'){ callGeminiText(userText, cb); }
     else { callClaudeText(userText, cb); }
   }
   function callAIVision(userText, base64Jpeg, cb){
+    if(activeProvider === 'local'){ callLocalVision(userText, base64Jpeg, cb); return; }
     if(!currentKey()){ cb(null, 'no_key'); return; }
     if(activeProvider === 'gemini'){ callGeminiVision(userText, base64Jpeg, cb); }
     else { callClaudeVision(userText, base64Jpeg, cb); }
@@ -708,7 +806,11 @@
     });
   }
   function showCamera(){
-    document.getElementById('camLayer').classList.add('on');
+    var layer = document.getElementById('camLayer');
+    layer.classList.add('on');
+    layer.classList.remove('pulse');
+    void layer.offsetWidth;
+    layer.classList.add('pulse');
     document.getElementById('camBtn').classList.add('live');
   }
   function hideCamera(){
@@ -857,6 +959,7 @@
     }
 
     document.getElementById('viewportVal').textContent = window.innerWidth+'×'+window.innerHeight;
+    document.getElementById('displayVal').textContent = screen.width+'×'+screen.height+' @'+(window.devicePixelRatio||1)+'x';
 
     var connEst = performance.now() % 40 + 8;
     document.getElementById('pingVal').textContent = Math.round(connEst) + ' ms';
@@ -869,6 +972,23 @@
       setBar('netBar','netVal', 70, null, navigator.onLine ? 'ONLINE' : 'OFFLINE');
     }
   }
+  function detectPlatformInfo(){
+    var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || 'Unknown';
+    document.getElementById('platformVal').textContent = platform;
+
+    var ua = navigator.userAgent;
+    var browser = 'Unknown';
+    if(/Edg\//.test(ua)) browser = 'Edge';
+    else if(/Chrome\//.test(ua) && !/Chromium/.test(ua)) browser = 'Chrome';
+    else if(/Firefox\//.test(ua)) browser = 'Firefox';
+    else if(/Safari\//.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
+    document.getElementById('browserVal').textContent = browser;
+  }
+  function updateProviderBadge(){
+    var el = document.getElementById('statProvider');
+    if(!el) return;
+    el.textContent = activeProvider.toUpperCase();
+  }
   function setBar(barId, valId, pct, suffix, overrideText){
     var bar = document.getElementById(barId);
     var val = document.getElementById(valId);
@@ -879,6 +999,7 @@
     val.textContent = overrideText ? overrideText : (pct + (suffix||'%'));
   }
   setInterval(updateTelemetry, 2200);
+  detectPlatformInfo();
 
   function initBattery(){
     if(navigator.getBattery){
@@ -898,13 +1019,51 @@
 
   // ---------- Speech synthesis (TTS) ----------
   var ttsVoice = null;
+  var manualVoiceURI = null;
+  try{ manualVoiceURI = localStorage.getItem('jarvis_voice_uri_v1') || null; }catch(e){}
+
+  function populateVoiceDropdown(){
+    var voices = speechSynthesis.getVoices();
+    var sel = document.getElementById('voiceSelect');
+    if(!sel || voices.length === 0) return;
+    var currentVal = sel.value;
+    sel.innerHTML = '<option value="">Auto (best male match)</option>' + voices.map(function(v){
+      return '<option value="'+v.voiceURI+'">'+v.name+' ('+v.lang+')</option>';
+    }).join('');
+    if(manualVoiceURI){
+      sel.value = manualVoiceURI;
+    } else if(currentVal){
+      sel.value = currentVal;
+    }
+  }
   function pickVoice(){
     var voices = speechSynthesis.getVoices();
-    ttsVoice = voices.find(function(v){ return /en-GB/i.test(v.lang) && /male|daniel|arthur|george/i.test(v.name); })
-      || voices.find(function(v){ return /en-GB/i.test(v.lang); })
-      || voices.find(function(v){ return /en/i.test(v.lang); })
+    if(manualVoiceURI){
+      var manual = voices.find(function(v){ return v.voiceURI === manualVoiceURI; });
+      if(manual){ ttsVoice = manual; populateVoiceDropdown(); return; }
+    }
+    var femaleNames = /female|hazel|zira|susan|samantha|victoria|karen|moira|tessa|fiona|catherine|linda|olivia|emma|ava|aria/i;
+    var maleNames = /male|daniel|arthur|george|guy|ryan|david|mark|james|matthew|christopher|eric|brian|alex(?!a)/i;
+
+    ttsVoice = voices.find(function(v){ return /en-GB/i.test(v.lang) && maleNames.test(v.name) && !femaleNames.test(v.name); })
+      || voices.find(function(v){ return maleNames.test(v.name) && !femaleNames.test(v.name); })
+      || voices.find(function(v){ return /en-GB/i.test(v.lang) && !femaleNames.test(v.name); })
+      || voices.find(function(v){ return /en/i.test(v.lang) && !femaleNames.test(v.name); })
       || voices[0];
+    populateVoiceDropdown();
   }
+  document.getElementById('voiceSelect').addEventListener('change', function(){
+    var val = this.value;
+    if(!val){
+      manualVoiceURI = null;
+      try{ localStorage.removeItem('jarvis_voice_uri_v1'); }catch(e){}
+    } else {
+      manualVoiceURI = val;
+      try{ localStorage.setItem('jarvis_voice_uri_v1', val); }catch(e){}
+    }
+    pickVoice();
+    speak('Voice updated. This is how I sound now.');
+  });
   if('speechSynthesis' in window){
     speechSynthesis.onvoiceschanged = pickVoice;
     pickVoice();
@@ -916,7 +1075,7 @@
     speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
     if(ttsVoice) u.voice = ttsVoice;
-    u.rate = 1.0; u.pitch = 0.92; u.volume = 1;
+    u.rate = 1.0; u.pitch = 0.82; u.volume = 1;
     document.getElementById('dotVoice').classList.add('on');
     document.getElementById('statVoice').textContent = 'SPEAKING';
     u.onend = function(){
