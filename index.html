@@ -23,9 +23,10 @@
   html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
   #app{position:relative;width:100vw;height:100vh;background:var(--void);}
 
-  #camLayer{position:absolute;top:50px;right:16px;width:160px;height:120px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:none;}
+  #camLayer{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:320px;height:240px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:none;}
   #camLayer.on{display:block;}
-  #camVideo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:100%;min-height:100%;width:auto;height:auto;object-fit:cover;filter:grayscale(0.25) contrast(1.1) brightness(0.75) saturate(1.2) hue-rotate(150deg);}
+  #camVideo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:100%;min-height:100%;width:auto;height:auto;object-fit:cover;filter:contrast(1.05) brightness(0.95);}
+  #camTint{position:absolute;inset:0;background:var(--cyan);mix-blend-mode:overlay;opacity:0.12;pointer-events:none;}
   #camScrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);pointer-events:none;}
   #camLabel{position:absolute;bottom:3px;left:6px;font-family:'JetBrains Mono';font-size:9px;color:var(--cyan);letter-spacing:1px;text-shadow:0 0 4px #000;}
 
@@ -84,7 +85,7 @@
   .bar-fill.crit{background:var(--red);box-shadow:0 0 8px rgba(255,59,48,0.5);}
 
   /* RIGHT EQUIPMENT */
-  #rightPanel{top:200px;right:16px;width:190px;display:flex;flex-direction:column;gap:8px;}
+  #rightPanel{top:110px;right:16px;width:190px;display:flex;flex-direction:column;gap:8px;}
   .tile{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);}
   .tile-name{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
   .tile-stat{font-family:'JetBrains Mono';font-size:12px;color:var(--cyan);}
@@ -125,6 +126,7 @@
   #memEmpty{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);font-style:italic;}
   .smallBtn{font-family:'Orbitron';font-size:10px;letter-spacing:1px;background:transparent;border:1px solid var(--cyan-dim);color:var(--text-dim);padding:6px 10px;cursor:pointer;text-transform:uppercase;}
   .smallBtn:hover{border-color:var(--cyan);color:var(--cyan);}
+  .providerTab.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,0.1);}
 
   #permBadges{position:absolute;z-index:20;top:16px;right:16px;display:flex;gap:4px;pointer-events:none;width:140px;justify-content:flex-end;flex-wrap:wrap;}
   .permBadge{font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim);border:1px solid var(--cyan-dim);padding:3px 7px;letter-spacing:1px;}
@@ -146,6 +148,7 @@
 
   <div id="camLayer">
     <video id="camVideo" autoplay muted playsinline></video>
+    <div id="camTint"></div>
     <div id="camScrim"></div>
     <div id="camLabel">OPTIC FEED</div>
   </div>
@@ -196,9 +199,18 @@
     <div id="memList"></div>
     <button class="smallBtn" id="clearMemBtn">Purge memory</button>
     <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">Anthropic API key</h3>
+      <h3 style="margin-bottom:6px;">AI provider</h3>
       <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Stored only in this browser. Enables real reasoning and vision commands like "Jarvis, what am I looking at."</p>
-      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button>
+        <button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button>
+      </div>
+      <div id="claudeKeySection">
+        <input type="password" id="apiKeyInputClaude" placeholder="sk-ant-..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
+      </div>
+      <div id="geminiKeySection" style="display:none;">
+        <input type="password" id="apiKeyInputGemini" placeholder="AIza..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
+      </div>
       <div style="display:flex;gap:6px;">
         <button class="smallBtn" id="saveKeyBtn">Save key</button>
         <button class="smallBtn" id="clearKeyBtn">Remove key</button>
@@ -336,46 +348,79 @@
     renderMemory();
   }
 
-  var API_KEY_STORAGE = 'jarvis_api_key_v1';
-  var apiKey = null;
-  try{ apiKey = localStorage.getItem(API_KEY_STORAGE) || null; }catch(e){}
+  var CLAUDE_KEY_STORAGE = 'jarvis_claude_key_v1';
+  var GEMINI_KEY_STORAGE = 'jarvis_gemini_key_v1';
+  var PROVIDER_STORAGE = 'jarvis_provider_v1';
+  var claudeKey = null, geminiKey = null;
+  var activeProvider = 'claude';
+  try{
+    claudeKey = localStorage.getItem(CLAUDE_KEY_STORAGE) || null;
+    geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || null;
+    activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
+  }catch(e){}
+
+  function currentKey(){ return activeProvider === 'gemini' ? geminiKey : claudeKey; }
+
+  function setProviderTab(p){
+    activeProvider = p;
+    try{ localStorage.setItem(PROVIDER_STORAGE, p); }catch(e){}
+    document.getElementById('tabClaude').classList.toggle('active', p==='claude');
+    document.getElementById('tabGemini').classList.toggle('active', p==='gemini');
+    document.getElementById('claudeKeySection').style.display = p==='claude' ? 'block' : 'none';
+    document.getElementById('geminiKeySection').style.display = p==='gemini' ? 'block' : 'none';
+    refreshKeyStatus();
+  }
+  document.getElementById('tabClaude').addEventListener('click', function(){ setProviderTab('claude'); });
+  document.getElementById('tabGemini').addEventListener('click', function(){ setProviderTab('gemini'); });
 
   function refreshKeyStatus(){
     var el = document.getElementById('keyStatus');
-    if(apiKey){
-      el.textContent = 'Key saved (' + apiKey.slice(0,8) + '…' + apiKey.slice(-4) + '). Vision and reasoning are active.';
+    var key = currentKey();
+    var providerName = activeProvider === 'gemini' ? 'Gemini' : 'Claude';
+    if(key){
+      el.textContent = providerName + ' key saved (' + key.slice(0,6) + '\u2026' + key.slice(-4) + '). Vision and reasoning are active.';
       el.style.color = 'var(--mint)';
     } else {
-      el.textContent = 'No key saved. Running on local commands only.';
+      el.textContent = 'No ' + providerName + ' key saved. Running on local commands only.';
       el.style.color = 'var(--text-dim)';
     }
   }
   document.getElementById('saveKeyBtn').addEventListener('click', function(){
-    var val = document.getElementById('apiKeyInput').value.trim();
+    var inputId = activeProvider === 'gemini' ? 'apiKeyInputGemini' : 'apiKeyInputClaude';
+    var val = document.getElementById(inputId).value.trim();
     if(val.length < 10){
-      document.getElementById('keyStatus').textContent = 'That doesn\'t look like a valid key.';
+      document.getElementById('keyStatus').textContent = "That doesn't look like a valid key.";
       document.getElementById('keyStatus').style.color = 'var(--amber)';
       return;
     }
-    apiKey = val;
-    try{ localStorage.setItem(API_KEY_STORAGE, apiKey); }catch(e){}
-    document.getElementById('apiKeyInput').value = '';
+    if(activeProvider === 'gemini'){
+      geminiKey = val;
+      try{ localStorage.setItem(GEMINI_KEY_STORAGE, geminiKey); }catch(e){}
+    } else {
+      claudeKey = val;
+      try{ localStorage.setItem(CLAUDE_KEY_STORAGE, claudeKey); }catch(e){}
+    }
+    document.getElementById(inputId).value = '';
     refreshKeyStatus();
   });
   document.getElementById('clearKeyBtn').addEventListener('click', function(){
-    apiKey = null;
-    try{ localStorage.removeItem(API_KEY_STORAGE); }catch(e){}
+    if(activeProvider === 'gemini'){
+      geminiKey = null;
+      try{ localStorage.removeItem(GEMINI_KEY_STORAGE); }catch(e){}
+    } else {
+      claudeKey = null;
+      try{ localStorage.removeItem(CLAUDE_KEY_STORAGE); }catch(e){}
+    }
     refreshKeyStatus();
   });
-  refreshKeyStatus();
+  setProviderTab(activeProvider);
 
   function callClaudeText(userText, cb){
-    if(!apiKey){ cb(null, 'no_key'); return; }
     fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key': apiKey,
+        'x-api-key': claudeKey,
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
@@ -396,19 +441,18 @@
   }
 
   function callClaudeVision(userText, base64Jpeg, cb){
-    if(!apiKey){ cb(null, 'no_key'); return; }
     fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key': apiKey,
+        'x-api-key': claudeKey,
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:300,
-        system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user\'s camera. Answer in 1-3 short spoken sentences. No markdown, plain spoken text only.',
+        system:"You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer in 1-3 short spoken sentences. No markdown, plain spoken text only.",
         messages:[{
           role:'user',
           content:[
@@ -425,6 +469,56 @@
         cb(null, (data && data.error && data.error.message) || 'unknown_error');
       }
     }).catch(function(err){ cb(null, err.message || 'network_error'); });
+  }
+
+  function callGeminiText(userText, cb){
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey;
+    fetch(url, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        contents:[{parts:[{text: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, plain spoken text only.\n\nUser: ' + userText}]}]
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.candidates && data.candidates[0]){
+        var text = data.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join(' ').trim();
+        cb(text, null);
+      } else {
+        cb(null, (data && data.error && data.error.message) || 'unknown_error');
+      }
+    }).catch(function(err){ cb(null, err.message || 'network_error'); });
+  }
+
+  function callGeminiVision(userText, base64Jpeg, cb){
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey;
+    fetch(url, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        contents:[{parts:[
+          {text: "You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer in 1-3 short spoken sentences. No markdown, plain spoken text only.\n\nUser question: " + (userText || 'What am I looking at?')},
+          {inline_data:{mime_type:'image/jpeg', data: base64Jpeg}}
+        ]}]
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.candidates && data.candidates[0]){
+        var text = data.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join(' ').trim();
+        cb(text, null);
+      } else {
+        cb(null, (data && data.error && data.error.message) || 'unknown_error');
+      }
+    }).catch(function(err){ cb(null, err.message || 'network_error'); });
+  }
+
+  function callAIText(userText, cb){
+    if(!currentKey()){ cb(null, 'no_key'); return; }
+    if(activeProvider === 'gemini'){ callGeminiText(userText, cb); }
+    else { callClaudeText(userText, cb); }
+  }
+  function callAIVision(userText, base64Jpeg, cb){
+    if(!currentKey()){ cb(null, 'no_key'); return; }
+    if(activeProvider === 'gemini'){ callGeminiVision(userText, base64Jpeg, cb); }
+    else { callClaudeVision(userText, base64Jpeg, cb); }
   }
 
   function captureFrameBase64(){
@@ -447,6 +541,28 @@
       if(cmd.includes(visionTriggers[i])) return true;
     }
     return false;
+  }
+
+  function handleVisionCommand(cmd){
+    if(!camStream){
+      speak('I need the camera on to look. Tap the camera icon first.');
+      return;
+    }
+    setCaption('Analyzing…');
+    var frame = captureFrameBase64();
+    if(!frame){
+      speak('I could not capture a clear frame. Try again in a moment.');
+      return;
+    }
+    callAIVision(cmd, frame, function(text, err){
+      if(err === 'no_key'){
+        speak('I need an API key to analyze images. Add one in the memory panel settings.');
+      } else if(err){
+        speak('Vision request failed. ' + (err.length < 60 ? err : 'Check your API key and connection.'));
+      } else {
+        speak(text);
+      }
+    });
   }
 
   document.getElementById('settingsBtn').addEventListener('click', function(){
@@ -939,9 +1055,9 @@
       speak('Go ahead.');
     } else if(isVisionCommand(cmd)){
       handleVisionCommand(cmd);
-    } else if(apiKey){
+    } else if(currentKey()){
       setCaption('Thinking…');
-      callClaudeText(cmd, function(text, err){
+      callAIText(cmd, function(text, err){
         if(err){
           speak('I hit an error reaching the reasoning engine. ' + (err.length < 60 ? err : 'Check your API key.'));
         } else {
