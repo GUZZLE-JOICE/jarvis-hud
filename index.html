@@ -26,8 +26,8 @@
   html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
   #app{position:relative;width:100vw;height:100vh;background:var(--void);}
 
-  #camLayer{position:absolute;top:50%;left:50%;width:520px;height:390px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.8);pointer-events:none;transition:opacity .4s cubic-bezier(.2,.8,.3,1), transform .5s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
-  #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
+  #camLayer{position:absolute;top:420px;right:16px;left:auto;width:340px;height:255px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translateX(30px) scale(0.9);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
+  #camLayer.on{opacity:1;transform:translateX(0) scale(1);pointer-events:auto;box-shadow:0 0 30px rgba(0,229,255,0.2);}
   #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
   #camLayer.pulse::before{animation:camPulse .6s ease-out;}
   @keyframes camPulse{
@@ -944,12 +944,10 @@
     void layer.offsetWidth;
     layer.classList.add('pulse');
     document.getElementById('camBtn').classList.add('live');
-    document.getElementById('reticleWrap').classList.add('cam-active');
   }
   function hideCamera(){
     document.getElementById('camLayer').classList.remove('on');
     document.getElementById('camBtn').classList.remove('live');
-    document.getElementById('reticleWrap').classList.remove('cam-active');
     if(typeof stopHandTracking === 'function') stopHandTracking();
   }
   function toggleCamera(){
@@ -1183,7 +1181,7 @@
     if(isCalibrating){
       var thumbTip = landmarks[4];
       var d = distance3D(thumbTip, indexTip);
-      if(d < 0.06){
+      if(d < 0.12){
         calibrationSamples.push(d);
       }
     }
@@ -1444,8 +1442,50 @@
     return text.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '').replace(/\s{2,}/g, ' ').trim();
   }
 
+  var awakeConversationStart = null;
+  var MAX_CONVERSATION_MS = 30000;
+
+  function enterAwakeState(){
+    state.awake = true;
+    awakeConversationStart = Date.now();
+    document.getElementById('wakeLabel').textContent = 'Listening…';
+    document.getElementById('tickerMode').textContent = 'ACTIVE';
+    resetAwakeTimer();
+  }
+  function closeAwakeState(){
+    state.awake = false;
+    awakeConversationStart = null;
+    clearTimeout(window.__awakeTimeout);
+    document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
+    document.getElementById('tickerMode').textContent = 'STANDBY';
+  }
+  function resetAwakeTimer(){
+    clearTimeout(window.__awakeTimeout);
+    if(awakeConversationStart && (Date.now() - awakeConversationStart) >= MAX_CONVERSATION_MS){
+      closeAwakeState();
+      return;
+    }
+    window.__awakeTimeout = setTimeout(function(){
+      closeAwakeState();
+    }, 7000);
+  }
+  function dispatchSpokenCommand(cmd, raw){
+    handleCommand(cmd, raw);
+    resetAwakeTimer();
+  }
+
+  var lastSpokenText = '';
+  function isLikelyEcho(transcript){
+    if(!lastSpokenText) return false;
+    var t = transcript.toLowerCase().trim();
+    var spoken = lastSpokenText.toLowerCase();
+    if(t.length < 4) return false;
+    return spoken.includes(t) || t.includes(spoken.slice(0, Math.min(20, spoken.length)));
+  }
+
   function speak(text){
     var clean = stripEmojis(text);
+    lastSpokenText = clean;
     setCaption(clean);
     remember(clean);
     if(!('speechSynthesis' in window)) return;
@@ -1458,6 +1498,10 @@
     u.onend = function(){
       document.getElementById('dotVoice').classList.remove('on');
       document.getElementById('statVoice').textContent = 'IDLE';
+      lastSpokenText = '';
+      if(state.awake && typeof resetAwakeTimer === 'function'){
+        resetAwakeTimer();
+      }
     };
     speechSynthesis.speak(u);
   }
@@ -1496,50 +1540,35 @@
         var lower = transcript.toLowerCase();
         var isFinal = result.isFinal;
 
+        if(transcript.trim().length > 3 && speechSynthesis.speaking && !isLikelyEcho(transcript)){
+          speechSynthesis.cancel();
+          document.getElementById('dotVoice').classList.remove('on');
+          document.getElementById('statVoice').textContent = 'IDLE';
+        }
+
         if(!state.awake){
           if(lower.includes('jarvis')){
-            state.awake = true;
-            document.getElementById('wakeLabel').textContent = 'Listening…';
-            document.getElementById('tickerMode').textContent = 'ACTIVE';
+            enterAwakeState();
             setCaption('Yes?');
-            clearTimeout(window.__awakeTimeout);
-            window.__awakeTimeout = setTimeout(function(){
-              state.awake = false;
-              document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
-              document.getElementById('tickerMode').textContent = 'STANDBY';
-            }, 8000);
             var afterWake = lower.split('jarvis').pop().trim();
             if(isFinal && afterWake.length > 1){
-              handleCommand(afterWake, transcript);
-              state.awake = false;
-              clearTimeout(window.__awakeTimeout);
-              document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
-              document.getElementById('tickerMode').textContent = 'STANDBY';
+              dispatchSpokenCommand(afterWake, transcript);
             }
           }
         } else {
+          resetAwakeTimer();
           if(isFinal){
             var cmd = lower.replace('jarvis','').trim();
-            clearTimeout(window.__awakeTimeout);
             if(cmd.length > 1){
-              handleCommand(cmd, transcript);
+              dispatchSpokenCommand(cmd, transcript);
             } else {
               speak('Go ahead.');
             }
-            state.awake = false;
-            document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
-            document.getElementById('tickerMode').textContent = 'STANDBY';
-          } else {
-            clearTimeout(window.__awakeTimeout);
-            window.__awakeTimeout = setTimeout(function(){
-              state.awake = false;
-              document.getElementById('wakeLabel').textContent = 'Say "Jarvis" to wake';
-              document.getElementById('tickerMode').textContent = 'STANDBY';
-            }, 8000);
           }
         }
       }
     };
+
     recognition.onerror = function(e){
       if(e.error === 'not-allowed'){ document.getElementById('statMic').textContent = 'DENIED'; }
     };
