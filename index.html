@@ -6,6 +6,9 @@
 <title>J.A.R.V.I.S.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <style>
   :root{
     --void:#050708;
@@ -23,8 +26,8 @@
   html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
   #app{position:relative;width:100vw;height:100vh;background:var(--void);}
 
-  #camLayer{position:absolute;bottom:170px;left:50%;width:320px;height:240px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translateX(-50%) scale(0.85) translateY(12px);pointer-events:none;transition:opacity .28s cubic-bezier(.2,.8,.3,1), transform .32s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
-  #camLayer.on{opacity:1;transform:translateX(-50%) scale(1) translateY(0);pointer-events:auto;box-shadow:0 0 28px rgba(0,229,255,0.25);}
+  #camLayer{position:absolute;top:50%;left:50%;width:520px;height:390px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.8);pointer-events:none;transition:opacity .4s cubic-bezier(.2,.8,.3,1), transform .5s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
+  #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
   #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
   #camLayer.pulse::before{animation:camPulse .6s ease-out;}
   @keyframes camPulse{
@@ -35,6 +38,9 @@
   #camTint{position:absolute;inset:0;background:var(--cyan);mix-blend-mode:overlay;opacity:0.12;pointer-events:none;}
   #camScrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);pointer-events:none;}
   #camLabel{position:absolute;bottom:3px;left:6px;font-family:'JetBrains Mono';font-size:9px;color:var(--cyan);letter-spacing:1px;text-shadow:0 0 4px #000;}
+  #handCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;}
+  #pinchIndicator{position:absolute;top:6px;right:6px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:var(--text-dim);text-shadow:0 0 4px #000;z-index:4;padding:2px 6px;border:1px solid var(--cyan-dim);background:rgba(0,0,0,0.4);display:none;}
+  #pinchIndicator.active{display:block;color:var(--mint);border-color:var(--mint);}
 
   #hexbg{position:absolute;inset:0;opacity:0.06;pointer-events:none;
     background-image:
@@ -121,7 +127,8 @@
   .dot.off{background:#3a4a4d;box-shadow:none;}
 
   /* CENTER RETICLE / VOICE VISUALIZER */
-  #reticleWrap{top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;display:flex;align-items:center;justify-content:center;}
+  #reticleWrap{top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;display:flex;align-items:center;justify-content:center;transition:transform .5s cubic-bezier(.2,.8,.3,1), opacity .4s ease;}
+  #reticleWrap.cam-active{transform:translate(-50%,-50%) scale(0.35);opacity:0.25;}
   #reticleSvg{width:100%;height:100%;overflow:visible;}
   .ring{fill:none;stroke:var(--cyan-dim);}
   .ring-active{fill:none;stroke:var(--cyan);}
@@ -169,6 +176,10 @@
     #compassTicks{width:180px;}
     #reticleWrap{width:200px;height:200px;}
     .hud-label{font-size:9px;}
+    #camLayer{width:280px;height:210px;}
+  }
+  @media (max-width:900px) and (min-width:641px){
+    #camLayer{width:380px;height:285px;}
   }
 </style>
 </head>
@@ -177,9 +188,11 @@
 
   <div id="camLayer">
     <video id="camVideo" autoplay muted playsinline></video>
+    <canvas id="handCanvas"></canvas>
     <div id="camTint"></div>
     <div id="camScrim"></div>
     <div id="camLabel">OPTIC FEED</div>
+    <div id="pinchIndicator"></div>
   </div>
   <div id="hexbg"></div>
   <div id="scanline"></div>
@@ -239,6 +252,15 @@
     <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
       <h3 style="margin-bottom:6px;">Voice</h3>
       <select id="voiceSelect" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;box-sizing:border-box;"></select>
+    </div>
+    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
+      <h3 style="margin-bottom:6px;">Hand tracking</h3>
+      <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Turn on the camera, hold your hand up in frame, then calibrate your pinch gesture so Jarvis can tell when you're clicking versus just moving.</p>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button class="smallBtn" id="toggleHandTracking">Enable tracking</button>
+        <button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button>
+      </div>
+      <div id="handStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);line-height:1.5;"></div>
     </div>
     <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
       <h3 style="margin-bottom:6px;">AI provider</h3>
@@ -664,6 +686,24 @@
     return dataUrl.split(',')[1];
   }
 
+  function soundsUncertain(text){
+    if(!text) return true;
+    var lower = text.toLowerCase();
+    var patterns = [
+      "i don't know", "i do not know", "i'm not sure", "i am not sure",
+      "i can't see", "i cannot see", "i don't have", "i do not have",
+      "without seeing", "without an image", "without a camera", "without visual",
+      "i'm unable to see", "i am unable to see", "no visual", "can't tell",
+      "cannot tell", "i have no way to", "i don't have access to your camera",
+      "as a text", "i'm a text-based", "i don't have eyes", "i can't view",
+      "cannot view", "unable to view", "i can't perceive", "cannot perceive"
+    ];
+    for(var i=0;i<patterns.length;i++){
+      if(lower.includes(patterns[i])) return true;
+    }
+    return false;
+  }
+
   var visionTriggers = ['what am i looking at','what do you see','identify this','what is this','read this','explain this','what is in front of me','look at this','can you see'];
   function isVisionCommand(cmd){
     for(var i=0;i<visionTriggers.length;i++){
@@ -904,10 +944,13 @@
     void layer.offsetWidth;
     layer.classList.add('pulse');
     document.getElementById('camBtn').classList.add('live');
+    document.getElementById('reticleWrap').classList.add('cam-active');
   }
   function hideCamera(){
     document.getElementById('camLayer').classList.remove('on');
     document.getElementById('camBtn').classList.remove('live');
+    document.getElementById('reticleWrap').classList.remove('cam-active');
+    if(typeof stopHandTracking === 'function') stopHandTracking();
   }
   function toggleCamera(){
     var layer = document.getElementById('camLayer');
@@ -920,6 +963,243 @@
     }
   }
   document.getElementById('camBtn').addEventListener('click', toggleCamera);
+
+  // ---------- Hand tracking ----------
+  var handsInstance = null;
+  var handTrackingActive = false;
+  var handCanvasCtx = null;
+  var lastHandLandmarks = null;
+  var pinchState = { isPinching:false, distance:null };
+  var pinchThreshold = null;
+  var PINCH_THRESHOLD_STORAGE = 'jarvis_pinch_threshold_v1';
+  try{
+    var savedThreshold = localStorage.getItem(PINCH_THRESHOLD_STORAGE);
+    if(savedThreshold) pinchThreshold = parseFloat(savedThreshold);
+  }catch(e){}
+
+  var HAND_CONNECTIONS = [
+    [0,1],[1,2],[2,3],[3,4],
+    [0,5],[5,6],[6,7],[7,8],
+    [0,9],[9,10],[10,11],[11,12],
+    [0,13],[13,14],[14,15],[15,16],
+    [0,17],[17,18],[18,19],[19,20],
+    [5,9],[9,13],[13,17]
+  ];
+
+  function updateHandStatus(){
+    var el = document.getElementById('handStatus');
+    if(!el) return;
+    var lines = [];
+    lines.push('Tracking: ' + (handTrackingActive ? 'ON' : 'OFF'));
+    lines.push('Pinch threshold: ' + (pinchThreshold ? pinchThreshold.toFixed(3) : 'not calibrated (using default)'));
+    el.innerHTML = lines.join('<br>');
+  }
+
+  function distance3D(a, b){
+    var dx = a.x - b.x, dy = a.y - b.y, dz = (a.z||0) - (b.z||0);
+    return Math.sqrt(dx*dx + dy*dy + dz*dz);
+  }
+
+  function onHandResults(results){
+    var canvas = document.getElementById('handCanvas');
+    var video = document.getElementById('camVideo');
+    if(!canvas || !video.videoWidth) return;
+    if(canvas.width !== video.clientWidth || canvas.height !== video.clientHeight){
+      canvas.width = video.clientWidth;
+      canvas.height = video.clientHeight;
+    }
+    if(!handCanvasCtx) handCanvasCtx = canvas.getContext('2d');
+    var ctx = handCanvasCtx;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
+      lastHandLandmarks = null;
+      setPinchActive(false);
+      return;
+    }
+
+    var landmarks = results.multiHandLandmarks[0];
+    lastHandLandmarks = landmarks;
+
+    // Video is mirrored via CSS? Check: our video has no mirror transform, so draw as-is.
+    var w = canvas.width, h = canvas.height;
+
+    ctx.strokeStyle = 'rgba(0,229,255,0.55)';
+    ctx.lineWidth = 2;
+    HAND_CONNECTIONS.forEach(function(pair){
+      var a = landmarks[pair[0]], b = landmarks[pair[1]];
+      ctx.beginPath();
+      ctx.moveTo(a.x*w, a.y*h);
+      ctx.lineTo(b.x*w, b.y*h);
+      ctx.stroke();
+    });
+
+    landmarks.forEach(function(pt, i){
+      ctx.beginPath();
+      var isTip = (i===4 || i===8 || i===12 || i===16 || i===20);
+      ctx.fillStyle = isTip ? '#00e5ff' : 'rgba(0,229,255,0.7)';
+      ctx.arc(pt.x*w, pt.y*h, isTip ? 5 : 3, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // Pinch = distance between thumb tip (4) and index tip (8)
+    var thumbTip = landmarks[4];
+    var indexTip = landmarks[8];
+    var pinchDist = distance3D(thumbTip, indexTip);
+    pinchState.distance = pinchDist;
+
+    var threshold = pinchThreshold || 0.055;
+    var isPinching = pinchDist < threshold;
+    setPinchActive(isPinching);
+
+    // Draw pinch line
+    ctx.strokeStyle = isPinching ? '#3affc4' : 'rgba(0,229,255,0.35)';
+    ctx.lineWidth = isPinching ? 3 : 1.5;
+    ctx.beginPath();
+    ctx.moveTo(thumbTip.x*w, thumbTip.y*h);
+    ctx.lineTo(indexTip.x*w, indexTip.y*h);
+    ctx.stroke();
+
+    updateHandCursor(landmarks);
+  }
+
+  var wasPinching = false;
+  function setPinchActive(isPinching){
+    pinchState.isPinching = isPinching;
+    var indicator = document.getElementById('pinchIndicator');
+    if(indicator){
+      indicator.classList.toggle('active', isPinching);
+      indicator.textContent = isPinching ? 'PINCH' : '';
+    }
+    if(isPinching && !wasPinching){
+      onPinchStart();
+    } else if(!isPinching && wasPinching){
+      onPinchEnd();
+    }
+    wasPinching = isPinching;
+  }
+
+  function initHandTracking(){
+    if(handsInstance) return;
+    if(typeof Hands === 'undefined'){
+      document.getElementById('handStatus').textContent = 'Hand tracking library failed to load. Check your internet connection and reload.';
+      return;
+    }
+    handsInstance = new Hands({
+      locateFile: function(file){
+        return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
+      }
+    });
+    handsInstance.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6
+    });
+    handsInstance.onResults(onHandResults);
+  }
+
+  var handFrameLoopActive = false;
+  function handFrameLoop(){
+    if(!handTrackingActive || !camStream){
+      handFrameLoopActive = false;
+      return;
+    }
+    var video = document.getElementById('camVideo');
+    if(handsInstance && video.readyState >= 2){
+      handsInstance.send({image: video}).catch(function(){});
+    }
+    requestAnimationFrame(handFrameLoop);
+  }
+
+  function startHandTracking(){
+    if(!camStream){
+      document.getElementById('handStatus').textContent = 'Turn the camera on first.';
+      return;
+    }
+    initHandTracking();
+    handTrackingActive = true;
+    if(!handFrameLoopActive){
+      handFrameLoopActive = true;
+      handFrameLoop();
+    }
+    updateHandStatus();
+    document.getElementById('toggleHandTracking').textContent = 'Disable tracking';
+  }
+
+  function stopHandTracking(){
+    handTrackingActive = false;
+    var canvas = document.getElementById('handCanvas');
+    if(handCanvasCtx && canvas){
+      handCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    setPinchActive(false);
+    updateHandStatus();
+    document.getElementById('toggleHandTracking').textContent = 'Enable tracking';
+  }
+
+  document.getElementById('toggleHandTracking').addEventListener('click', function(){
+    if(handTrackingActive){ stopHandTracking(); } else { startHandTracking(); }
+  });
+
+  // ---------- Calibration ----------
+  var isCalibrating = false;
+  var calibrationSamples = [];
+  document.getElementById('calibratePinchBtn').addEventListener('click', function(){
+    if(!camStream){
+      document.getElementById('handStatus').textContent = 'Turn the camera on first.';
+      return;
+    }
+    if(!handTrackingActive) startHandTracking();
+    isCalibrating = true;
+    calibrationSamples = [];
+    document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, 3 times, then release each time. Hold each pinch for a moment.';
+    setTimeout(finishCalibration, 6000);
+  });
+
+  var calibrationPinchCount = 0;
+  function finishCalibration(){
+    isCalibrating = false;
+    if(calibrationSamples.length < 2){
+      document.getElementById('handStatus').textContent = 'Could not detect enough pinches. Make sure your hand is clearly visible and try again.';
+      return;
+    }
+    var avgPinchDist = calibrationSamples.reduce(function(a,b){return a+b;}, 0) / calibrationSamples.length;
+    pinchThreshold = avgPinchDist * 1.5;
+    try{ localStorage.setItem(PINCH_THRESHOLD_STORAGE, pinchThreshold.toString()); }catch(e){}
+    updateHandStatus();
+    document.getElementById('handStatus').innerHTML += '<br><span style="color:var(--mint)">Calibration complete.</span>';
+    speak('Pinch calibrated.');
+  }
+
+  // ---------- Pinch = mouse click ----------
+  var handCursorX = null, handCursorY = null;
+  function updateHandCursor(landmarks){
+    // Use index fingertip (8) as the cursor point, mapped to full screen space
+    var indexTip = landmarks[8];
+    handCursorX = indexTip.x;
+    handCursorY = indexTip.y;
+
+    if(isCalibrating){
+      var thumbTip = landmarks[4];
+      var d = distance3D(thumbTip, indexTip);
+      if(d < 0.06){
+        calibrationSamples.push(d);
+      }
+    }
+  }
+
+  function onPinchStart(){
+    if(isCalibrating) return;
+    // Placeholder hook for future drag/click actions once panels support it
+  }
+  function onPinchEnd(){
+    if(isCalibrating) return;
+  }
+
+  updateHandStatus();
+
+
 
   var audioCtx, analyser, micStream, dataArray;
   function initMic(){
@@ -1051,7 +1331,7 @@
     }
 
     document.getElementById('viewportVal').textContent = window.innerWidth+'×'+window.innerHeight;
-    document.getElementById('displayVal').textContent = screen.width+'×'+screen.height+' @'+(window.devicePixelRatio||1)+'x';
+    document.getElementById('displayVal').textContent = screen.width+'×'+screen.height+' @'+(Math.round((window.devicePixelRatio||1)*100)/100)+'x';
 
     var connEst = performance.now() % 40 + 8;
     document.getElementById('pingVal').textContent = Math.round(connEst) + ' ms';
@@ -1316,6 +1596,20 @@
       callAIText(cmd, function(text, err){
         if(err){
           speak('I hit an error reaching the reasoning engine. ' + (err.length < 60 ? err : 'Check your API key.'));
+        } else if(soundsUncertain(text) && camStream){
+          setCaption('Checking the camera…');
+          var frame = captureFrameBase64();
+          if(!frame){
+            speak(text);
+            return;
+          }
+          callAIVision(cmd, frame, function(visionText, visionErr){
+            if(visionErr || !visionText || soundsUncertain(visionText)){
+              speak("I don't know.");
+            } else {
+              speak(visionText);
+            }
+          });
         } else {
           speak(text);
         }
