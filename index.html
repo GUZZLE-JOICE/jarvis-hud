@@ -1049,6 +1049,7 @@
     document.getElementById('camBtn').classList.remove('live');
     document.getElementById('reticleWrap').classList.remove('cam-active');
     if(typeof stopHandTracking === 'function') stopHandTracking();
+    if(typeof applyHandZoom === 'function') applyHandZoom(1.0);
   }
   function toggleCamera(){
     var layer = document.getElementById('camLayer');
@@ -1090,6 +1091,9 @@
     var lines = [];
     lines.push('Tracking: ' + (handTrackingActive ? 'ON' : 'OFF'));
     lines.push('Pinch threshold: ' + (pinchThreshold ? pinchThreshold.toFixed(3) : 'not calibrated (using default)'));
+    if(handTrackingActive){
+      lines.push('Pinch with both hands and move them apart or together to zoom.');
+    }
     el.innerHTML = lines.join('<br>');
   }
 
@@ -1098,30 +1102,16 @@
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
   }
 
-  function onHandResults(results){
-    var canvas = document.getElementById('handCanvas');
-    var video = document.getElementById('camVideo');
-    if(!canvas || !video.videoWidth) return;
-    if(canvas.width !== video.clientWidth || canvas.height !== video.clientHeight){
-      canvas.width = video.clientWidth;
-      canvas.height = video.clientHeight;
-    }
-    if(!handCanvasCtx) handCanvasCtx = canvas.getContext('2d');
-    var ctx = handCanvasCtx;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  var handPinchStates = [
+    { isPinching:false, point:null },
+    { isPinching:false, point:null }
+  ];
+  var twoHandZoomActive = false;
+  var lastTwoHandDistance = null;
+  var handZoomScale = 1.0;
+  var MIN_ZOOM = 0.4, MAX_ZOOM = 3.0;
 
-    if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
-      lastHandLandmarks = null;
-      setPinchActive(false);
-      return;
-    }
-
-    var landmarks = results.multiHandLandmarks[0];
-    lastHandLandmarks = landmarks;
-
-    var w = canvas.width, h = canvas.height;
-
-    // Outer glow pass for bone lines (draw twice: wide blurred glow, then crisp line)
+  function drawHandSkeleton(ctx, landmarks, w, h){
     ctx.lineCap = 'round';
     HAND_CONNECTIONS.forEach(function(pair){
       var a = landmarks[pair[0]], b = landmarks[pair[1]];
@@ -1141,7 +1131,6 @@
       ctx.lineTo(b.x*w, b.y*h);
       ctx.stroke();
 
-      // Small perpendicular tick mid-bone, like an armor plate seam
       var mx = (a.x+b.x)/2*w, my = (a.y+b.y)/2*h;
       var dx = (b.x-a.x)*w, dy = (b.y-a.y)*h;
       var len = Math.sqrt(dx*dx+dy*dy) || 1;
@@ -1154,7 +1143,6 @@
       ctx.stroke();
     });
 
-    // Joints: hex/diamond plates instead of plain dots
     landmarks.forEach(function(pt, i){
       var isTip = (i===4 || i===8 || i===12 || i===16 || i===20);
       var isKnuckle = (i===0 || i===5 || i===9 || i===13 || i===17);
@@ -1177,26 +1165,97 @@
       ctx.strokeRect(-size/2, -size/2, size, size);
       ctx.restore();
     });
+  }
 
-    // Pinch = distance between thumb tip (4) and index tip (8)
-    var thumbTip = landmarks[4];
-    var indexTip = landmarks[8];
-    var pinchDist = distance3D(thumbTip, indexTip);
-    pinchState.distance = pinchDist;
+  function applyHandZoom(scale){
+    handZoomScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, scale));
+    if(typeof window.__onHandZoomChange === 'function'){
+      window.__onHandZoomChange(handZoomScale);
+    } else {
+      var v = document.getElementById('camVideo');
+      if(v) v.style.transform = 'translate(-50%,-50%) scale(' + handZoomScale + ')';
+    }
+  }
+
+  function onHandResults(results){
+    var canvas = document.getElementById('handCanvas');
+    var video = document.getElementById('camVideo');
+    if(!canvas || !video.videoWidth) return;
+    if(canvas.width !== video.clientWidth || canvas.height !== video.clientHeight){
+      canvas.width = video.clientWidth;
+      canvas.height = video.clientHeight;
+    }
+    if(!handCanvasCtx) handCanvasCtx = canvas.getContext('2d');
+    var ctx = handCanvasCtx;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
+      lastHandLandmarks = null;
+      handPinchStates[0].isPinching = false;
+      handPinchStates[1].isPinching = false;
+      twoHandZoomActive = false;
+      lastTwoHandDistance = null;
+      setPinchActive(false);
+      return;
+    }
+
+    var w = canvas.width, h = canvas.height;
+    var hands = results.multiHandLandmarks;
+    lastHandLandmarks = hands[0];
 
     var threshold = pinchThreshold || 0.055;
-    var isPinching = pinchDist < threshold;
-    setPinchActive(isPinching);
+    var activePinchPoints = [];
 
-    // Draw pinch line
-    ctx.strokeStyle = isPinching ? '#3affc4' : 'rgba(0,229,255,0.35)';
-    ctx.lineWidth = isPinching ? 3 : 1.5;
-    ctx.beginPath();
-    ctx.moveTo(thumbTip.x*w, thumbTip.y*h);
-    ctx.lineTo(indexTip.x*w, indexTip.y*h);
-    ctx.stroke();
+    for(var hIdx = 0; hIdx < Math.min(hands.length, 2); hIdx++){
+      var landmarks = hands[hIdx];
+      drawHandSkeleton(ctx, landmarks, w, h);
 
-    updateHandCursor(landmarks);
+      var thumbTip = landmarks[4];
+      var indexTip = landmarks[8];
+      var pinchDist = distance3D(thumbTip, indexTip);
+      var isPinching = pinchDist < threshold;
+      handPinchStates[hIdx].isPinching = isPinching;
+      handPinchStates[hIdx].point = { x:(thumbTip.x+indexTip.x)/2, y:(thumbTip.y+indexTip.y)/2 };
+
+      ctx.strokeStyle = isPinching ? '#3affc4' : 'rgba(0,229,255,0.35)';
+      ctx.lineWidth = isPinching ? 3 : 1.5;
+      ctx.beginPath();
+      ctx.moveTo(thumbTip.x*w, thumbTip.y*h);
+      ctx.lineTo(indexTip.x*w, indexTip.y*h);
+      ctx.stroke();
+
+      if(isPinching) activePinchPoints.push(handPinchStates[hIdx].point);
+
+      if(hIdx === 0) updateHandCursor(landmarks);
+    }
+
+    // Two-hand pinch-zoom: both hands pinching simultaneously
+    if(hands.length >= 2 && handPinchStates[0].isPinching && handPinchStates[1].isPinching){
+      twoHandZoomActive = true;
+      var p1 = handPinchStates[0].point, p2 = handPinchStates[1].point;
+      var dx = (p2.x - p1.x) * w, dy = (p2.y - p1.y) * h;
+      var dist = Math.sqrt(dx*dx + dy*dy);
+
+      ctx.strokeStyle = 'rgba(58,255,196,0.8)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,6]);
+      ctx.beginPath();
+      ctx.moveTo(p1.x*w, p1.y*h);
+      ctx.lineTo(p2.x*w, p2.y*h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      if(lastTwoHandDistance !== null){
+        var ratio = dist / lastTwoHandDistance;
+        applyHandZoom(handZoomScale * ratio);
+      }
+      lastTwoHandDistance = dist;
+      setPinchActive(false);
+    } else {
+      twoHandZoomActive = false;
+      lastTwoHandDistance = null;
+      setPinchActive(handPinchStates[0].isPinching);
+    }
   }
 
   var wasPinching = false;
@@ -1232,7 +1291,7 @@
           delegate: 'GPU'
         },
         runningMode: 'VIDEO',
-        numHands: 1,
+        numHands: 2,
         minHandDetectionConfidence: 0.6,
         minTrackingConfidence: 0.6
       });
@@ -1661,6 +1720,8 @@
     return spoken.includes(t) || t.includes(spoken.slice(0, Math.min(20, spoken.length)));
   }
 
+  var ignoreRecognitionUntil = 0;
+
   function speak(text){
     var clean = stripEmojis(text);
     lastSpokenText = clean;
@@ -1677,6 +1738,7 @@
       document.getElementById('dotVoice').classList.remove('on');
       document.getElementById('statVoice').textContent = 'IDLE';
       lastSpokenText = '';
+      ignoreRecognitionUntil = Date.now() + 900;
       if(state.awake && typeof resetAwakeTimer === 'function'){
         resetAwakeTimer();
       }
@@ -1717,6 +1779,10 @@
         var transcript = result[0].transcript;
         var lower = transcript.toLowerCase();
         var isFinal = result.isFinal;
+
+        if(Date.now() < ignoreRecognitionUntil){
+          continue;
+        }
 
         if(transcript.trim().length > 3 && speechSynthesis.speaking && !isLikelyEcho(transcript)){
           speechSynthesis.cancel();
