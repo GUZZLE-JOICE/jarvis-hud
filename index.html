@@ -129,7 +129,6 @@
   /* CENTER RETICLE / VOICE VISUALIZER */
   #reticleWrap{top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;display:flex;align-items:center;justify-content:center;transition:transform .5s cubic-bezier(.2,.8,.3,1), opacity .4s ease;}
   #reticleWrap.cam-active{transform:translate(calc(-50% + 520px), -50%) scale(0.7);opacity:0.5;}
-  #reticleWrap.cam-active{transform:translate(-50%,-50%) scale(0.35);opacity:0.25;}
   #reticleSvg{width:100%;height:100%;overflow:visible;}
   .ring{fill:none;stroke:var(--cyan-dim);}
   .ring-active{fill:none;stroke:var(--cyan);}
@@ -1031,25 +1030,63 @@
     var landmarks = results.multiHandLandmarks[0];
     lastHandLandmarks = landmarks;
 
-    // Video is mirrored via CSS? Check: our video has no mirror transform, so draw as-is.
     var w = canvas.width, h = canvas.height;
 
-    ctx.strokeStyle = 'rgba(0,229,255,0.55)';
-    ctx.lineWidth = 2;
+    // Outer glow pass for bone lines (draw twice: wide blurred glow, then crisp line)
+    ctx.lineCap = 'round';
     HAND_CONNECTIONS.forEach(function(pair){
       var a = landmarks[pair[0]], b = landmarks[pair[1]];
       ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0,229,255,0.18)';
+      ctx.lineWidth = 7;
       ctx.moveTo(a.x*w, a.y*h);
       ctx.lineTo(b.x*w, b.y*h);
       ctx.stroke();
     });
-
-    landmarks.forEach(function(pt, i){
+    HAND_CONNECTIONS.forEach(function(pair){
+      var a = landmarks[pair[0]], b = landmarks[pair[1]];
       ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0,229,255,0.85)';
+      ctx.lineWidth = 2.5;
+      ctx.moveTo(a.x*w, a.y*h);
+      ctx.lineTo(b.x*w, b.y*h);
+      ctx.stroke();
+
+      // Small perpendicular tick mid-bone, like an armor plate seam
+      var mx = (a.x+b.x)/2*w, my = (a.y+b.y)/2*h;
+      var dx = (b.x-a.x)*w, dy = (b.y-a.y)*h;
+      var len = Math.sqrt(dx*dx+dy*dy) || 1;
+      var px = -dy/len, py = dx/len;
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(mx - px*4, my - py*4);
+      ctx.lineTo(mx + px*4, my + py*4);
+      ctx.stroke();
+    });
+
+    // Joints: hex/diamond plates instead of plain dots
+    landmarks.forEach(function(pt, i){
       var isTip = (i===4 || i===8 || i===12 || i===16 || i===20);
-      ctx.fillStyle = isTip ? '#00e5ff' : 'rgba(0,229,255,0.7)';
-      ctx.arc(pt.x*w, pt.y*h, isTip ? 5 : 3, 0, Math.PI*2);
+      var isKnuckle = (i===0 || i===5 || i===9 || i===13 || i===17);
+      var x = pt.x*w, y = pt.y*h;
+      var size = isTip ? 7 : (isKnuckle ? 6 : 4.5);
+
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(0,229,255,0.15)';
+      ctx.arc(x, y, size + 4, 0, Math.PI*2);
       ctx.fill();
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.PI/4);
+      ctx.beginPath();
+      ctx.fillStyle = isTip ? '#00e5ff' : (isKnuckle ? 'rgba(0,229,255,0.9)' : 'rgba(0,229,255,0.75)');
+      ctx.fillRect(-size/2, -size/2, size, size);
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 0.75;
+      ctx.strokeRect(-size/2, -size/2, size, size);
+      ctx.restore();
     });
 
     // Pinch = distance between thumb tip (4) and index tip (8)
@@ -1160,12 +1197,28 @@
       document.getElementById('handStatus').textContent = 'Turn the camera on first.';
       return;
     }
+    document.getElementById('handStatus').textContent = 'Starting hand tracking…';
     if(!handTrackingActive) startHandTracking();
+
+    var waitTries = 0;
+    var waitForHand = setInterval(function(){
+      waitTries++;
+      if(lastHandLandmarks){
+        clearInterval(waitForHand);
+        beginCalibrationCountdown();
+      } else if(waitTries > 40){
+        clearInterval(waitForHand);
+        document.getElementById('handStatus').textContent = 'No hand detected yet. Hold your hand clearly in the camera frame, then click Calibrate again.';
+      }
+    }, 150);
+  });
+
+  function beginCalibrationCountdown(){
     isCalibrating = true;
     calibrationSamples = [];
-    document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, 3 times, then release each time. Hold each pinch for a moment.';
+    document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, then release. Repeat a few times. (0 samples)';
     setTimeout(finishCalibration, 6000);
-  });
+  }
 
   var calibrationPinchCount = 0;
   function finishCalibration(){
@@ -1195,6 +1248,7 @@
       var d = distance3D(thumbTip, indexTip);
       if(d < 0.12){
         calibrationSamples.push(d);
+        document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, then release. Repeat a few times. (' + calibrationSamples.length + ' samples)';
       }
     }
   }
