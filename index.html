@@ -6,9 +6,12 @@
 <title>J.A.R.V.I.S.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script type="module">
+  import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+  window.__mpHandLandmarker = HandLandmarker;
+  window.__mpFilesetResolver = FilesetResolver;
+  window.__mpReady = true;
+</script>
 <style>
   :root{
     --void:#050708;
@@ -1126,24 +1129,35 @@
     wasPinching = isPinching;
   }
 
-  function initHandTracking(){
-    if(handsInstance) return;
-    if(typeof Hands === 'undefined'){
-      document.getElementById('handStatus').textContent = 'Hand tracking library failed to load. Check your internet connection and reload.';
+  var handLandmarkerReady = false;
+  function initHandTracking(cb){
+    if(handsInstance){ cb && cb(); return; }
+    if(!window.__mpReady || !window.__mpHandLandmarker || !window.__mpFilesetResolver){
+      document.getElementById('handStatus').textContent = 'Hand tracking library is still loading. Wait a moment and try again.';
       return;
     }
-    handsInstance = new Hands({
-      locateFile: function(file){
-        return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
-      }
+    document.getElementById('handStatus').textContent = 'Loading hand tracking model…';
+    window.__mpFilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+    ).then(function(vision){
+      return window.__mpHandLandmarker.createFromOptions(vision, {
+        baseOptions:{
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+          delegate: 'GPU'
+        },
+        runningMode: 'VIDEO',
+        numHands: 1,
+        minHandDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+      });
+    }).then(function(landmarker){
+      handsInstance = landmarker;
+      handLandmarkerReady = true;
+      document.getElementById('handStatus').textContent = 'Hand tracking model loaded.';
+      cb && cb();
+    }).catch(function(err){
+      document.getElementById('handStatus').textContent = 'Failed to load hand tracking model: ' + (err.message || err);
     });
-    handsInstance.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.6,
-      minTrackingConfidence: 0.6
-    });
-    handsInstance.onResults(onHandResults);
   }
 
   var handFrameLoopActive = false;
@@ -1153,8 +1167,13 @@
       return;
     }
     var video = document.getElementById('camVideo');
-    if(handsInstance && video.readyState >= 2){
-      handsInstance.send({image: video}).catch(function(){});
+    if(handsInstance && handLandmarkerReady && video.readyState >= 2){
+      try{
+        var result = handsInstance.detectForVideo(video, performance.now());
+        onHandResults({
+          multiHandLandmarks: result.landmarks && result.landmarks.length > 0 ? result.landmarks : null
+        });
+      }catch(e){}
     }
     requestAnimationFrame(handFrameLoop);
   }
@@ -1164,14 +1183,15 @@
       document.getElementById('handStatus').textContent = 'Turn the camera on first.';
       return;
     }
-    initHandTracking();
-    handTrackingActive = true;
-    if(!handFrameLoopActive){
-      handFrameLoopActive = true;
-      handFrameLoop();
-    }
-    updateHandStatus();
-    document.getElementById('toggleHandTracking').textContent = 'Disable tracking';
+    initHandTracking(function(){
+      handTrackingActive = true;
+      if(!handFrameLoopActive){
+        handFrameLoopActive = true;
+        handFrameLoop();
+      }
+      updateHandStatus();
+      document.getElementById('toggleHandTracking').textContent = 'Disable tracking';
+    });
   }
 
   function stopHandTracking(){
@@ -1747,8 +1767,6 @@
   document.getElementById('initBtn').addEventListener('click', function(){
     document.getElementById('startGate').style.display = 'none';
     runBoot(function(){
-      initCamera();
-      initMic();
       initGeo();
       initOrientation();
       initBattery();
