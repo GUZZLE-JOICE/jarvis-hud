@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="module">
-  import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+  import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm";
   window.__mpHandLandmarker = HandLandmarker;
   window.__mpFilesetResolver = FilesetResolver;
   window.__mpReady = true;
@@ -150,6 +150,11 @@
   #micBtn svg{stroke:var(--cyan);}
 
   #camBtn{position:absolute;z-index:20;bottom:18px;right:82px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:transform .15s ease, background .2s, box-shadow .2s;}
+  #screenBtn{position:absolute;z-index:20;bottom:18px;right:144px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:transform .15s ease, background .2s, box-shadow .2s;}
+  #screenBtn:active{transform:scale(0.88);}
+  #screenBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
+  #screenBtn svg{width:22px;height:22px;stroke:var(--cyan);}
+  #screenBtn.live svg{stroke:#00151a;}
   #camBtn:active{transform:scale(0.88);}
   #camBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
   #camBtn svg{width:22px;height:22px;stroke:var(--cyan);}
@@ -375,6 +380,13 @@
   <div id="camBtn" title="Toggle camera">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
   </div>
+
+  <div id="screenBtn" title="Share screen">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+  </div>
+
+  <video id="screenVideo" autoplay muted playsinline style="display:none;"></video>
+  <canvas id="screenCaptureCanvas" style="display:none;"></canvas>
 
   <canvas id="captureCanvas" style="display:none;"></canvas>
 
@@ -687,6 +699,80 @@
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
     return dataUrl.split(',')[1];
+  }
+
+  // ---------- Screen sharing ----------
+  var screenStream = null;
+  function captureScreenFrameBase64(){
+    var video = document.getElementById('screenVideo');
+    if(!screenStream || !video.videoWidth){ return null; }
+    var canvas = document.getElementById('screenCaptureCanvas');
+    var maxW = 1280;
+    var scale = Math.min(1, maxW / video.videoWidth);
+    canvas.width = video.videoWidth * scale;
+    canvas.height = video.videoHeight * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    return dataUrl.split(',')[1];
+  }
+
+  function startScreenShare(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+      speak('Screen sharing is not supported in this browser.');
+      return;
+    }
+    navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'}, audio:false}).then(function(stream){
+      screenStream = stream;
+      var v = document.getElementById('screenVideo');
+      v.srcObject = stream;
+      document.getElementById('screenBtn').classList.add('live');
+      speak('Screen sharing active. Ask me what is on your screen anytime.');
+      stream.getVideoTracks()[0].addEventListener('ended', function(){
+        stopScreenShare();
+      });
+    }).catch(function(err){
+      setCaption('Screen share was not started.');
+    });
+  }
+  function stopScreenShare(){
+    if(screenStream){
+      screenStream.getTracks().forEach(function(t){ t.stop(); });
+      screenStream = null;
+    }
+    document.getElementById('screenBtn').classList.remove('live');
+  }
+  document.getElementById('screenBtn').addEventListener('click', function(){
+    if(screenStream){ stopScreenShare(); } else { startScreenShare(); }
+  });
+
+  var screenVisionTriggers = ['on my screen','on the screen','what am i looking at on screen','read my screen','screen share','check my screen','look at my screen'];
+  function isScreenVisionCommand(cmd){
+    for(var i=0;i<screenVisionTriggers.length;i++){
+      if(cmd.includes(screenVisionTriggers[i])) return true;
+    }
+    return false;
+  }
+  function handleScreenVisionCommand(cmd){
+    if(!screenStream){
+      speak('Screen sharing is not active. Tap the screen share icon first.');
+      return;
+    }
+    setCaption('Analyzing your screen…');
+    var frame = captureScreenFrameBase64();
+    if(!frame){
+      speak('I could not capture your screen. Try again in a moment.');
+      return;
+    }
+    callAIVision(cmd, frame, function(text, err){
+      if(err === 'no_key'){
+        speak('I need an API key or local model to analyze your screen. Check settings.');
+      } else if(err){
+        speak('Screen analysis failed. ' + (err.length < 60 ? err : 'Check your connection.'));
+      } else {
+        speak(text);
+      }
+    });
   }
 
   function soundsUncertain(text){
@@ -1710,6 +1796,8 @@
       speak('Memory log purged.');
     } else if(cmd.trim().length === 0){
       speak('Go ahead.');
+    } else if(isScreenVisionCommand(cmd)){
+      handleScreenVisionCommand(cmd);
     } else if(isVisionCommand(cmd)){
       handleVisionCommand(cmd);
     } else if(currentKey()){
