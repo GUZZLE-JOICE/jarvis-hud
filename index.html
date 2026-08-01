@@ -1,1998 +1,478 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>J.A.R.V.I.S.</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script type="module">
-  import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm";
-  window.__mpHandLandmarker = HandLandmarker;
-  window.__mpFilesetResolver = FilesetResolver;
-  window.__mpReady = true;
-</script>
-<style>
-  :root{
-    --void:#050708;
-    --panel:#070d0f;
-    --cyan:#00e5ff;
-    --cyan-dim:#0a2a30;
-    --cyan-mid:#0e4a56;
-    --cyan-glow:rgba(0,229,255,0.55);
-    --amber:#ffb020;
-    --red:#ff3b30;
-    --mint:#3affc4;
-    --text-dim:#5fa8b0;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
-  #app{position:relative;width:100vw;height:100vh;background:var(--void);}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JARVIS</title>
 
-  #camLayer{position:absolute;top:50%;left:50%;width:560px;height:420px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.85);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
-  #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
-  #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
-  #camLayer.pulse::before{animation:camPulse .6s ease-out;}
-  @keyframes camPulse{
-    0%{opacity:1;inset:-2px;}
-    100%{opacity:0;inset:-14px;}
-  }
-  #camVideo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scaleX(-1);min-width:100%;min-height:100%;width:auto;height:auto;object-fit:cover;filter:contrast(1.05) brightness(0.95);}
-  #camTint{position:absolute;inset:0;background:var(--cyan);mix-blend-mode:overlay;opacity:0.12;pointer-events:none;}
-  #camScrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);pointer-events:none;}
-  #camLabel{position:absolute;bottom:3px;left:6px;font-family:'JetBrains Mono';font-size:9px;color:var(--cyan);letter-spacing:1px;text-shadow:0 0 4px #000;}
-  #handCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;transform:scaleX(-1);}
-  #pinchIndicator{position:absolute;top:6px;right:6px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:var(--text-dim);text-shadow:0 0 4px #000;z-index:4;padding:2px 6px;border:1px solid var(--cyan-dim);background:rgba(0,0,0,0.4);display:none;}
-  #pinchIndicator.active{display:block;color:var(--mint);border-color:var(--mint);}
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
-  #hexbg{position:absolute;inset:0;opacity:0.06;pointer-events:none;
-    background-image:
-      linear-gradient(30deg, var(--cyan) 1px, transparent 1px),
-      linear-gradient(150deg, var(--cyan) 1px, transparent 1px),
-      linear-gradient(90deg, var(--cyan) 1px, transparent 1px);
-    background-size: 60px 104px;
-  }
-
-  #scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg, transparent, var(--cyan-glow), transparent);opacity:0.5;pointer-events:none;z-index:5;animation:scan 6s linear infinite;}
-  @keyframes scan{0%{top:-2px;}100%{top:100%;}}
-
-  .hud-label{font-family:'Orbitron',sans-serif;font-weight:500;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
-  .hud-value{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--cyan);font-variant-numeric:tabular-nums;}
-  .hud-panel{position:absolute;z-index:10;pointer-events:none;}
-  .panel-inner{border:1px solid var(--cyan-dim);background:linear-gradient(135deg, rgba(0,229,255,0.05), rgba(0,229,255,0.01));backdrop-filter:blur(2px);padding:10px 14px;position:relative;}
-  .panel-inner::before{content:'';position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);}
-  .panel-inner::after{content:'';position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan);}
-
-  #bootOverlay{position:absolute;inset:0;background:var(--void);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity 1s ease;}
-  #coreWrap{width:220px;height:220px;position:relative;}
-  #coreSvg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 0px transparent);transition:filter 0.6s ease;}
-  #coreSvg circle, #coreSvg line{transition:stroke 0.5s ease, stroke-width 0.4s ease;}
-  #coreSpokes line{stroke:var(--cyan-dim);stroke-width:1;transition:stroke 0.5s ease;}
-  @keyframes coreSpin{to{transform:rotate(360deg);}}
-  @keyframes coreSpinRev{to{transform:rotate(-360deg);}}
-  @keyframes centerPulse{
-    0%,100%{r:8;opacity:1;}
-    50%{r:11;opacity:0.7;}
-  }
-  #coreWrap.stage-1 #coreOuterRing{stroke:var(--cyan-mid);animation:coreSpin 8s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-2 #coreOuterRing{stroke:var(--cyan-mid);animation:coreSpin 6s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-2 #coreRing1{stroke:var(--cyan-mid);animation:coreSpinRev 5s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-3 #coreOuterRing{stroke:var(--cyan);animation:coreSpin 4s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-3 #coreRing1{stroke:var(--cyan);animation:coreSpinRev 3.2s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-3 #coreRing2{stroke:var(--cyan-mid);animation:coreSpin 4.5s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-3 #coreSpokes line{stroke:var(--cyan-mid);}
-  #coreWrap.stage-4 #coreOuterRing{stroke:var(--cyan);animation:coreSpin 2.4s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-4 #coreRing1{stroke:var(--cyan);animation:coreSpinRev 2s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-4 #coreRing2{stroke:var(--cyan);animation:coreSpin 2.8s linear infinite;transform-origin:150px 150px;}
-  #coreWrap.stage-4 #coreInner{stroke:var(--cyan);}
-  #coreWrap.stage-4 #coreSpokes line{stroke:var(--cyan);}
-  #coreWrap.stage-4 #coreSvg{filter:drop-shadow(0 0 12px var(--cyan-glow));}
-  #coreWrap.stage-5 #coreCenter{fill:var(--cyan);animation:centerPulse 1.1s ease-in-out infinite;}
-  #coreWrap.stage-5 #coreSvg{filter:drop-shadow(0 0 26px var(--cyan-glow));}
-  #coreWrap.stage-5 #coreInner{stroke:var(--cyan);}
-  #bootText{font-family:'Orbitron',sans-serif;color:var(--cyan);font-size:13px;letter-spacing:3px;margin-top:36px;text-transform:uppercase;}
-  #bootSub{font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:11px;margin-top:10px;letter-spacing:1px;min-height:16px;}
-  #bootLogo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;color:var(--cyan);letter-spacing:6px;}
-
-  #startGate{position:absolute;inset:0;background:var(--void);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;text-align:center;padding:24px;}
-  #startGate h1{font-family:'Orbitron';color:var(--cyan);letter-spacing:6px;font-size:20px;margin:0;}
-  #startGate p{color:var(--text-dim);font-family:'Rajdhani';font-size:14px;max-width:360px;margin:0;line-height:1.5;}
-  .startBtn{font-family:'Orbitron';background:transparent;border:1px solid var(--cyan);color:var(--cyan);padding:14px 32px;letter-spacing:3px;font-size:12px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
-  .startBtn:hover{background:var(--cyan);color:#00151a;box-shadow:0 0 24px var(--cyan-glow);}
-
-  /* TOP NAV BAR */
-  #topBar{top:0;left:76px;right:170px;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;}
-  #compassWrap{display:flex;flex-direction:column;align-items:center;}
-  #compassTicks{width:280px;height:22px;overflow:hidden;position:relative;}
-  #compassStrip{display:flex;position:absolute;left:50%;transform:translateX(-50%);transition:transform .3s ease;}
-  .tick{width:35px;text-align:center;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);flex-shrink:0;}
-  .tick.card{color:var(--cyan);font-weight:700;}
-  #headingVal{font-family:'Orbitron';color:var(--cyan);font-size:14px;letter-spacing:2px;margin-top:2px;}
-  #clockBlock{text-align:right;margin-right:8px;}
-  #clockTime{font-family:'JetBrains Mono';color:var(--cyan);font-size:18px;letter-spacing:1px;white-space:nowrap;}
-  #clockDate{font-family:'Rajdhani';color:var(--text-dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
-
-  /* LEFT DIAGNOSTICS */
-  #leftPanel{top:110px;left:16px;width:190px;display:flex;flex-direction:column;gap:10px;}
-  .metric-row{display:flex;flex-direction:column;gap:3px;}
-  .metric-top{display:flex;justify-content:space-between;align-items:baseline;}
-  .bar-track{height:5px;background:rgba(0,229,255,0.08);position:relative;overflow:hidden;}
-  .bar-fill{height:100%;background:var(--cyan);box-shadow:0 0 8px var(--cyan-glow);transition:width .6s ease;}
-  .bar-fill.warn{background:var(--amber);box-shadow:0 0 8px rgba(255,176,32,0.5);}
-  .bar-fill.crit{background:var(--red);box-shadow:0 0 8px rgba(255,59,48,0.5);}
-
-  /* RIGHT EQUIPMENT */
-  #rightPanel{top:110px;right:16px;width:190px;display:flex;flex-direction:column;gap:8px;}
-  .tile{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);}
-  .tile-name{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
-  .tile-stat{font-family:'JetBrains Mono';font-size:12px;color:var(--cyan);}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint);display:inline-block;margin-right:6px;}
-  .dot.off{background:#3a4a4d;box-shadow:none;}
-
-  /* CENTER RETICLE / VOICE VISUALIZER */
-  #reticleWrap{top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;display:flex;align-items:center;justify-content:center;transition:transform .5s cubic-bezier(.2,.8,.3,1), opacity .4s ease;}
-  #reticleWrap.cam-active{transform:translate(calc(-50% + 520px), -50%) scale(0.7);opacity:0.5;}
-  #reticleSvg{width:100%;height:100%;overflow:visible;}
-  .ring{fill:none;stroke:var(--cyan-dim);}
-  .ring-active{fill:none;stroke:var(--cyan);}
-  #wakeLabel{position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);font-family:'Orbitron';font-size:10px;letter-spacing:3px;color:var(--text-dim);white-space:nowrap;text-transform:uppercase;transition:opacity 1s ease;}
-
-  /* BOTTOM TELEMETRY / CAPTION */
-  #bottomBar{bottom:0;left:0;right:0;padding:12px 20px 16px;display:flex;flex-direction:column;gap:8px;align-items:center;}
-  #captionBox{max-width:640px;width:100%;min-height:20px;text-align:center;font-family:'Rajdhani';font-size:15px;color:var(--cyan);letter-spacing:0.5px;transition:opacity .3s;text-shadow:0 0 8px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9);}
-  #tickerRow{display:flex;gap:26px;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);flex-wrap:wrap;justify-content:center;}
-  #tickerRow span b{color:var(--cyan);font-weight:500;}
-
-  #micBtn{position:absolute;z-index:20;bottom:18px;right:20px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:all .2s;}
-  #micBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
-  #micBtn svg{width:22px;height:22px;}
-  #micBtn.live svg{stroke:#00151a;}
-  #micBtn svg{stroke:var(--cyan);}
-
-  #camBtn{position:absolute;z-index:20;bottom:18px;right:82px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:transform .15s ease, background .2s, box-shadow .2s;}
-  #screenBtn{position:absolute;z-index:20;bottom:18px;right:144px;width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(0,229,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;transition:transform .15s ease, background .2s, box-shadow .2s;}
-  #screenBtn:active{transform:scale(0.88);}
-  #screenBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
-  #screenBtn svg{width:22px;height:22px;stroke:var(--cyan);}
-  #screenBtn.live svg{stroke:#00151a;}
-  #camBtn:active{transform:scale(0.88);}
-  #camBtn.live{background:var(--cyan);box-shadow:0 0 20px var(--cyan-glow);}
-  #camBtn svg{width:22px;height:22px;stroke:var(--cyan);}
-  #camBtn.live svg{stroke:#00151a;}
-
-  #settingsBtn{position:absolute;z-index:30;top:16px;left:16px;width:34px;height:34px;pointer-events:auto;border:1px solid var(--cyan-dim);background:var(--void);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--cyan-dim);}
-  #settingsBtn:hover{border-color:var(--cyan);color:var(--cyan);}
-
-  #memPanel{position:absolute;z-index:50;top:16px;left:60px;width:300px;background:var(--void);border:1px solid var(--cyan);box-shadow:0 0 30px rgba(0,229,255,0.15);padding:16px;display:none;pointer-events:auto;max-height:80vh;overflow-y:auto;}
-  #memPanel h3{font-family:'Orbitron';color:var(--cyan);font-size:11px;letter-spacing:2px;margin:0 0 10px;text-transform:uppercase;}
-  #memList{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
-  .memItem{font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-dim);border-left:2px solid var(--cyan-dim);padding:4px 8px;line-height:1.4;}
-  #memEmpty{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);font-style:italic;}
-  .smallBtn{font-family:'Orbitron';font-size:10px;letter-spacing:1px;background:transparent;border:1px solid var(--cyan-dim);color:var(--text-dim);padding:6px 10px;cursor:pointer;text-transform:uppercase;}
-  .smallBtn:hover{border-color:var(--cyan);color:var(--cyan);}
-  .providerTab.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,0.1);}
-
-  #permBadges{position:absolute;z-index:20;top:16px;right:16px;display:flex;gap:4px;pointer-events:none;width:140px;justify-content:flex-end;flex-wrap:wrap;}
-  .permBadge{font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim);border:1px solid var(--cyan-dim);padding:3px 7px;letter-spacing:1px;}
-  .permBadge.on{color:var(--mint);border-color:var(--mint);}
-
-  ::-webkit-scrollbar{width:4px;}
-  ::-webkit-scrollbar-thumb{background:var(--cyan-dim);}
-
-  @media (max-width:640px){
-    #leftPanel, #rightPanel{width:150px;font-size:11px;}
-    #compassTicks{width:180px;}
-    #reticleWrap{width:200px;height:200px;}
-    .hud-label{font-size:9px;}
-    #camLayer{width:280px;height:210px;}
-  }
-  @media (max-width:900px) and (min-width:641px){
-    #camLayer{width:380px;height:285px;}
-  }
-</style>
+  <style>
+    :root {
+      --cyan:#49e9ff; --blue:#087cff; --dark:#020812;
+      --glass:rgba(5,25,44,.72); --border:rgba(73,233,255,.35);
+    }
+    * { box-sizing:border-box }
+    body {
+      margin:0; min-height:100vh; overflow:hidden; color:#dffcff;
+      font:14px Inter,system-ui,sans-serif;
+      background:
+        radial-gradient(circle at 50% 45%,#063b61 0,#041527 28%,#01040a 72%);
+    }
+    body::before {
+      content:""; position:fixed; inset:0; pointer-events:none; opacity:.16;
+      background-image:linear-gradient(var(--border) 1px,transparent 1px),
+      linear-gradient(90deg,var(--border) 1px,transparent 1px);
+      background-size:45px 45px;
+    }
+    button,input,select { font:inherit }
+    button {
+      color:var(--cyan); background:#06213a; border:1px solid var(--border);
+      border-radius:8px; padding:9px 13px; cursor:pointer;
+    }
+    button:hover { box-shadow:0 0 15px #1adfff88; background:#0b3151 }
+    header {
+      height:64px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 20px; border-bottom:1px solid var(--border); background:#020916cc;
+    }
+    h1 { margin:0; letter-spacing:.35em; font-size:20px; text-shadow:0 0 15px var(--cyan) }
+    .online::before { content:"●"; color:#45ff9c; margin-right:7px }
+    main {
+      height:calc(100vh - 64px); display:grid;
+      grid-template-columns:280px minmax(400px,1fr) 340px; gap:12px; padding:12px;
+    }
+    .panel {
+      background:var(--glass); border:1px solid var(--border); border-radius:14px;
+      backdrop-filter:blur(14px); box-shadow:inset 0 0 25px #008cff10;
+      padding:14px; overflow:auto;
+    }
+    .title { color:var(--cyan); letter-spacing:.18em; font-size:12px; margin:0 0 12px }
+    .telemetry { display:grid; grid-template-columns:1fr 1fr; gap:8px }
+    .metric {
+      min-height:66px; background:#031323; border-left:2px solid var(--cyan);
+      border-radius:6px; padding:9px;
+    }
+    .metric b { display:block; margin-top:7px; font-size:16px }
+    .controls { display:grid; gap:8px; margin-top:13px }
+    .controls button { width:100%; text-align:left }
+    .stage { position:relative; padding:0; overflow:hidden }
+    video,.stage canvas {
+      position:absolute; width:100%; height:100%; object-fit:contain;
+      background:#01050b;
+    }
+    #camera { transform:scaleX(-1) }
+    #handCanvas { transform:scaleX(-1); pointer-events:none }
+    .hud {
+      position:absolute; inset:14px; pointer-events:none;
+      border:1px solid #49e9ff55; clip-path:polygon(0 0,28% 0,30% 2%,70% 2%,72% 0,100% 0,100% 100%,0 100%);
+    }
+    .crosshair {
+      position:absolute; left:50%; top:50%; width:90px; height:90px;
+      border:1px solid var(--cyan); border-radius:50%; transform:translate(-50%,-50%);
+      box-shadow:0 0 25px #28dfff55; pointer-events:none;
+    }
+    .crosshair::after {
+      content:""; position:absolute; inset:13px; border:1px dashed var(--cyan);
+      border-radius:50%; animation:spin 8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg) } }
+    #status {
+      position:absolute; bottom:13px; left:13px; right:13px;
+      padding:9px; background:#00101dcc; border-left:3px solid var(--cyan);
+    }
+    .chat { display:flex; flex-direction:column; min-height:0 }
+    #messages { flex:1; overflow:auto }
+    .message {
+      margin:8px 0; padding:10px; border-radius:9px; white-space:pre-wrap;
+      background:#071a2b;
+    }
+    .user { border-right:2px solid #9c72ff; text-align:right }
+    .jarvis { border-left:2px solid var(--cyan) }
+    .composer { display:grid; grid-template-columns:1fr auto auto; gap:6px; margin-top:8px }
+    input,select {
+      min-width:0; color:white; padding:10px; border-radius:8px;
+      border:1px solid var(--border); background:#020c17;
+    }
+    .config { display:grid; gap:7px; margin-bottom:9px }
+    small { color:#83a9be }
+    #cursor {
+      position:fixed; z-index:50; width:24px; height:24px; border:2px solid var(--cyan);
+      border-radius:50%; pointer-events:none; display:none; transform:translate(-50%,-50%);
+      box-shadow:0 0 18px var(--cyan);
+    }
+    @media(max-width:1000px) {
+      body { overflow:auto } main { height:auto; grid-template-columns:1fr }
+      .panel,.stage { min-height:520px }
+    }
+  </style>
 </head>
+
 <body>
-<div id="app">
+<header>
+  <h1>J.A.R.V.I.S.</h1>
+  <div class="online">LOCAL SYSTEM ONLINE</div>
+</header>
 
-  <div id="camLayer">
-    <video id="camVideo" autoplay muted playsinline></video>
+<main>
+  <aside class="panel">
+    <p class="title">SYSTEM TELEMETRY</p>
+    <div class="telemetry">
+      <div class="metric">Resolution<b id="resolution">—</b></div>
+      <div class="metric">Connection<b id="connection">—</b></div>
+      <div class="metric">Ping<b id="ping">—</b></div>
+      <div class="metric">Memory hint<b id="memory">—</b></div>
+      <div class="metric">CPU cores<b id="cores">—</b></div>
+      <div class="metric">FPS<b id="fps">—</b></div>
+      <div class="metric">GPU usage<b>Restricted</b></div>
+      <div class="metric">Temperatures<b>Restricted</b></div>
+    </div>
+
+    <div class="controls">
+      <button onclick="startScreen()">▣ Share screen</button>
+      <button onclick="startHands()">◉ Camera + hand tracking</button>
+      <button onclick="calibrate()">⌖ Calibrate gesture</button>
+      <button onclick="stopMedia()">□ Stop media</button>
+      <button onclick="runSpeedTest()">⇅ Estimate connection speed</button>
+    </div>
+
+    <p class="title" style="margin-top:18px">GESTURES</p>
+    <small>
+      One pinch: click<br>
+      Double pinch: drag/release<br>
+      Pinch with both hands: page zoom<br>
+      Move index finger: pointer
+    </small>
+  </aside>
+
+  <section class="panel stage">
+    <video id="screen" autoplay playsinline></video>
+    <video id="camera" autoplay playsinline muted hidden></video>
     <canvas id="handCanvas"></canvas>
-    <div id="camTint"></div>
-    <div id="camScrim"></div>
-    <div id="camLabel">OPTIC FEED</div>
-    <div id="pinchIndicator"></div>
-  </div>
-  <div id="hexbg"></div>
-  <div id="scanline"></div>
+    <div class="hud"></div>
+    <div class="crosshair"></div>
+    <div id="status">Awaiting command, sir.</div>
+  </section>
 
-  <div id="startGate">
-    <div id="bootLogo">J.A.R.V.I.S.</div>
-    <h1>Interface Standby</h1>
-    <p>Grant access to camera, microphone, motion and location sensors for the full HUD experience. Anything denied just falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning and vision commands like "Jarvis, what am I looking at."</p>
-    <p id="secWarning" style="display:none;color:var(--amber);font-family:'JetBrains Mono';font-size:11px;max-width:380px;"></p>
-    <button class="startBtn" id="initBtn">Initialize System</button>
-  </div>
+  <aside class="panel chat">
+    <p class="title">OLLAMA INTELLIGENCE</p>
 
-  <div id="bootOverlay" style="display:none;">
-    <div id="coreWrap">
-      <svg id="coreSvg" viewBox="0 0 300 300">
-        <circle id="coreOuterRing" cx="150" cy="150" r="140" fill="none" stroke="var(--cyan-dim)" stroke-width="1" stroke-dasharray="3 7"/>
-        <circle id="coreRing1" cx="150" cy="150" r="115" fill="none" stroke="var(--cyan-dim)" stroke-width="1.5"/>
-        <circle id="coreRing2" cx="150" cy="150" r="90" fill="none" stroke="var(--cyan-dim)" stroke-width="2"/>
-        <g id="coreSpokes"></g>
-        <circle id="coreInner" cx="150" cy="150" r="55" fill="none" stroke="var(--cyan-dim)" stroke-width="2"/>
-        <circle id="coreCenter" cx="150" cy="150" r="8" fill="var(--cyan-dim)"/>
-      </svg>
+    <div class="config">
+      <input id="endpoint" value="http://localhost:11434">
+      <select id="model">
+        <option>llava:7b</option>
+        <option>llava</option>
+        <option>llama3.2</option>
+        <option>qwen2.5</option>
+      </select>
     </div>
-    <div id="bootText">J.A.R.V.I.S.</div>
-    <div id="bootSub">— standby —</div>
-  </div>
 
-  <!-- TOP -->
-  <div class="hud-panel" id="topBar">
-    <div id="compassWrap">
-      <div id="compassTicks"><div id="compassStrip"></div></div>
-      <div id="headingVal">--°</div>
+    <div id="messages">
+      <div class="message jarvis">JARVIS initialized. Screen, camera and automation require your permission.</div>
     </div>
-    <div style="text-align:center;">
-      <div class="hud-label" style="letter-spacing:4px;">Stark-Class Assistant</div>
+
+    <div class="composer">
+      <input id="prompt" placeholder="Ask JARVIS…" onkeydown="if(event.key==='Enter') send()">
+      <button onclick="listen()">🎙</button>
+      <button onclick="send()">Send</button>
     </div>
-    <div id="clockBlock">
-      <div id="clockTime">--:--:--</div>
-      <div id="clockDate">-- --- ----</div>
-    </div>
-  </div>
+  </aside>
+</main>
 
-  <div id="permBadges">
-    <div class="permBadge" id="badgeCam">CAM</div>
-    <div class="permBadge" id="badgeMic">MIC</div>
-    <div class="permBadge" id="badgeGeo">GPS</div>
-  </div>
-
-  <div id="settingsBtn" title="Memory log">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.63.77 1.05 1.42 1.05H21a2 2 0 010 4h-.09c-.65 0-1.22.42-1.51 1z"/></svg>
-  </div>
-
-  <div id="memPanel">
-    <h3>Memory Log</h3>
-    <div id="memList"></div>
-    <button class="smallBtn" id="clearMemBtn">Purge memory</button>
-    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">Voice</h3>
-      <select id="voiceSelect" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;box-sizing:border-box;"></select>
-    </div>
-    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">Hand tracking</h3>
-      <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Turn on the camera, hold your hand up in frame, then calibrate your pinch gesture so Jarvis can tell when you're clicking versus just moving.</p>
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <button class="smallBtn" id="toggleHandTracking">Enable tracking</button>
-        <button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button>
-      </div>
-      <div id="handStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);line-height:1.5;"></div>
-    </div>
-    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">AI provider</h3>
-      <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Stored only in this browser. Enables real reasoning and vision commands like "Jarvis, what am I looking at."</p>
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button>
-        <button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button>
-        <button class="smallBtn providerTab" data-provider="local" id="tabLocal">Local</button>
-      </div>
-      <div id="claudeKeySection">
-        <input type="password" id="apiKeyInputClaude" placeholder="sk-ant-..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
-      </div>
-      <div id="geminiKeySection" style="display:none;">
-        <input type="password" id="apiKeyInputGemini" placeholder="AIza..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
-      </div>
-      <div id="localKeySection" style="display:none;">
-        <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Runs on your own GPU via Ollama. Make sure "ollama serve" is running in the background.</p>
-        <input type="text" id="localModelInput" placeholder="llava:7b" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="smallBtn" id="saveKeyBtn">Save</button>
-        <button class="smallBtn" id="clearKeyBtn">Remove key</button>
-      </div>
-      <div id="keyStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);margin-top:8px;"></div>
-    </div>
-  </div>
-
-  <!-- LEFT -->
-  <div class="hud-panel" id="leftPanel">
-    <div class="panel-inner" style="display:flex;flex-direction:column;gap:11px;">
-      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;font-size:11px;">Diagnostics</div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">CPU load</span><span class="hud-value" id="cpuVal">--%</span></div>
-        <div class="bar-track"><div class="bar-fill" id="cpuBar" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">Memory</span><span class="hud-value" id="memVal">-- GB</span></div>
-        <div class="bar-track"><div class="bar-fill" id="memBar" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">Power cell</span><span class="hud-value" id="battVal">--%</span></div>
-        <div class="bar-track"><div class="bar-fill" id="battBar" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">Uplink</span><span class="hud-value" id="netVal">--</span></div>
-        <div class="bar-track"><div class="bar-fill" id="netBar" style="width:0%"></div></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
-        <div class="metric-top"><span class="hud-label">Cores</span><span class="hud-value" id="coreVal">--</span></div>
-        <div class="metric-top"><span class="hud-label">Latency</span><span class="hud-value" id="pingVal">-- ms</span></div>
-        <div class="metric-top"><span class="hud-label">Viewport</span><span class="hud-value" id="viewportVal">--</span></div>
-        <div class="metric-top"><span class="hud-label">Display</span><span class="hud-value" id="displayVal">--</span></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
-        <div class="metric-top"><span class="hud-label">Platform</span><span class="hud-value" id="platformVal" style="font-size:10px;">--</span></div>
-        <div class="metric-top"><span class="hud-label">Browser</span><span class="hud-value" id="browserVal" style="font-size:10px;">--</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="hud-panel" id="rightPanel">
-    <div class="panel-inner" style="display:flex;flex-direction:column;gap:7px;">
-      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;margin-bottom:2px;font-size:11px;">Systems</div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotCam"></span>Optic feed</span><span class="tile-stat" id="statCam">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotMic"></span>Audio link</span><span class="tile-stat" id="statMic">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotGeo"></span>Geo-lock</span><span class="tile-stat" id="statGeo">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotOrient"></span>Gyro array</span><span class="tile-stat" id="statOrient">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot on"></span>Neural core</span><span class="tile-stat">ONLINE</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotVoice"></span>Voice synth</span><span class="tile-stat" id="statVoice">--</span></div>
-      <div class="tile" style="border-top:1px solid var(--cyan-dim);margin-top:2px;padding-top:9px;"><span class="tile-name">AI provider</span><span class="tile-stat" id="statProvider">CLAUDE</span></div>
-    </div>
-  </div>
-
-  <!-- CENTER -->
-  <div class="hud-panel" id="reticleWrap">
-    <svg id="reticleSvg" viewBox="0 0 260 260">
-      <circle class="ring" cx="130" cy="130" r="118" stroke-width="0.6" stroke-dasharray="2 6"/>
-      <circle class="ring" cx="130" cy="130" r="95" stroke-width="1"/>
-      <circle class="ring-active" id="audioRing" cx="130" cy="130" r="70" stroke-width="1.5" stroke-dasharray="440" stroke-dashoffset="110"/>
-      <circle class="ring" cx="130" cy="130" r="46" stroke-width="0.6"/>
-      <g id="tickMarks"></g>
-      <line x1="130" y1="6" x2="130" y2="20" stroke="var(--cyan)" stroke-width="1.5"/>
-      <line x1="130" y1="254" x2="130" y2="240" stroke="var(--cyan)" stroke-width="1.5"/>
-      <line x1="6" y1="130" x2="20" y2="130" stroke="var(--cyan)" stroke-width="1.5"/>
-      <line x1="254" y1="130" x2="240" y2="130" stroke="var(--cyan)" stroke-width="1.5"/>
-      <circle id="pupil" cx="130" cy="130" r="4" fill="var(--cyan)"/>
-    </svg>
-    <div id="wakeLabel">Say "Jarvis" to wake</div>
-  </div>
-
-  <!-- BOTTOM -->
-  <div class="hud-panel" id="bottomBar">
-    <div id="captionBox"></div>
-    <div id="tickerRow">
-      <span>LOC <b id="tickerLoc">acquiring</b></span>
-      <span>TIME ONLINE <b id="tickerUptime">00:00:00</b></span>
-      <span>ENTRIES LOGGED <b id="tickerMem">0</b></span>
-      <span>MODE <b id="tickerMode">STANDBY</b></span>
-    </div>
-  </div>
-
-  <div id="camBtn" title="Toggle camera">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-  </div>
-
-  <div id="screenBtn" title="Share screen">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-  </div>
-
-  <video id="screenVideo" autoplay muted playsinline style="display:none;"></video>
-  <canvas id="screenCaptureCanvas" style="display:none;"></canvas>
-
-  <canvas id="captureCanvas" style="display:none;"></canvas>
-
-  <div id="micBtn" title="Push to talk">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-  </div>
-
-</div>
+<div id="cursor"></div>
 
 <script>
-(function(){
+const $ = id => document.getElementById(id);
+const screenVideo = $("screen");
+const cameraVideo = $("camera");
+const canvas = $("handCanvas");
+const ctx = canvas.getContext("2d");
+const cursor = $("cursor");
 
-  var state = {
-    booted:false,
-    listening:false,
-    awake:false,
-    speaking:false,
-    perms:{cam:false, mic:false, geo:false, orient:false},
-    startTime:Date.now(),
-    heading:0,
-    memory:[],
+let mediaStream, handCamera, hands;
+let calibratedPinch = 0.055;
+let lastPinch = 0, dragging = false, previousFrame = performance.now();
+let frames = 0, displayedFps = 0, zoom = 1;
+
+function status(text) { $("status").textContent = text; }
+
+function addMessage(text, type) {
+  const el = document.createElement("div");
+  el.className = "message " + type;
+  el.textContent = text;
+  $("messages").append(el);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+async function startScreen() {
+  try {
+    mediaStream = await navigator.mediaDevices.getDisplayMedia({
+      video:{ frameRate:{ ideal:30 } }, audio:true
+    });
+    screenVideo.srcObject = mediaStream;
+    cameraVideo.hidden = true;
+    status("Screen link active.");
+    mediaStream.getVideoTracks()[0].onended = () => status("Screen sharing stopped.");
+  } catch (error) {
+    status("Screen permission was not granted.");
+  }
+}
+
+async function startHands() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{ width:1280, height:720, facingMode:"user" }, audio:false
+    });
+    cameraVideo.srcObject = stream;
+    cameraVideo.hidden = false;
+    screenVideo.srcObject = null;
+    cursor.style.display = "block";
+
+    hands ||= new Hands({
+      locateFile:file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands:2,
+      modelComplexity:1,
+      minDetectionConfidence:.7,
+      minTrackingConfidence:.7
+    });
+
+    hands.onResults(drawHands);
+
+    handCamera = new Camera(cameraVideo, {
+      width:1280,
+      height:720,
+      onFrame:async () => hands.send({ image:cameraVideo })
+    });
+
+    await handCamera.start();
+    status("Optical hand interface active.");
+  } catch (error) {
+    status("Camera access failed: " + error.message);
+  }
+}
+
+function distance(a,b) {
+  return Math.hypot(a.x-b.x, a.y-b.y);
+}
+
+function drawHands(results) {
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const sets = results.multiHandLandmarks || [];
+  const pinched = [];
+
+  for (const marks of sets) {
+    drawConnectors(ctx, marks, HAND_CONNECTIONS, {
+      color:"#168fff", lineWidth:5
+    });
+    drawLandmarks(ctx, marks, {
+      color:"#93f6ff", fillColor:"#087cff", lineWidth:2, radius:4
+    });
+
+    const pinchDistance = distance(marks[4], marks[8]);
+    pinched.push(pinchDistance < calibratedPinch);
+
+    const x = (1 - marks[8].x) * innerWidth;
+    const y = marks[8].y * innerHeight;
+    cursor.style.left = x + "px";
+    cursor.style.top = y + "px";
+
+    if (pinchDistance < calibratedPinch) processPinch(x,y);
+  }
+
+  if (pinched.length === 2 && pinched.every(Boolean)) {
+    zoom = Math.min(1.8, zoom + .01);
+    document.documentElement.style.zoom = zoom;
+    status(`Dual-pinch zoom: ${Math.round(zoom*100)}%`);
+  }
+}
+
+function processPinch(x,y) {
+  const now = Date.now();
+  if (now-lastPinch < 450) {
+    dragging = !dragging;
+    status(dragging ? "Drag mode engaged." : "Drag mode released.");
+  } else if (now-lastPinch > 700) {
+    const target = document.elementFromPoint(x,y);
+    if (target && ["BUTTON","INPUT","SELECT","A"].includes(target.tagName)) target.click();
+    status("Pinch click detected.");
+  }
+  lastPinch = now;
+}
+
+function calibrate() {
+  const value = prompt(
+    "Pinch threshold (smaller is stricter). Recommended 0.04–0.08:",
+    calibratedPinch
+  );
+  const parsed = Number(value);
+  if (parsed >= .02 && parsed <= .15) {
+    calibratedPinch = parsed;
+    status(`Calibration saved: ${parsed}`);
+  }
+}
+
+function stopMedia() {
+  mediaStream?.getTracks().forEach(track => track.stop());
+  cameraVideo.srcObject?.getTracks().forEach(track => track.stop());
+  handCamera?.stop();
+  screenVideo.srcObject = cameraVideo.srcObject = null;
+  cameraVideo.hidden = true;
+  cursor.style.display = "none";
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  status("Media systems offline.");
+}
+
+function research(query) {
+  const q = encodeURIComponent(query);
+  addMessage(`Opening research results for: ${query}`, "jarvis");
+
+  // Google/Amazon block embedding. Opening a user-approved tab is reliable.
+  window.open(`https://www.google.com/search?q=${q}`, "_blank", "noopener");
+  window.open(`https://www.amazon.com/s?k=${q}`, "_blank", "noopener");
+}
+
+async function send() {
+  const input = $("prompt");
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = "";
+  addMessage(text, "user");
+
+  const researchMatch = text.match(/^(?:research|search(?: for)?|find)\s+(.+)/i);
+  if (researchMatch) {
+    research(researchMatch[1]);
+    return;
+  }
+
+  if (/share (?:my )?screen/i.test(text)) return startScreen();
+  if (/camera|hand tracking/i.test(text)) return startHands();
+  if (/stop (?:camera|screen|media)/i.test(text)) return stopMedia();
+  if (/speed test/i.test(text)) return runSpeedTest();
+
+  status("Consulting local Ollama intelligence…");
+
+  try {
+    const response = await fetch(`${$("endpoint").value}/api/chat`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:$("model").value,
+        stream:false,
+        messages:[
+          {
+            role:"system",
+            content:"You are JARVIS, a concise local desktop assistant. Never claim an action occurred unless the browser performed it."
+          },
+          { role:"user", content:text }
+        ]
+      })
+    });
+
+    if (!response.ok) throw new Error(`Ollama returned ${response.status}`);
+    const data = await response.json();
+    const answer = data.message?.content || "No response received.";
+    addMessage(answer, "jarvis");
+    speak(answer);
+    status("Ready.");
+  } catch (error) {
+    addMessage(
+      `Ollama connection failed. Start Ollama and permit this page's origin.\n${error.message}`,
+      "jarvis"
+    );
+    status("Local AI connection unavailable.");
+  }
+}
+
+function listen() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) return status("Speech recognition is unsupported in this browser.");
+
+  const recognition = new Recognition();
+  recognition.lang = "en-US";
+  recognition.onstart = () => status("Listening…");
+  recognition.onresult = event => {
+    $("prompt").value = event.results[0][0].transcript;
+    send();
   };
+  recognition.onerror = event => status("Voice error: " + event.error);
+  recognition.start();
+}
 
-  var MEM_KEY = 'jarvis_memory_log_v1';
-  try{
-    var saved = JSON.parse(localStorage.getItem(MEM_KEY) || '[]');
-    if(Array.isArray(saved)) state.memory = saved;
-  }catch(e){ state.memory = []; }
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text.slice(0,500));
+  utterance.rate = 1.05;
+  utterance.pitch = .8;
+  speechSynthesis.speak(utterance);
+}
 
-  function renderMemory(){
-    var list = document.getElementById('memList');
-    var tickerMem = document.getElementById('tickerMem');
-    tickerMem.textContent = state.memory.length;
-    if(state.memory.length === 0){
-      list.innerHTML = '<div id="memEmpty">No entries yet. Memory grows as we talk.</div>';
-      return;
-    }
-    list.innerHTML = state.memory.slice().reverse().map(function(m){
-      return '<div class="memItem">' + m.time + ' — ' + escapeHtml(m.text) + '</div>';
-    }).join('');
-  }
-  function escapeHtml(s){
-    var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
-  }
-  function remember(text){
-    var entry = { time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), text: text };
-    state.memory.push(entry);
-    if(state.memory.length > 200) state.memory.shift();
-    try{ localStorage.setItem(MEM_KEY, JSON.stringify(state.memory)); }catch(e){}
-    renderMemory();
-  }
-
-  var CLAUDE_KEY_STORAGE = 'jarvis_claude_key_v1';
-  var GEMINI_KEY_STORAGE = 'jarvis_gemini_key_v1';
-  var LOCAL_MODEL_STORAGE = 'jarvis_local_model_v1';
-  var PROVIDER_STORAGE = 'jarvis_provider_v1';
-  var claudeKey = null, geminiKey = null, localModel = null;
-  var activeProvider = 'claude';
-  try{
-    claudeKey = localStorage.getItem(CLAUDE_KEY_STORAGE) || null;
-    geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || null;
-    localModel = localStorage.getItem(LOCAL_MODEL_STORAGE) || null;
-    activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
-  }catch(e){}
-
-  function currentKey(){
-    if(activeProvider === 'gemini') return geminiKey;
-    if(activeProvider === 'local') return localModel || 'llava:7b';
-    return claudeKey;
-  }
-
-  function setProviderTab(p){
-    activeProvider = p;
-    try{ localStorage.setItem(PROVIDER_STORAGE, p); }catch(e){}
-    document.getElementById('tabClaude').classList.toggle('active', p==='claude');
-    document.getElementById('tabGemini').classList.toggle('active', p==='gemini');
-    document.getElementById('tabLocal').classList.toggle('active', p==='local');
-    document.getElementById('claudeKeySection').style.display = p==='claude' ? 'block' : 'none';
-    document.getElementById('geminiKeySection').style.display = p==='gemini' ? 'block' : 'none';
-    document.getElementById('localKeySection').style.display = p==='local' ? 'block' : 'none';
-    if(p === 'local' && !document.getElementById('localModelInput').value){
-      document.getElementById('localModelInput').value = localModel || 'llava:7b';
-    }
-    refreshKeyStatus();
-    if(typeof updateProviderBadge === 'function') updateProviderBadge();
-  }
-  document.getElementById('tabClaude').addEventListener('click', function(){ setProviderTab('claude'); });
-  document.getElementById('tabGemini').addEventListener('click', function(){ setProviderTab('gemini'); });
-  document.getElementById('tabLocal').addEventListener('click', function(){ setProviderTab('local'); });
-
-  function refreshKeyStatus(){
-    var el = document.getElementById('keyStatus');
-    if(activeProvider === 'local'){
-      var m = localModel || 'llava:7b';
-      el.textContent = 'Using local model "' + m + '" via Ollama at localhost:11434. Make sure "ollama serve" is running.';
-      el.style.color = 'var(--mint)';
-      return;
-    }
-    var key = currentKey();
-    var providerName = activeProvider === 'gemini' ? 'Gemini' : 'Claude';
-    if(key){
-      el.textContent = providerName + ' key saved (' + key.slice(0,6) + '\u2026' + key.slice(-4) + '). Vision and reasoning are active.';
-      el.style.color = 'var(--mint)';
-    } else {
-      el.textContent = 'No ' + providerName + ' key saved. Running on local commands only.';
-      el.style.color = 'var(--text-dim)';
-    }
-  }
-  document.getElementById('saveKeyBtn').addEventListener('click', function(){
-    if(activeProvider === 'local'){
-      var modelVal = document.getElementById('localModelInput').value.trim() || 'llava:7b';
-      localModel = modelVal;
-      try{ localStorage.setItem(LOCAL_MODEL_STORAGE, localModel); }catch(e){}
-      refreshKeyStatus();
-      return;
-    }
-    var inputId = activeProvider === 'gemini' ? 'apiKeyInputGemini' : 'apiKeyInputClaude';
-    var val = document.getElementById(inputId).value.trim();
-    if(val.length < 10){
-      document.getElementById('keyStatus').textContent = "That doesn't look like a valid key.";
-      document.getElementById('keyStatus').style.color = 'var(--amber)';
-      return;
-    }
-    if(activeProvider === 'gemini'){
-      geminiKey = val;
-      try{ localStorage.setItem(GEMINI_KEY_STORAGE, geminiKey); }catch(e){}
-    } else {
-      claudeKey = val;
-      try{ localStorage.setItem(CLAUDE_KEY_STORAGE, claudeKey); }catch(e){}
-    }
-    document.getElementById(inputId).value = '';
-    refreshKeyStatus();
-  });
-  document.getElementById('clearKeyBtn').addEventListener('click', function(){
-    if(activeProvider === 'gemini'){
-      geminiKey = null;
-      try{ localStorage.removeItem(GEMINI_KEY_STORAGE); }catch(e){}
-    } else if(activeProvider === 'local'){
-      localModel = null;
-      try{ localStorage.removeItem(LOCAL_MODEL_STORAGE); }catch(e){}
-      document.getElementById('localModelInput').value = '';
-    } else {
-      claudeKey = null;
-      try{ localStorage.removeItem(CLAUDE_KEY_STORAGE); }catch(e){}
-    }
-    refreshKeyStatus();
-  });
-  setProviderTab(activeProvider);
-
-  function callClaudeText(userText, cb){
-    fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': claudeKey,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body: JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:300,
-        system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, no emojis, plain spoken text only.',
-        messages:[{role:'user', content:userText}]
-      })
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data && data.content){
-        var textBlocks = data.content.filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; });
-        cb(textBlocks.join(' ').trim(), null);
-      } else {
-        cb(null, (data && data.error && data.error.message) || 'unknown_error');
-      }
-    }).catch(function(err){ cb(null, err.message || 'network_error'); });
-  }
-
-  function callClaudeVision(userText, base64Jpeg, cb){
-    fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': claudeKey,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body: JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:300,
-        system:"You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer in 1-3 short spoken sentences. No markdown, no emojis, plain spoken text only.",
-        messages:[{
-          role:'user',
-          content:[
-            {type:'image', source:{type:'base64', media_type:'image/jpeg', data: base64Jpeg}},
-            {type:'text', text: userText || 'What am I looking at?'}
-          ]
-        }]
-      })
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data && data.content){
-        var textBlocks = data.content.filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; });
-        cb(textBlocks.join(' ').trim(), null);
-      } else {
-        cb(null, (data && data.error && data.error.message) || 'unknown_error');
-      }
-    }).catch(function(err){ cb(null, err.message || 'network_error'); });
-  }
-
-  function callGeminiText(userText, cb){
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey;
-    fetch(url, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        contents:[{parts:[{text: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, no emojis, plain spoken text only.\n\nUser: ' + userText}]}]
-      })
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data && data.candidates && data.candidates[0]){
-        var text = data.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join(' ').trim();
-        cb(text, null);
-      } else {
-        cb(null, (data && data.error && data.error.message) || 'unknown_error');
-      }
-    }).catch(function(err){ cb(null, err.message || 'network_error'); });
-  }
-
-  function callGeminiVision(userText, base64Jpeg, cb){
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey;
-    fetch(url, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        contents:[{parts:[
-          {text: "You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer in 1-3 short spoken sentences. No markdown, no emojis, plain spoken text only.\n\nUser question: " + (userText || 'What am I looking at?')},
-          {inline_data:{mime_type:'image/jpeg', data: base64Jpeg}}
-        ]}]
-      })
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data && data.candidates && data.candidates[0]){
-        var text = data.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join(' ').trim();
-        cb(text, null);
-      } else {
-        cb(null, (data && data.error && data.error.message) || 'unknown_error');
-      }
-    }).catch(function(err){ cb(null, err.message || 'network_error'); });
-  }
-
-  function callLocalText(userText, cb){
-    var model = localModel || 'llava:7b';
-    fetch('http://localhost:11434/api/generate', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        model: model,
-        prompt: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, plain spoken text only.\n\nUser: ' + userText,
-        stream: false
-      })
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data && data.response){
-        cb(data.response.trim(), null);
-      } else {
-        cb(null, (data && data.error) || 'unknown_error');
-      }
-    }).catch(function(err){
-      cb(null, 'Could not reach Ollama on localhost. Make sure "ollama serve" is running.');
+async function ping() {
+  const start = performance.now();
+  try {
+    await fetch("https://www.google.com/favicon.ico?x="+Date.now(), {
+      mode:"no-cors", cache:"no-store"
     });
+    $("ping").textContent = Math.round(performance.now()-start) + " ms";
+  } catch {
+    $("ping").textContent = "Unavailable";
   }
+}
 
-  function callLocalVision(userText, base64Jpeg, cb){
-    var model = localModel || 'llava:7b';
-    fetch('http://localhost:11434/api/generate', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        model: model,
-        prompt: userText || 'What am I looking at? Describe it in 1-3 short spoken sentences, no markdown.',
-        images: [base64Jpeg],
-        stream: false
-      })
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data && data.response){
-        cb(data.response.trim(), null);
-      } else {
-        cb(null, (data && data.error) || 'unknown_error');
-      }
-    }).catch(function(err){
-      cb(null, 'Could not reach Ollama on localhost. Make sure "ollama serve" is running.');
+async function runSpeedTest() {
+  status("Estimating download speed…");
+  const bytes = 2_000_000;
+  const start = performance.now();
+
+  try {
+    await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}&x=${Date.now()}`, {
+      cache:"no-store"
     });
-  }
-
-  function callAIText(userText, cb){
-    if(activeProvider === 'local'){ callLocalText(userText, cb); return; }
-    if(!currentKey()){ cb(null, 'no_key'); return; }
-    if(activeProvider === 'gemini'){ callGeminiText(userText, cb); }
-    else { callClaudeText(userText, cb); }
-  }
-  function callAIVision(userText, base64Jpeg, cb){
-    if(activeProvider === 'local'){ callLocalVision(userText, base64Jpeg, cb); return; }
-    if(!currentKey()){ cb(null, 'no_key'); return; }
-    if(activeProvider === 'gemini'){ callGeminiVision(userText, base64Jpeg, cb); }
-    else { callClaudeVision(userText, base64Jpeg, cb); }
-  }
-
-  function captureFrameBase64(){
-    var video = document.getElementById('camVideo');
-    if(!camStream || !video.videoWidth){ return null; }
-    var canvas = document.getElementById('captureCanvas');
-    var maxW = 640;
-    var scale = Math.min(1, maxW / video.videoWidth);
-    canvas.width = video.videoWidth * scale;
-    canvas.height = video.videoHeight * scale;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-    return dataUrl.split(',')[1];
-  }
-
-  // ---------- Screen sharing ----------
-  var screenStream = null;
-  function captureScreenFrameBase64(){
-    var video = document.getElementById('screenVideo');
-    if(!screenStream || !video.videoWidth){ return null; }
-    var canvas = document.getElementById('screenCaptureCanvas');
-    var maxW = 1280;
-    var scale = Math.min(1, maxW / video.videoWidth);
-    canvas.width = video.videoWidth * scale;
-    canvas.height = video.videoHeight * scale;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    return dataUrl.split(',')[1];
-  }
-
-  function startScreenShare(){
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
-      speak('Screen sharing is not supported in this browser.');
-      return;
-    }
-    navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'}, audio:false}).then(function(stream){
-      screenStream = stream;
-      var v = document.getElementById('screenVideo');
-      v.srcObject = stream;
-      document.getElementById('screenBtn').classList.add('live');
-      speak('Screen sharing active. Ask me what is on your screen anytime.');
-      stream.getVideoTracks()[0].addEventListener('ended', function(){
-        stopScreenShare();
-      });
-    }).catch(function(err){
-      setCaption('Screen share was not started.');
-    });
-  }
-  function stopScreenShare(){
-    if(screenStream){
-      screenStream.getTracks().forEach(function(t){ t.stop(); });
-      screenStream = null;
-    }
-    document.getElementById('screenBtn').classList.remove('live');
-  }
-  document.getElementById('screenBtn').addEventListener('click', function(){
-    if(screenStream){ stopScreenShare(); } else { startScreenShare(); }
-  });
-
-  var screenVisionTriggers = ['on my screen','on the screen','what am i looking at on screen','read my screen','screen share','check my screen','look at my screen'];
-  function isScreenVisionCommand(cmd){
-    for(var i=0;i<screenVisionTriggers.length;i++){
-      if(cmd.includes(screenVisionTriggers[i])) return true;
-    }
-    return false;
-  }
-  function handleScreenVisionCommand(cmd){
-    if(!screenStream){
-      speak('Screen sharing is not active. Tap the screen share icon first.');
-      return;
-    }
-    setCaption('Analyzing your screen…');
-    var frame = captureScreenFrameBase64();
-    if(!frame){
-      speak('I could not capture your screen. Try again in a moment.');
-      return;
-    }
-    callAIVision(cmd, frame, function(text, err){
-      if(err === 'no_key'){
-        speak('I need an API key or local model to analyze your screen. Check settings.');
-      } else if(err){
-        speak('Screen analysis failed. ' + (err.length < 60 ? err : 'Check your connection.'));
-      } else {
-        speak(text);
-      }
-    });
-  }
-
-  function soundsUncertain(text){
-    if(!text) return true;
-    var lower = text.toLowerCase();
-    var patterns = [
-      "i don't know", "i do not know", "i'm not sure", "i am not sure",
-      "i can't see", "i cannot see", "i don't have", "i do not have",
-      "without seeing", "without an image", "without a camera", "without visual",
-      "i'm unable to see", "i am unable to see", "no visual", "can't tell",
-      "cannot tell", "i have no way to", "i don't have access to your camera",
-      "as a text", "i'm a text-based", "i don't have eyes", "i can't view",
-      "cannot view", "unable to view", "i can't perceive", "cannot perceive"
-    ];
-    for(var i=0;i<patterns.length;i++){
-      if(lower.includes(patterns[i])) return true;
-    }
-    return false;
-  }
-
-  var visionTriggers = ['what am i looking at','what do you see','identify this','what is this','read this','explain this','what is in front of me','look at this','can you see'];
-  function isVisionCommand(cmd){
-    for(var i=0;i<visionTriggers.length;i++){
-      if(cmd.includes(visionTriggers[i])) return true;
-    }
-    return false;
-  }
-
-  function handleVisionCommand(cmd){
-    if(!camStream){
-      speak('I need the camera on to look. Tap the camera icon first.');
-      return;
-    }
-    setCaption('Analyzing…');
-    var frame = captureFrameBase64();
-    if(!frame){
-      speak('I could not capture a clear frame. Try again in a moment.');
-      return;
-    }
-    callAIVision(cmd, frame, function(text, err){
-      if(err === 'no_key'){
-        speak('I need an API key to analyze images. Add one in the memory panel settings.');
-      } else if(err){
-        speak('Vision request failed. ' + (err.length < 60 ? err : 'Check your API key and connection.'));
-      } else {
-        speak(text);
-      }
-    });
-  }
-
-  document.getElementById('settingsBtn').addEventListener('click', function(){
-    var p = document.getElementById('memPanel');
-    p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-  });
-  document.getElementById('clearMemBtn').addEventListener('click', function(){
-    state.memory = [];
-    try{ localStorage.removeItem(MEM_KEY); }catch(e){}
-    renderMemory();
-  });
-  renderMemory();
-
-  // ---------- Clock ----------
-  function tickClock(){
-    var now = new Date();
-    document.getElementById('clockTime').textContent = now.toLocaleTimeString([], {hour12:false});
-    document.getElementById('clockDate').textContent = now.toLocaleDateString([], {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
-    var up = Date.now() - state.startTime;
-    var h = String(Math.floor(up/3600000)).padStart(2,'0');
-    var m = String(Math.floor((up%3600000)/60000)).padStart(2,'0');
-    var s = String(Math.floor((up%60000)/1000)).padStart(2,'0');
-    document.getElementById('tickerUptime').textContent = h+':'+m+':'+s;
-  }
-  setInterval(tickClock, 1000);
-  tickClock();
-
-  // ---------- Compass ticks ----------
-  var dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-  var stripEl = document.getElementById('compassStrip');
-  function buildStrip(){
-    var html = '';
-    for(var loop=0; loop<3; loop++){
-      for(var i=0;i<dirs.length;i++){
-        var isCard = (i%4===0);
-        html += '<div class="tick'+(isCard?' card':'')+'">'+dirs[i]+'</div>';
-      }
-    }
-    stripEl.innerHTML = html;
-  }
-  buildStrip();
-  function updateCompass(deg){
-    state.heading = deg;
-    var tickWidth = 35;
-    var totalTicks = dirs.length * 3;
-    var offset = (deg/360) * dirs.length * tickWidth;
-    var centerSet = dirs.length * tickWidth;
-    stripEl.style.transform = 'translateX(calc(-50% - ' + (centerSet + offset - (7*tickWidth)) + 'px))';
-    document.getElementById('headingVal').textContent = Math.round(deg) + '° ' + dirs[Math.round(deg/22.5)%16];
-  }
-  updateCompass(0);
-
-  // ---------- Reticle idle rotation ----------
-  var ticksG = document.getElementById('tickMarks');
-  var tickHtml = '';
-  for(var t=0;t<24;t++){
-    var ang = (t/24)*360;
-    tickHtml += '<line x1="130" y1="24" x2="130" y2="'+(t%6===0?32:29)+'" stroke="var(--cyan-dim)" stroke-width="1" transform="rotate('+ang+' 130 130)"/>';
-  }
-  ticksG.innerHTML = tickHtml;
-
-  var rotDeg = 0;
-  function idleSpin(){
-    rotDeg += 0.15;
-    ticksG.setAttribute('transform','rotate('+rotDeg+' 130 130)');
-    requestAnimationFrame(idleSpin);
-  }
-  idleSpin();
-
-  // ---------- Boot sequence ----------
-  var bootLines = [
-    'Loading neural core…',
-    'Calibrating sensor array…',
-    'Establishing telemetry link…',
-    'Warming reticle systems…',
-    'All systems nominal.'
-  ];
-
-  function buildCoreSpokes(){
-    var g = document.getElementById('coreSpokes');
-    var html = '';
-    var count = 12;
-    for(var i=0;i<count;i++){
-      var ang = (i/count)*360;
-      html += '<line x1="150" y1="105" x2="150" y2="120" stroke-width="1.5" transform="rotate('+ang+' 150 150)"/>';
-    }
-    g.innerHTML = html;
-  }
-  buildCoreSpokes();
-
-  function playPowerUpTone(){
-    try{
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      var now = ctx.currentTime;
-      var duration = 2.2;
-
-      var osc1 = ctx.createOscillator();
-      var osc2 = ctx.createOscillator();
-      var gain = ctx.createGain();
-      var filter = ctx.createBiquadFilter();
-
-      osc1.type = 'sawtooth';
-      osc2.type = 'sine';
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(300, now);
-      filter.frequency.exponentialRampToValueAtTime(3200, now + duration);
-      filter.Q.value = 6;
-
-      osc1.frequency.setValueAtTime(60, now);
-      osc1.frequency.exponentialRampToValueAtTime(340, now + duration);
-      osc2.frequency.setValueAtTime(120, now);
-      osc2.frequency.exponentialRampToValueAtTime(680, now + duration);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.22, now + duration * 0.75);
-      gain.gain.exponentialRampToValueAtTime(0.35, now + duration * 0.95);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.4);
-
-      osc1.connect(filter);
-      osc2.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + duration + 0.5);
-      osc2.stop(now + duration + 0.5);
-    }catch(e){}
-  }
-
-  function runBoot(cb){
-    document.getElementById('bootOverlay').style.display = 'flex';
-    var core = document.getElementById('coreWrap');
-    var sub = document.getElementById('bootSub');
-    core.className = '';
-    playPowerUpTone();
-
-    var stageDelay = 480;
-    for(var s=1; s<=5; s++){
-      (function(stage){
-        setTimeout(function(){
-          core.className = 'stage-' + stage;
-          sub.textContent = bootLines[stage-1];
-        }, stageDelay * stage);
-      })(s);
-    }
-
-    setTimeout(function(){
-      setTimeout(function(){
-        document.getElementById('bootOverlay').style.opacity='0';
-        setTimeout(function(){
-          document.getElementById('bootOverlay').style.display='none';
-          cb && cb();
-          scheduleWakeLabelFade();
-        }, 1000);
-      }, 500);
-    }, stageDelay * 5);
-  }
-
-  function scheduleWakeLabelFade(){
-    clearTimeout(window.__wakeLabelFadeTimer);
-    window.__wakeLabelFadeTimer = setTimeout(function(){
-      var el = document.getElementById('wakeLabel');
-      if(el && !state.awake) el.style.opacity = '0';
-    }, 30000);
-  }
-
-  // ---------- Permissions + sensors ----------
-  function setBadge(id, on){
-    document.getElementById(id).classList.toggle('on', !!on);
-  }
-
-  function isSecureCtx(){
-    return window.isSecureContext === true;
-  }
-
-  var camStream = null;
-  function initCamera(){
-    if(!isSecureCtx()){
-      document.getElementById('statCam').textContent = 'NEEDS HTTPS';
-      speak('Camera access needs a secure connection. This page must be served over https, or from localhost, not opened as a local file.');
-      return;
-    }
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-      document.getElementById('statCam').textContent = 'UNSUPPORTED';
-      return;
-    }
-    if(camStream){
-      showCamera();
-      return;
-    }
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(function(stream){
-      camStream = stream;
-      var v = document.getElementById('camVideo');
-      v.srcObject = stream;
-      state.perms.cam = true;
-      setBadge('badgeCam', true);
-      document.getElementById('dotCam').classList.add('on');
-      document.getElementById('statCam').textContent = 'LIVE';
-      showCamera();
-    }).catch(function(err){
-      if(err.name === 'NotAllowedError'){
-        if(isInIframe()){
-          document.getElementById('statCam').textContent = 'IFRAME BLOCKED';
-          setCaption('Camera access is blocked because this is running in an embedded preview. Open the file directly in its own browser tab instead.');
-        } else {
-          document.getElementById('statCam').textContent = 'BLOCKED';
-          setCaption('Camera is blocked for this site. Click the lock or camera icon in the address bar, allow camera access, then reload.');
-        }
-      } else {
-        document.getElementById('statCam').textContent = err.name || 'ERROR';
-      }
-    });
-  }
-  function showCamera(){
-    var layer = document.getElementById('camLayer');
-    layer.classList.add('on');
-    layer.classList.remove('pulse');
-    void layer.offsetWidth;
-    layer.classList.add('pulse');
-    document.getElementById('camBtn').classList.add('live');
-    document.getElementById('reticleWrap').classList.add('cam-active');
-  }
-  function hideCamera(){
-    document.getElementById('camLayer').classList.remove('on');
-    document.getElementById('camBtn').classList.remove('live');
-    document.getElementById('reticleWrap').classList.remove('cam-active');
-    if(typeof stopHandTracking === 'function') stopHandTracking();
-    if(typeof applyHandZoom === 'function') applyHandZoom(1.0);
-  }
-  function toggleCamera(){
-    var layer = document.getElementById('camLayer');
-    if(layer.classList.contains('on')){
-      hideCamera();
-    } else if(camStream){
-      showCamera();
-    } else {
-      initCamera();
-    }
-  }
-  document.getElementById('camBtn').addEventListener('click', toggleCamera);
-
-  // ---------- Hand tracking ----------
-  var handsInstance = null;
-  var handTrackingActive = false;
-  var handCanvasCtx = null;
-  var lastHandLandmarks = null;
-  var pinchState = { isPinching:false, distance:null };
-  var pinchThreshold = null;
-  var PINCH_THRESHOLD_STORAGE = 'jarvis_pinch_threshold_v1';
-  try{
-    var savedThreshold = localStorage.getItem(PINCH_THRESHOLD_STORAGE);
-    if(savedThreshold) pinchThreshold = parseFloat(savedThreshold);
-  }catch(e){}
-
-  var HAND_CONNECTIONS = [
-    [0,1],[1,2],[2,3],[3,4],
-    [0,5],[5,6],[6,7],[7,8],
-    [0,9],[9,10],[10,11],[11,12],
-    [0,13],[13,14],[14,15],[15,16],
-    [0,17],[17,18],[18,19],[19,20],
-    [5,9],[9,13],[13,17]
-  ];
-
-  function updateHandStatus(){
-    var el = document.getElementById('handStatus');
-    if(!el) return;
-    var lines = [];
-    lines.push('Tracking: ' + (handTrackingActive ? 'ON' : 'OFF'));
-    lines.push('Pinch threshold: ' + (pinchThreshold ? pinchThreshold.toFixed(3) : 'not calibrated (using default)'));
-    if(handTrackingActive){
-      lines.push('Pinch with both hands and move them apart or together to zoom.');
-    }
-    el.innerHTML = lines.join('<br>');
-  }
-
-  function distance3D(a, b){
-    var dx = a.x - b.x, dy = a.y - b.y, dz = (a.z||0) - (b.z||0);
-    return Math.sqrt(dx*dx + dy*dy + dz*dz);
-  }
-
-  var handPinchStates = [
-    { isPinching:false, point:null },
-    { isPinching:false, point:null }
-  ];
-  var twoHandZoomActive = false;
-  var lastTwoHandDistance = null;
-  var handZoomScale = 1.0;
-  var MIN_ZOOM = 0.4, MAX_ZOOM = 3.0;
-
-  function getCoverMapping(video, canvasW, canvasH){
-    var videoW = video.videoWidth, videoH = video.videoHeight;
-    if(!videoW || !videoH) return null;
-    var coverScale = Math.max(canvasW / videoW, canvasH / videoH);
-    var renderedW = videoW * coverScale;
-    var renderedH = videoH * coverScale;
-    return {
-      videoW: videoW,
-      videoH: videoH,
-      scale: coverScale,
-      offsetX: (renderedW - canvasW) / 2,
-      offsetY: (renderedH - canvasH) / 2
-    };
-  }
-
-  function mapNormalizedPoint(nx, ny, mapping){
-    return {
-      x: nx * mapping.videoW * mapping.scale - mapping.offsetX,
-      y: ny * mapping.videoH * mapping.scale - mapping.offsetY
-    };
-  }
-
-  function drawHandSkeleton(ctx, landmarks, mapping){
-    ctx.lineCap = 'round';
-    HAND_CONNECTIONS.forEach(function(pair){
-      var a = mapNormalizedPoint(landmarks[pair[0]].x, landmarks[pair[0]].y, mapping);
-      var b = mapNormalizedPoint(landmarks[pair[1]].x, landmarks[pair[1]].y, mapping);
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(0,229,255,0.18)';
-      ctx.lineWidth = 7;
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-    });
-    HAND_CONNECTIONS.forEach(function(pair){
-      var a = mapNormalizedPoint(landmarks[pair[0]].x, landmarks[pair[0]].y, mapping);
-      var b = mapNormalizedPoint(landmarks[pair[1]].x, landmarks[pair[1]].y, mapping);
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(0,229,255,0.85)';
-      ctx.lineWidth = 2.5;
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-
-      var mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
-      var dx = (b.x-a.x), dy = (b.y-a.y);
-      var len = Math.sqrt(dx*dx+dy*dy) || 1;
-      var px = -dy/len, py = dx/len;
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
-      ctx.lineWidth = 1.5;
-      ctx.moveTo(mx - px*4, my - py*4);
-      ctx.lineTo(mx + px*4, my + py*4);
-      ctx.stroke();
-    });
-
-    landmarks.forEach(function(pt, i){
-      var isTip = (i===4 || i===8 || i===12 || i===16 || i===20);
-      var isKnuckle = (i===0 || i===5 || i===9 || i===13 || i===17);
-      var mapped = mapNormalizedPoint(pt.x, pt.y, mapping);
-      var x = mapped.x, y = mapped.y;
-      var size = isTip ? 7 : (isKnuckle ? 6 : 4.5);
-
-      ctx.beginPath();
-      ctx.fillStyle = 'rgba(0,229,255,0.15)';
-      ctx.arc(x, y, size + 4, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(Math.PI/4);
-      ctx.beginPath();
-      ctx.fillStyle = isTip ? '#00e5ff' : (isKnuckle ? 'rgba(0,229,255,0.9)' : 'rgba(0,229,255,0.75)');
-      ctx.fillRect(-size/2, -size/2, size, size);
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-      ctx.lineWidth = 0.75;
-      ctx.strokeRect(-size/2, -size/2, size, size);
-      ctx.restore();
-    });
-  }
-
-  function applyHandZoom(scale){
-
-    handZoomScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, scale));
-    if(typeof window.__onHandZoomChange === 'function'){
-      window.__onHandZoomChange(handZoomScale);
-    }
-    // No web-view panel target wired up yet — zoom scale is tracked but has no visible effect until that's built.
-  }
-
-  function onHandResults(results){
-    var canvas = document.getElementById('handCanvas');
-    var video = document.getElementById('camVideo');
-    if(!canvas || !video.videoWidth) return;
-    if(canvas.width !== video.clientWidth || canvas.height !== video.clientHeight){
-      canvas.width = video.clientWidth;
-      canvas.height = video.clientHeight;
-    }
-    if(!handCanvasCtx) handCanvasCtx = canvas.getContext('2d');
-    var ctx = handCanvasCtx;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    var mapping = getCoverMapping(video, canvas.width, canvas.height);
-    if(!mapping) return;
-
-    if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
-      lastHandLandmarks = null;
-      handPinchStates[0].isPinching = false;
-      handPinchStates[1].isPinching = false;
-      twoHandZoomActive = false;
-      lastTwoHandDistance = null;
-      setPinchActive(false);
-      return;
-    }
-
-    var hands = results.multiHandLandmarks;
-    lastHandLandmarks = hands[0];
-
-    var threshold = pinchThreshold || 0.055;
-
-    for(var hIdx = 0; hIdx < Math.min(hands.length, 2); hIdx++){
-      var landmarks = hands[hIdx];
-      drawHandSkeleton(ctx, landmarks, mapping);
-
-      var thumbTip = landmarks[4];
-      var indexTip = landmarks[8];
-      var pinchDist = distance3D(thumbTip, indexTip);
-      var isPinching = pinchDist < threshold;
-      handPinchStates[hIdx].isPinching = isPinching;
-      handPinchStates[hIdx].point = { x:(thumbTip.x+indexTip.x)/2, y:(thumbTip.y+indexTip.y)/2 };
-
-      var mappedThumb = mapNormalizedPoint(thumbTip.x, thumbTip.y, mapping);
-      var mappedIndex = mapNormalizedPoint(indexTip.x, indexTip.y, mapping);
-      ctx.strokeStyle = isPinching ? '#3affc4' : 'rgba(0,229,255,0.35)';
-      ctx.lineWidth = isPinching ? 3 : 1.5;
-      ctx.beginPath();
-      ctx.moveTo(mappedThumb.x, mappedThumb.y);
-      ctx.lineTo(mappedIndex.x, mappedIndex.y);
-      ctx.stroke();
-
-      if(hIdx === 0) updateHandCursor(landmarks, mapping);
-    }
-
-    // Two-hand pinch-zoom: both hands pinching simultaneously
-    if(hands.length >= 2 && handPinchStates[0].isPinching && handPinchStates[1].isPinching){
-      twoHandZoomActive = true;
-      var p1 = mapNormalizedPoint(handPinchStates[0].point.x, handPinchStates[0].point.y, mapping);
-      var p2 = mapNormalizedPoint(handPinchStates[1].point.x, handPinchStates[1].point.y, mapping);
-      var dx = p2.x - p1.x, dy = p2.y - p1.y;
-      var dist = Math.sqrt(dx*dx + dy*dy);
-
-      ctx.strokeStyle = 'rgba(58,255,196,0.8)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6,6]);
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      if(lastTwoHandDistance !== null){
-        var ratio = dist / lastTwoHandDistance;
-        applyHandZoom(handZoomScale * ratio);
-      }
-      lastTwoHandDistance = dist;
-      setPinchActive(false);
-    } else {
-      twoHandZoomActive = false;
-      lastTwoHandDistance = null;
-      setPinchActive(handPinchStates[0].isPinching);
-    }
-  }
-
-  var wasPinching = false;
-  function setPinchActive(isPinching){
-    pinchState.isPinching = isPinching;
-    var indicator = document.getElementById('pinchIndicator');
-    if(indicator){
-      indicator.classList.toggle('active', isPinching);
-      indicator.textContent = isPinching ? 'PINCH' : '';
-    }
-    if(isPinching && !wasPinching){
-      onPinchStart();
-    } else if(!isPinching && wasPinching){
-      onPinchEnd();
-    }
-    wasPinching = isPinching;
-  }
-
-  var handLandmarkerReady = false;
-  function initHandTracking(cb){
-    if(handsInstance){ cb && cb(); return; }
-    if(!window.__mpReady || !window.__mpHandLandmarker || !window.__mpFilesetResolver){
-      document.getElementById('handStatus').textContent = 'Hand tracking library is still loading. Wait a moment and try again.';
-      return;
-    }
-    document.getElementById('handStatus').textContent = 'Loading hand tracking model…';
-    window.__mpFilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
-    ).then(function(vision){
-      return window.__mpHandLandmarker.createFromOptions(vision, {
-        baseOptions:{
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
-          delegate: 'GPU'
-        },
-        runningMode: 'VIDEO',
-        numHands: 2,
-        minHandDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6
-      });
-    }).then(function(landmarker){
-      handsInstance = landmarker;
-      handLandmarkerReady = true;
-      document.getElementById('handStatus').textContent = 'Hand tracking model loaded.';
-      cb && cb();
-    }).catch(function(err){
-      document.getElementById('handStatus').textContent = 'Failed to load hand tracking model: ' + (err.message || err);
-    });
-  }
-
-  var handFrameLoopActive = false;
-  function handFrameLoop(){
-    if(!handTrackingActive || !camStream){
-      handFrameLoopActive = false;
-      return;
-    }
-    var video = document.getElementById('camVideo');
-    if(handsInstance && handLandmarkerReady && video.readyState >= 2){
-      try{
-        var result = handsInstance.detectForVideo(video, performance.now());
-        onHandResults({
-          multiHandLandmarks: result.landmarks && result.landmarks.length > 0 ? result.landmarks : null
-        });
-      }catch(e){}
-    }
-    requestAnimationFrame(handFrameLoop);
-  }
-
-  function startHandTracking(){
-    if(!camStream){
-      document.getElementById('handStatus').textContent = 'Turn the camera on first.';
-      return;
-    }
-    initHandTracking(function(){
-      handTrackingActive = true;
-      if(!handFrameLoopActive){
-        handFrameLoopActive = true;
-        handFrameLoop();
-      }
-      updateHandStatus();
-      document.getElementById('toggleHandTracking').textContent = 'Disable tracking';
-    });
-  }
-
-  function stopHandTracking(){
-    handTrackingActive = false;
-    var canvas = document.getElementById('handCanvas');
-    if(handCanvasCtx && canvas){
-      handCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    setPinchActive(false);
-    updateHandStatus();
-    document.getElementById('toggleHandTracking').textContent = 'Enable tracking';
-  }
-
-  document.getElementById('toggleHandTracking').addEventListener('click', function(){
-    if(handTrackingActive){ stopHandTracking(); } else { startHandTracking(); }
-  });
-
-  // ---------- Calibration ----------
-  var isCalibrating = false;
-  var calibrationSamples = [];
-  document.getElementById('calibratePinchBtn').addEventListener('click', function(){
-    if(!camStream){
-      document.getElementById('handStatus').textContent = 'Turn the camera on first.';
-      return;
-    }
-    document.getElementById('handStatus').textContent = 'Starting hand tracking…';
-    if(!handTrackingActive) startHandTracking();
-
-    var waitTries = 0;
-    var waitForHand = setInterval(function(){
-      waitTries++;
-      if(lastHandLandmarks){
-        clearInterval(waitForHand);
-        beginCalibrationCountdown();
-      } else if(waitTries > 40){
-        clearInterval(waitForHand);
-        document.getElementById('handStatus').textContent = 'No hand detected yet. Hold your hand clearly in the camera frame, then click Calibrate again.';
-      }
-    }, 150);
-  });
-
-  function beginCalibrationCountdown(){
-    isCalibrating = true;
-    calibrationSamples = [];
-    document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, then release. Repeat a few times. (0 samples)';
-    setTimeout(finishCalibration, 6000);
-  }
-
-  var calibrationPinchCount = 0;
-  function finishCalibration(){
-    isCalibrating = false;
-    if(calibrationSamples.length < 2){
-      document.getElementById('handStatus').textContent = 'Could not detect enough pinches. Make sure your hand is clearly visible and try again.';
-      return;
-    }
-    var avgPinchDist = calibrationSamples.reduce(function(a,b){return a+b;}, 0) / calibrationSamples.length;
-    pinchThreshold = avgPinchDist * 1.5;
-    try{ localStorage.setItem(PINCH_THRESHOLD_STORAGE, pinchThreshold.toString()); }catch(e){}
-    updateHandStatus();
-    document.getElementById('handStatus').innerHTML += '<br><span style="color:var(--mint)">Calibration complete.</span>';
-    speak('Pinch calibrated.');
-  }
-
-  // ---------- Pinch = mouse click ----------
-  var handCursorX = null, handCursorY = null;
-  function updateHandCursor(landmarks, mapping){
-    var indexTip = landmarks[8];
-    handCursorX = indexTip.x;
-    handCursorY = indexTip.y;
-
-    if(mapping && handCanvasCtx){
-      var mapped = mapNormalizedPoint(indexTip.x, indexTip.y, mapping);
-      var ctx = handCanvasCtx;
-      var isPinch = handPinchStates[0].isPinching;
-      var r = isPinch ? 10 : 14;
-      ctx.save();
-      ctx.strokeStyle = isPinch ? '#3affc4' : 'rgba(0,229,255,0.7)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(mapped.x, mapped.y, r, 0, Math.PI*2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(mapped.x - r - 6, mapped.y);
-      ctx.lineTo(mapped.x - r + 2, mapped.y);
-      ctx.moveTo(mapped.x + r - 2, mapped.y);
-      ctx.lineTo(mapped.x + r + 6, mapped.y);
-      ctx.moveTo(mapped.x, mapped.y - r - 6);
-      ctx.lineTo(mapped.x, mapped.y - r + 2);
-      ctx.moveTo(mapped.x, mapped.y + r - 2);
-      ctx.lineTo(mapped.x, mapped.y + r + 6);
-      ctx.stroke();
-      if(isPinch){
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(58,255,196,0.35)';
-        ctx.arc(mapped.x, mapped.y, r - 3, 0, Math.PI*2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    if(isCalibrating){
-      var thumbTip = landmarks[4];
-      var d = distance3D(thumbTip, indexTip);
-      if(d < 0.12){
-        calibrationSamples.push(d);
-        document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, then release. Repeat a few times. (' + calibrationSamples.length + ' samples)';
-      }
-    }
-  }
-
-  function onPinchStart(){
-    if(isCalibrating) return;
-    // Placeholder hook for future drag/click actions once panels support it
-  }
-  function onPinchEnd(){
-    if(isCalibrating) return;
-  }
-
-  updateHandStatus();
-
-
-
-  var audioCtx, analyser, micStream, dataArray;
-  function initMic(){
-    if(!isSecureCtx()){
-      document.getElementById('statMic').textContent = 'NEEDS HTTPS';
-      return;
-    }
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-      document.getElementById('statMic').textContent = 'UNSUPPORTED';
-      return;
-    }
-    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
-      micStream = stream;
-      state.perms.mic = true;
-      setBadge('badgeMic', true);
-      document.getElementById('dotMic').classList.add('on');
-      document.getElementById('statMic').textContent = 'LIVE';
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      var src = audioCtx.createMediaStreamSource(stream);
-      src.connect(analyser);
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      monitorAudio();
-      initSpeechRecognition();
-    }).catch(function(err){
-      if(err.name === 'NotAllowedError'){
-        if(isInIframe()){
-          document.getElementById('statMic').textContent = 'IFRAME BLOCKED';
-          setCaption('Microphone access is blocked because this is running in an embedded preview. Open the file directly in its own browser tab instead.');
-        } else {
-          document.getElementById('statMic').textContent = 'BLOCKED';
-          setCaption('Microphone is blocked for this site. Click the lock icon in the address bar, allow microphone access, then reload.');
-        }
-      } else {
-        document.getElementById('statMic').textContent = err.name || 'ERROR';
-      }
-    });
-  }
-
-  var audioRingEl = document.getElementById('audioRing');
-  var pupilEl = document.getElementById('pupil');
-  function monitorAudio(){
-    if(!analyser) return;
-    analyser.getByteFrequencyData(dataArray);
-    var sum=0;
-    for(var i=0;i<dataArray.length;i++) sum += dataArray[i];
-    var avg = sum/dataArray.length;
-    var level = Math.min(1, avg/70);
-    var circumference = 440;
-    var offset = circumference * (1 - (0.15 + level*0.75));
-    audioRingEl.style.transition = 'stroke-dashoffset 0.08s linear';
-    audioRingEl.setAttribute('stroke-dashoffset', offset);
-    var scale = 1 + level*0.6;
-    pupilEl.setAttribute('r', 4*scale);
-    requestAnimationFrame(monitorAudio);
-  }
-
-  function initGeo(){
-    if(!navigator.geolocation) return;
-    navigator.geolocation.watchPosition(function(pos){
-      state.perms.geo = true;
-      setBadge('badgeGeo', true);
-      document.getElementById('dotGeo').classList.add('on');
-      document.getElementById('statGeo').textContent = 'LOCK';
-      var lat = pos.coords.latitude.toFixed(3);
-      var lon = pos.coords.longitude.toFixed(3);
-      document.getElementById('tickerLoc').textContent = lat+', '+lon;
-    }, function(){
-      document.getElementById('statGeo').textContent = 'DENIED';
-      document.getElementById('tickerLoc').textContent = 'unavailable';
-    }, {enableHighAccuracy:false, maximumAge:30000});
-  }
-
-  function initOrientation(){
-    function handler(e){
-      if(e.alpha !== null && e.alpha !== undefined){
-        state.perms.orient = true;
-        setBadge('', true);
-        document.getElementById('dotOrient').classList.add('on');
-        document.getElementById('statOrient').textContent = 'LOCK';
-        updateCompass(360 - e.alpha);
-      }
-    }
-    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
-      DeviceOrientationEvent.requestPermission().then(function(res){
-        if(res === 'granted'){
-          window.addEventListener('deviceorientation', handler);
-        } else {
-          document.getElementById('statOrient').textContent = 'DENIED';
-          runFakeCompass();
-        }
-      }).catch(function(){ runFakeCompass(); });
-    } else if('DeviceOrientationEvent' in window){
-      window.addEventListener('deviceorientation', handler);
-      setTimeout(function(){
-        if(!state.perms.orient){
-          document.getElementById('statOrient').textContent = 'N/A';
-          runFakeCompass();
-        }
-      }, 1500);
-    } else {
-      document.getElementById('statOrient').textContent = 'N/A';
-      runFakeCompass();
-    }
-  }
-  function runFakeCompass(){
-    var h = 0;
-    setInterval(function(){
-      h = (h + (Math.random()*6-3) + 360) % 360;
-      updateCompass(h);
-    }, 2000);
-  }
-
-  // ---------- Browser-readable telemetry ----------
-  function updateTelemetry(){
-    var cores = navigator.hardwareConcurrency || 4;
-    document.getElementById('coreVal').textContent = cores + ' threads';
-
-    var loadPct = Math.min(100, Math.round((cores>0 ? (performance.now()%1000)/10 : 0)));
-    var simLoad = Math.round(18 + Math.random()*22 + (cores<=4?15:0));
-    setBar('cpuBar','cpuVal', simLoad, '%');
-
-    if(navigator.deviceMemory){
-      var usedApprox = Math.round(navigator.deviceMemory * (0.35+Math.random()*0.25) * 10)/10;
-      setBar('memBar','memVal', Math.round((usedApprox/navigator.deviceMemory)*100), '%', usedApprox+' / '+navigator.deviceMemory+' GB');
-    } else {
-      setBar('memBar','memVal', Math.round(30+Math.random()*20), '%', '~ N/A');
-    }
-
-    document.getElementById('viewportVal').textContent = window.innerWidth+'×'+window.innerHeight;
-    document.getElementById('displayVal').textContent = screen.width+'×'+screen.height+' @'+(Math.round((window.devicePixelRatio||1)*100)/100)+'x';
-
-    var connEst = performance.now() % 40 + 8;
-    document.getElementById('pingVal').textContent = Math.round(connEst) + ' ms';
-
-    if(navigator.connection){
-      var c = navigator.connection;
-      var netPct = c.downlink ? Math.min(100, Math.round(c.downlink*10)) : 60;
-      setBar('netBar','netVal', netPct, null, (c.effectiveType||'4g').toUpperCase()+' · '+(c.downlink||'--')+'Mbps');
-    } else {
-      setBar('netBar','netVal', 70, null, navigator.onLine ? 'ONLINE' : 'OFFLINE');
-    }
-  }
-  function detectPlatformInfo(){
-    var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || 'Unknown';
-    document.getElementById('platformVal').textContent = platform;
-
-    var ua = navigator.userAgent;
-    var browser = 'Unknown';
-    if(/Edg\//.test(ua)) browser = 'Edge';
-    else if(/Chrome\//.test(ua) && !/Chromium/.test(ua)) browser = 'Chrome';
-    else if(/Firefox\//.test(ua)) browser = 'Firefox';
-    else if(/Safari\//.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
-    document.getElementById('browserVal').textContent = browser;
-  }
-  function updateProviderBadge(){
-    var el = document.getElementById('statProvider');
-    if(!el) return;
-    el.textContent = activeProvider.toUpperCase();
-  }
-  function setBar(barId, valId, pct, suffix, overrideText){
-    var bar = document.getElementById(barId);
-    var val = document.getElementById(valId);
-    pct = Math.max(0, Math.min(100, pct));
-    bar.style.width = pct+'%';
-    bar.classList.remove('warn','crit');
-    if(pct>85) bar.classList.add('crit'); else if(pct>65) bar.classList.add('warn');
-    val.textContent = overrideText ? overrideText : (pct + (suffix||'%'));
-  }
-  setInterval(updateTelemetry, 2200);
-  detectPlatformInfo();
-
-  function initBattery(){
-    if(navigator.getBattery){
-      navigator.getBattery().then(function(bat){
-        function upd(){
-          var pct = Math.round(bat.level*100);
-          setBar('battBar','battVal', pct, '%', pct+'%'+(bat.charging?' ⚡':''));
-        }
-        upd();
-        bat.addEventListener('levelchange', upd);
-        bat.addEventListener('chargingchange', upd);
-      });
-    } else {
-      setBar('battBar','battVal', 100, '%', 'N/A');
-    }
-  }
-
-  // ---------- Speech synthesis (TTS) ----------
-  var ttsVoice = null;
-  var manualVoiceURI = null;
-  try{ manualVoiceURI = localStorage.getItem('jarvis_voice_uri_v1') || null; }catch(e){}
-
-  function populateVoiceDropdown(){
-    var voices = speechSynthesis.getVoices();
-    var sel = document.getElementById('voiceSelect');
-    if(!sel || voices.length === 0) return;
-    var currentVal = sel.value;
-    sel.innerHTML = '<option value="">Auto (best male match)</option>' + voices.map(function(v){
-      return '<option value="'+v.voiceURI+'">'+v.name+' ('+v.lang+')</option>';
-    }).join('');
-    if(manualVoiceURI){
-      sel.value = manualVoiceURI;
-    } else if(currentVal){
-      sel.value = currentVal;
-    }
-  }
-  function pickVoice(){
-    var voices = speechSynthesis.getVoices();
-    if(manualVoiceURI){
-      var manual = voices.find(function(v){ return v.voiceURI === manualVoiceURI; });
-      if(manual){ ttsVoice = manual; populateVoiceDropdown(); return; }
-    }
-    var femaleNames = /female|hazel|zira|susan|samantha|victoria|karen|moira|tessa|fiona|catherine|linda|olivia|emma|ava|aria/i;
-    var maleNames = /male|daniel|arthur|george|guy|ryan|david|mark|james|matthew|christopher|eric|brian|alex(?!a)/i;
-
-    ttsVoice = voices.find(function(v){ return /en-GB/i.test(v.lang) && maleNames.test(v.name) && !femaleNames.test(v.name); })
-      || voices.find(function(v){ return maleNames.test(v.name) && !femaleNames.test(v.name); })
-      || voices.find(function(v){ return /en-GB/i.test(v.lang) && !femaleNames.test(v.name); })
-      || voices.find(function(v){ return /en/i.test(v.lang) && !femaleNames.test(v.name); })
-      || voices[0];
-    populateVoiceDropdown();
-  }
-  document.getElementById('voiceSelect').addEventListener('change', function(){
-    var val = this.value;
-    if(!val){
-      manualVoiceURI = null;
-      try{ localStorage.removeItem('jarvis_voice_uri_v1'); }catch(e){}
-    } else {
-      manualVoiceURI = val;
-      try{ localStorage.setItem('jarvis_voice_uri_v1', val); }catch(e){}
-    }
-    pickVoice();
-    speak('Voice updated. This is how I sound now.');
-  });
-  if('speechSynthesis' in window){
-    speechSynthesis.onvoiceschanged = pickVoice;
-    pickVoice();
-  }
-  function stripEmojis(text){
-    return text.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '').replace(/\s{2,}/g, ' ').trim();
-  }
-
-  var awakeConversationStart = null;
-  var MAX_CONVERSATION_MS = 30000;
-
-  function enterAwakeState(){
-    state.awake = true;
-    awakeConversationStart = Date.now();
-    clearTimeout(window.__wakeLabelFadeTimer);
-    var label = document.getElementById('wakeLabel');
-    label.style.opacity = '1';
-    label.textContent = 'Listening…';
-    document.getElementById('tickerMode').textContent = 'ACTIVE';
-    resetAwakeTimer();
-  }
-  function closeAwakeState(){
-    state.awake = false;
-    awakeConversationStart = null;
-    clearTimeout(window.__awakeTimeout);
-    var label = document.getElementById('wakeLabel');
-    label.textContent = 'Say "Jarvis" to wake';
-    label.style.opacity = '1';
-    document.getElementById('tickerMode').textContent = 'STANDBY';
-    scheduleWakeLabelFade();
-  }
-  function resetAwakeTimer(){
-    clearTimeout(window.__awakeTimeout);
-    if(awakeConversationStart && (Date.now() - awakeConversationStart) >= MAX_CONVERSATION_MS){
-      closeAwakeState();
-      return;
-    }
-    window.__awakeTimeout = setTimeout(function(){
-      closeAwakeState();
-    }, 7000);
-  }
-  function dispatchSpokenCommand(cmd, raw){
-    handleCommand(cmd, raw);
-    resetAwakeTimer();
-  }
-
-  var lastSpokenText = '';
-  function isLikelyEcho(transcript){
-    if(!lastSpokenText) return false;
-    var t = transcript.toLowerCase().trim();
-    var spoken = lastSpokenText.toLowerCase();
-    if(t.length < 4) return false;
-    return spoken.includes(t) || t.includes(spoken.slice(0, Math.min(20, spoken.length)));
-  }
-
-  var ignoreRecognitionUntil = 0;
-
-  var speakingBlockRecognition = false;
-
-  function speak(text){
-    var clean = stripEmojis(text);
-    lastSpokenText = clean;
-    setCaption(clean);
-    remember(clean);
-    if(!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-
-    speakingBlockRecognition = true;
-    if(recognition && state.listening){
-      try{ recognition.stop(); }catch(e){}
-    }
-
-    var u = new SpeechSynthesisUtterance(clean);
-    if(ttsVoice) u.voice = ttsVoice;
-    u.rate = 1.0; u.pitch = 0.82; u.volume = 1;
-    document.getElementById('dotVoice').classList.add('on');
-    document.getElementById('statVoice').textContent = 'SPEAKING';
-    u.onend = function(){
-      document.getElementById('dotVoice').classList.remove('on');
-      document.getElementById('statVoice').textContent = 'IDLE';
-      lastSpokenText = '';
-      speakingBlockRecognition = false;
-      ignoreRecognitionUntil = Date.now() + 350;
-      if(state.listening && recognition){
-        setTimeout(function(){
-          try{ recognition.start(); }catch(e){}
-        }, 350);
-      }
-      if(state.awake && typeof resetAwakeTimer === 'function'){
-        resetAwakeTimer();
-      }
-    };
-    speechSynthesis.speak(u);
-  }
-
-  var captionTimer;
-  function setCaption(text){
-    var box = document.getElementById('captionBox');
-    box.style.opacity = '0';
-    setTimeout(function(){
-      box.textContent = text;
-      box.style.opacity = '1';
-    }, 150);
-    clearTimeout(captionTimer);
-    captionTimer = setTimeout(function(){
-      box.style.opacity='0.35';
-    }, 6000);
-  }
-
-  // ---------- Speech recognition (wake word + commands) ----------
-  var recognition, restartTimer;
-  function initSpeechRecognition(){
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){
-      document.getElementById('wakeLabel').textContent = 'Voice recognition unsupported — tap mic';
-      return;
-    }
-    recognition = new SR();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = function(e){
-      for(var i=e.resultIndex; i<e.results.length; i++){
-        var result = e.results[i];
-        var transcript = result[0].transcript;
-        var lower = transcript.toLowerCase();
-        var isFinal = result.isFinal;
-
-        if(Date.now() < ignoreRecognitionUntil){
-          continue;
-        }
-
-        if(!state.awake){
-          if(lower.includes('jarvis')){
-            enterAwakeState();
-            setCaption('Yes?');
-            var afterWake = lower.split('jarvis').pop().trim();
-            if(isFinal && afterWake.length > 1){
-              dispatchSpokenCommand(afterWake, transcript);
-            }
-          }
-        } else {
-          resetAwakeTimer();
-          if(isFinal){
-            var cmd = lower.replace('jarvis','').trim();
-            if(cmd.length > 1){
-              dispatchSpokenCommand(cmd, transcript);
-            } else {
-              speak('Go ahead.');
-            }
-          }
-        }
-      }
-    };
-
-    recognition.onerror = function(e){
-      if(e.error === 'not-allowed'){ document.getElementById('statMic').textContent = 'DENIED'; }
-    };
-    recognition.onend = function(){
-      if(state.listening && !speakingBlockRecognition){
-        setTimeout(function(){
-          try{ recognition.start(); }catch(e){}
-        }, 250);
-      }
-    };
-    startListening();
-  }
-
-  function startListening(){
-    if(!recognition) return;
-    state.listening = true;
-    try{ recognition.start(); }catch(e){}
-    document.getElementById('micBtn').classList.add('live');
-  }
-  function stopListening(){
-    state.listening = false;
-    if(recognition){ try{ recognition.stop(); }catch(e){} }
-    document.getElementById('micBtn').classList.remove('live');
-  }
-
-  document.getElementById('micBtn').addEventListener('click', function(){
-    if(!state.perms.mic){ initMic(); return; }
-    if(!recognition){ return; }
-    if(state.listening){ stopListening(); } else { startListening(); }
-  });
-
-  // ---------- Command handling ----------
-  function handleCommand(cmd, raw){
-    document.getElementById('tickerMode').textContent = 'PROCESSING';
-    if(cmd.includes('status') || cmd.includes('report')){
-      var cores = navigator.hardwareConcurrency || 4;
-      var battEl = document.getElementById('battVal').textContent;
-      speak('All systems nominal. Running on '+cores+' threads, power cell at '+battEl+'.');
-    } else if(cmd.includes('time')){
-      speak('It is currently ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '.');
-    } else if(cmd.includes('who are you') || cmd.includes('introduce')){
-      speak('I am your interface assistant, built to monitor your system and assist on request.');
-    } else if(cmd.includes('clear memory') || cmd.includes('forget everything')){
-      state.memory = [];
-      try{ localStorage.removeItem(MEM_KEY); }catch(e){}
-      renderMemory();
-      speak('Memory log purged.');
-    } else if(cmd.trim().length === 0){
-      speak('Go ahead.');
-    } else if(isScreenVisionCommand(cmd)){
-      handleScreenVisionCommand(cmd);
-    } else if(isVisionCommand(cmd)){
-      handleVisionCommand(cmd);
-    } else if(currentKey()){
-      setCaption('Thinking…');
-      callAIText(cmd, function(text, err){
-        if(err){
-          speak('I hit an error reaching the reasoning engine. ' + (err.length < 60 ? err : 'Check your API key.'));
-        } else if(soundsUncertain(text) && camStream){
-          setCaption('Checking the camera…');
-          var frame = captureFrameBase64();
-          if(!frame){
-            speak(text);
-            return;
-          }
-          callAIVision(cmd, frame, function(visionText, visionErr){
-            if(visionErr || !visionText || soundsUncertain(visionText)){
-              speak("I don't know.");
-            } else {
-              speak(visionText);
-            }
-          });
-        } else {
-          speak(text);
-        }
-      });
-    } else if(cmd.includes('remember')){
-      speak('Noted. I will keep that in the log.');
-      remember('User note: ' + raw.replace(/jarvis/ig,'').trim());
-    } else {
-      speak('I heard: ' + cmd + '. Add an API key in settings so I can actually reason about that.');
-    }
-    setTimeout(function(){
-      if(document.getElementById('tickerMode').textContent === 'PROCESSING'){
-        document.getElementById('tickerMode').textContent = 'STANDBY';
-      }
-    }, 3000);
-  }
-
-  // ---------- Start gate ----------
-  function isInIframe(){
-    try{ return window.self !== window.top; }catch(e){ return true; }
-  }
-
-  (function checkSecurity(){
-    var w = document.getElementById('secWarning');
-    if(isInIframe()){
-      w.style.display = 'block';
-      w.textContent = 'This is running inside an embedded preview (an iframe), which browsers block from using the camera or microphone regardless of site permissions. Download this file and open it directly in its own browser tab — e.g. via "python3 -m http.server" and http://localhost:8000 — to enable those features.';
-    } else if(window.isSecureContext !== true){
-      w.style.display = 'block';
-      w.textContent = 'Warning: this page is not running on https or localhost (currently ' + window.location.protocol + '). Chrome and most browsers will block camera and microphone access entirely on insecure origins — no permission prompt will appear. Host this file over https, or run it via a local server at http://localhost, to enable those features.';
-    }
-  })();
-
-  document.getElementById('initBtn').addEventListener('click', function(){
-    document.getElementById('startGate').style.display = 'none';
-    runBoot(function(){
-      initGeo();
-      initOrientation();
-      initBattery();
-      updateTelemetry();
-      speak('Good to see you. All systems nominal.');
-    });
-  });
-
-})();
+    const seconds = (performance.now()-start)/1000;
+    const mbps = (bytes*8/seconds/1_000_000).toFixed(1);
+    $("connection").textContent = `${mbps} Mbps`;
+    status("Download estimate complete. Upload testing requires a cooperating server.");
+  } catch {
+    status("Speed test blocked by the network or browser.");
+  }
+}
+
+function updateTelemetry() {
+  $("resolution").textContent = `${screen.width}×${screen.height}`;
+  $("cores").textContent = navigator.hardwareConcurrency || "Restricted";
+  $("memory").textContent = navigator.deviceMemory
+    ? `${navigator.deviceMemory} GB`
+    : "Restricted";
+
+  const connection = navigator.connection;
+  $("connection").textContent = connection
+    ? `${connection.effectiveType} / ${connection.downlink} Mbps`
+    : "Restricted";
+}
+
+function countFps(now) {
+  frames++;
+  if (now-previousFrame >= 1000) {
+    displayedFps = frames;
+    frames = 0;
+    previousFrame = now;
+    $("fps").textContent = displayedFps;
+  }
+  requestAnimationFrame(countFps);
+}
+
+updateTelemetry();
+ping();
+setInterval(ping,15000);
+requestAnimationFrame(countFps);
 </script>
 </body>
 </html>
