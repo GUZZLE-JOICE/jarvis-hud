@@ -1,478 +1,686 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>J.A.R.V.I.S</title>
+<style>
+  :root{
+    --cyan:#4fe3ff; --cyan-dim:#1b6b7d; --gold:#ffb347; --red:#ff4d4d;
+    --bg:#01060b; --panel:rgba(8,26,38,.55); --line:rgba(79,227,255,.28);
+    --font:"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(circle at 50% 55%,#062031 0%,var(--bg) 70%);
+    color:var(--cyan); font-family:var(--font); overflow:hidden;
+    text-shadow:0 0 6px rgba(79,227,255,.45);
+  }
+  body::after{ /* scanlines */
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:60; opacity:.35;
+    background:repeating-linear-gradient(to bottom,rgba(79,227,255,.05) 0 1px,transparent 1px 3px);
+  }
+  button,input,select,textarea{font-family:inherit;color:inherit}
 
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  /* ---------- boot ---------- */
+  #boot{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;
+    align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .8s}
+  #boot.done{opacity:0;pointer-events:none}
+  #bootLog{width:min(560px,86vw);height:190px;overflow:hidden;font-size:12.5px;letter-spacing:.6px;line-height:1.7}
+  #bootBarWrap{width:min(560px,86vw);height:3px;background:rgba(79,227,255,.15)}
+  #bootBar{height:100%;width:0;background:var(--cyan);box-shadow:0 0 12px var(--cyan);transition:width .25s}
+  .boot-title{font-size:30px;letter-spacing:14px;font-weight:300}
 
-  <style>
-    :root {
-      --cyan:#49e9ff; --blue:#087cff; --dark:#020812;
-      --glass:rgba(5,25,44,.72); --border:rgba(73,233,255,.35);
-    }
-    * { box-sizing:border-box }
-    body {
-      margin:0; min-height:100vh; overflow:hidden; color:#dffcff;
-      font:14px Inter,system-ui,sans-serif;
-      background:
-        radial-gradient(circle at 50% 45%,#063b61 0,#041527 28%,#01040a 72%);
-    }
-    body::before {
-      content:""; position:fixed; inset:0; pointer-events:none; opacity:.16;
-      background-image:linear-gradient(var(--border) 1px,transparent 1px),
-      linear-gradient(90deg,var(--border) 1px,transparent 1px);
-      background-size:45px 45px;
-    }
-    button,input,select { font:inherit }
-    button {
-      color:var(--cyan); background:#06213a; border:1px solid var(--border);
-      border-radius:8px; padding:9px 13px; cursor:pointer;
-    }
-    button:hover { box-shadow:0 0 15px #1adfff88; background:#0b3151 }
-    header {
-      height:64px; display:flex; align-items:center; justify-content:space-between;
-      padding:0 20px; border-bottom:1px solid var(--border); background:#020916cc;
-    }
-    h1 { margin:0; letter-spacing:.35em; font-size:20px; text-shadow:0 0 15px var(--cyan) }
-    .online::before { content:"●"; color:#45ff9c; margin-right:7px }
-    main {
-      height:calc(100vh - 64px); display:grid;
-      grid-template-columns:280px minmax(400px,1fr) 340px; gap:12px; padding:12px;
-    }
-    .panel {
-      background:var(--glass); border:1px solid var(--border); border-radius:14px;
-      backdrop-filter:blur(14px); box-shadow:inset 0 0 25px #008cff10;
-      padding:14px; overflow:auto;
-    }
-    .title { color:var(--cyan); letter-spacing:.18em; font-size:12px; margin:0 0 12px }
-    .telemetry { display:grid; grid-template-columns:1fr 1fr; gap:8px }
-    .metric {
-      min-height:66px; background:#031323; border-left:2px solid var(--cyan);
-      border-radius:6px; padding:9px;
-    }
-    .metric b { display:block; margin-top:7px; font-size:16px }
-    .controls { display:grid; gap:8px; margin-top:13px }
-    .controls button { width:100%; text-align:left }
-    .stage { position:relative; padding:0; overflow:hidden }
-    video,.stage canvas {
-      position:absolute; width:100%; height:100%; object-fit:contain;
-      background:#01050b;
-    }
-    #camera { transform:scaleX(-1) }
-    #handCanvas { transform:scaleX(-1); pointer-events:none }
-    .hud {
-      position:absolute; inset:14px; pointer-events:none;
-      border:1px solid #49e9ff55; clip-path:polygon(0 0,28% 0,30% 2%,70% 2%,72% 0,100% 0,100% 100%,0 100%);
-    }
-    .crosshair {
-      position:absolute; left:50%; top:50%; width:90px; height:90px;
-      border:1px solid var(--cyan); border-radius:50%; transform:translate(-50%,-50%);
-      box-shadow:0 0 25px #28dfff55; pointer-events:none;
-    }
-    .crosshair::after {
-      content:""; position:absolute; inset:13px; border:1px dashed var(--cyan);
-      border-radius:50%; animation:spin 8s linear infinite;
-    }
-    @keyframes spin { to { transform:rotate(360deg) } }
-    #status {
-      position:absolute; bottom:13px; left:13px; right:13px;
-      padding:9px; background:#00101dcc; border-left:3px solid var(--cyan);
-    }
-    .chat { display:flex; flex-direction:column; min-height:0 }
-    #messages { flex:1; overflow:auto }
-    .message {
-      margin:8px 0; padding:10px; border-radius:9px; white-space:pre-wrap;
-      background:#071a2b;
-    }
-    .user { border-right:2px solid #9c72ff; text-align:right }
-    .jarvis { border-left:2px solid var(--cyan) }
-    .composer { display:grid; grid-template-columns:1fr auto auto; gap:6px; margin-top:8px }
-    input,select {
-      min-width:0; color:white; padding:10px; border-radius:8px;
-      border:1px solid var(--border); background:#020c17;
-    }
-    .config { display:grid; gap:7px; margin-bottom:9px }
-    small { color:#83a9be }
-    #cursor {
-      position:fixed; z-index:50; width:24px; height:24px; border:2px solid var(--cyan);
-      border-radius:50%; pointer-events:none; display:none; transform:translate(-50%,-50%);
-      box-shadow:0 0 18px var(--cyan);
-    }
-    @media(max-width:1000px) {
-      body { overflow:auto } main { height:auto; grid-template-columns:1fr }
-      .panel,.stage { min-height:520px }
-    }
-  </style>
+  /* ---------- layout ---------- */
+  #hud{display:grid;grid-template-columns:290px 1fr 330px;grid-template-rows:52px 1fr 76px;
+    height:100%;gap:14px;padding:14px;}
+  header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);padding-bottom:8px}
+  .brand{letter-spacing:10px;font-weight:300;font-size:19px}
+  .brand b{color:var(--gold);font-weight:400}
+  .head-right{display:flex;align-items:center;gap:16px;font-size:12px;letter-spacing:1px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);
+    display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+  .dot.off{background:var(--red);box-shadow:0 0 10px var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 14px;
+    position:relative;backdrop-filter:blur(3px);overflow:hidden}
+  .panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border:1px solid var(--cyan);opacity:.8}
+  .panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+  .panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+  .panel h2{font-size:11px;letter-spacing:3px;font-weight:400;color:var(--gold);margin-bottom:10px;opacity:.9}
+
+  #left,#right{display:flex;flex-direction:column;gap:14px;min-height:0}
+  #center{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;min-height:0}
+
+  /* ---------- telemetry ---------- */
+  .row{display:flex;justify-content:space-between;font-size:12px;margin:5px 0;letter-spacing:.5px}
+  .row span:last-child{color:#dff8ff}
+  .bar{height:4px;background:rgba(79,227,255,.15);margin:4px 0 10px;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));
+    box-shadow:0 0 8px var(--cyan);width:0;transition:width .6s}
+  #clock{font-size:30px;font-weight:200;letter-spacing:4px;text-align:center;color:#dff8ff}
+  #date{font-size:11px;letter-spacing:3px;text-align:center;opacity:.7;margin-top:2px}
+
+  /* ---------- reactor + camera ---------- */
+  #reactorWrap{position:relative;width:min(46vh,420px);aspect-ratio:1}
+  #reactor{width:100%;height:100%;display:block}
+  #cam{position:absolute;inset:22%;border-radius:50%;object-fit:cover;width:56%;height:56%;
+    opacity:0;transition:opacity .6s;transform:scaleX(-1);border:1px solid var(--line)}
+  #cam.on{opacity:.9}
+  #status{margin-top:18px;font-size:12px;letter-spacing:5px;opacity:.75;min-height:16px;text-align:center}
+
+  /* ---------- log ---------- */
+  #log{flex:1;overflow-y:auto;font-size:12.5px;line-height:1.65;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+  #log::-webkit-scrollbar{width:4px}
+  #log::-webkit-scrollbar-thumb{background:var(--cyan-dim)}
+  .msg{border-left:2px solid var(--cyan-dim);padding-left:9px;white-space:pre-wrap;word-break:break-word}
+  .msg.user{border-color:var(--gold);color:#ffe0b8}
+  .msg.sys{border-color:#2b4c5c;color:#7fa8b8;font-size:11.5px;letter-spacing:.6px}
+  .msg.err{border-color:var(--red);color:#ffb0b0}
+  .msg .who{display:block;font-size:9.5px;letter-spacing:2.5px;opacity:.65;margin-bottom:2px}
+
+  /* ---------- command bar ---------- */
+  #bar{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+  #input{flex:1;height:46px;background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    padding:0 16px;font-size:14px;letter-spacing:.5px;outline:none}
+  #input:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(79,227,255,.25)}
+  .btn{height:46px;min-width:46px;padding:0 16px;background:transparent;border:1px solid var(--line);
+    border-radius:3px;cursor:pointer;font-size:11px;letter-spacing:2px;transition:.2s}
+  .btn:hover{background:rgba(79,227,255,.12);border-color:var(--cyan)}
+  .btn.active{background:rgba(255,179,71,.15);border-color:var(--gold);color:var(--gold)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+
+  /* ---------- modal ---------- */
+  #modal{position:fixed;inset:0;z-index:80;background:rgba(1,6,11,.85);display:none;
+    align-items:center;justify-content:center}
+  #modal.open{display:flex}
+  #modal .panel{width:min(430px,92vw);padding:22px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:10.5px;letter-spacing:2px;opacity:.75;margin-bottom:5px}
+  .field input,.field select{width:100%;height:38px;background:rgba(0,0,0,.35);
+    border:1px solid var(--line);border-radius:3px;padding:0 10px;font-size:13px;outline:none}
+  .field.inline{display:flex;align-items:center;gap:9px}
+  .field.inline input{width:16px;height:16px;accent-color:var(--cyan)}
+  .field.inline label{margin:0}
+  .hint{font-size:10.5px;color:#7fa8b8;letter-spacing:.4px;line-height:1.5;margin-top:-6px;margin-bottom:14px}
+
+  @media(max-width:1000px){
+    #hud{grid-template-columns:1fr;grid-template-rows:52px auto auto auto 76px}
+    #left,#right{max-height:230px}
+    #reactorWrap{width:min(42vh,300px)}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
-
 <body>
-<header>
-  <h1>J.A.R.V.I.S.</h1>
-  <div class="online">LOCAL SYSTEM ONLINE</div>
-</header>
 
-<main>
-  <aside class="panel">
-    <p class="title">SYSTEM TELEMETRY</p>
-    <div class="telemetry">
-      <div class="metric">Resolution<b id="resolution">—</b></div>
-      <div class="metric">Connection<b id="connection">—</b></div>
-      <div class="metric">Ping<b id="ping">—</b></div>
-      <div class="metric">Memory hint<b id="memory">—</b></div>
-      <div class="metric">CPU cores<b id="cores">—</b></div>
-      <div class="metric">FPS<b id="fps">—</b></div>
-      <div class="metric">GPU usage<b>Restricted</b></div>
-      <div class="metric">Temperatures<b>Restricted</b></div>
+<!-- ============ BOOT ============ -->
+<div id="boot">
+  <div class="boot-title">J.A.R.V.I.S</div>
+  <div id="bootBarWrap"><div id="bootBar"></div></div>
+  <div id="bootLog"></div>
+</div>
+
+<!-- ============ HUD ============ -->
+<div id="hud">
+  <header>
+    <div class="brand">J.A.R.V.I.<b>S</b></div>
+    <div class="head-right">
+      <span><i class="dot" id="netDot"></i><span id="netTxt">ONLINE</span></span>
+      <span id="providerTxt">OFFLINE CORE</span>
+      <button class="btn" id="settingsBtn">SETTINGS</button>
     </div>
+  </header>
 
-    <div class="controls">
-      <button onclick="startScreen()">▣ Share screen</button>
-      <button onclick="startHands()">◉ Camera + hand tracking</button>
-      <button onclick="calibrate()">⌖ Calibrate gesture</button>
-      <button onclick="stopMedia()">□ Stop media</button>
-      <button onclick="runSpeedTest()">⇅ Estimate connection speed</button>
+  <!-- left -->
+  <div id="left">
+    <div class="panel">
+      <div id="clock">--:--:--</div>
+      <div id="date">INITIALISING</div>
     </div>
+    <div class="panel" style="flex:1">
+      <h2>SYSTEM TELEMETRY</h2>
+      <div class="row"><span>POWER</span><span id="battTxt">N/A</span></div>
+      <div class="bar"><i id="battBar"></i></div>
+      <div class="row"><span>MEMORY</span><span id="memTxt">N/A</span></div>
+      <div class="bar"><i id="memBar"></i></div>
+      <div class="row"><span>RENDER</span><span id="fpsTxt">-- FPS</span></div>
+      <div class="bar"><i id="fpsBar"></i></div>
+      <div class="row"><span>UPLINK</span><span id="connTxt">--</span></div>
+      <div class="row"><span>VIEWPORT</span><span id="vpTxt">--</span></div>
+      <div class="row"><span>UPTIME</span><span id="upTxt">00:00</span></div>
+    </div>
+  </div>
 
-    <p class="title" style="margin-top:18px">GESTURES</p>
-    <small>
-      One pinch: click<br>
-      Double pinch: drag/release<br>
-      Pinch with both hands: page zoom<br>
-      Move index finger: pointer
-    </small>
-  </aside>
+  <!-- center -->
+  <div id="center">
+    <div id="reactorWrap">
+      <canvas id="reactor"></canvas>
+      <video id="cam" autoplay playsinline muted></video>
+    </div>
+    <div id="status">SYSTEMS NOMINAL</div>
+  </div>
 
-  <section class="panel stage">
-    <video id="screen" autoplay playsinline></video>
-    <video id="camera" autoplay playsinline muted hidden></video>
-    <canvas id="handCanvas"></canvas>
-    <div class="hud"></div>
-    <div class="crosshair"></div>
-    <div id="status">Awaiting command, sir.</div>
-  </section>
+  <!-- right -->
+  <div class="panel" id="right">
+    <h2>COMMS LOG</h2>
+    <div id="log"></div>
+  </div>
 
-  <aside class="panel chat">
-    <p class="title">OLLAMA INTELLIGENCE</p>
+  <!-- command bar -->
+  <div id="bar">
+    <button class="btn" id="micBtn" title="Push to talk">MIC</button>
+    <button class="btn" id="wakeBtn" title="Wake word listening">WAKE</button>
+    <button class="btn" id="camBtn">CAM</button>
+    <input id="input" placeholder="Speak or type a command, sir…" autocomplete="off" />
+    <button class="btn" id="sendBtn">SEND</button>
+    <button class="btn" id="muteBtn" title="Voice output">VOICE</button>
+  </div>
+</div>
 
-    <div class="config">
-      <input id="endpoint" value="http://localhost:11434">
-      <select id="model">
-        <option>llava:7b</option>
-        <option>llava</option>
-        <option>llama3.2</option>
-        <option>qwen2.5</option>
+<!-- ============ SETTINGS ============ -->
+<div id="modal">
+  <div class="panel">
+    <h2>CONFIGURATION</h2>
+    <div class="field">
+      <label>AI PROVIDER</label>
+      <select id="cfgProvider">
+        <option value="offline">Offline core (no network)</option>
+        <option value="claude">Anthropic Claude</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="ollama">Ollama (local)</option>
       </select>
     </div>
-
-    <div id="messages">
-      <div class="message jarvis">JARVIS initialized. Screen, camera and automation require your permission.</div>
+    <div class="field"><label>MODEL</label><input id="cfgModel" placeholder="claude-sonnet-4-20250514" /></div>
+    <div class="field"><label>API KEY</label><input id="cfgKey" type="password" placeholder="stored in this browser only" /></div>
+    <div class="field"><label>OLLAMA HOST</label><input id="cfgHost" placeholder="http://localhost:11434" /></div>
+    <p class="hint">Keys are kept in localStorage on this device. Any script on this page can read them, so use a backend proxy before putting this anywhere public.</p>
+    <div class="field inline"><input type="checkbox" id="cfgVoice" /><label>VOICE OUTPUT</label></div>
+    <div class="field inline"><input type="checkbox" id="cfgWake" /><label>WAKE WORD ("jarvis")</label></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn" id="cfgSave" style="flex:1">SAVE</button>
+      <button class="btn" id="cfgWipe">WIPE MEMORY</button>
+      <button class="btn" id="cfgClose">CLOSE</button>
     </div>
-
-    <div class="composer">
-      <input id="prompt" placeholder="Ask JARVIS…" onkeydown="if(event.key==='Enter') send()">
-      <button onclick="listen()">🎙</button>
-      <button onclick="send()">Send</button>
-    </div>
-  </aside>
-</main>
-
-<div id="cursor"></div>
+  </div>
+</div>
 
 <script>
-const $ = id => document.getElementById(id);
-const screenVideo = $("screen");
-const cameraVideo = $("camera");
-const canvas = $("handCanvas");
-const ctx = canvas.getContext("2d");
-const cursor = $("cursor");
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
 
-let mediaStream, handCamera, hands;
-let calibratedPinch = 0.055;
-let lastPinch = 0, dragging = false, previousFrame = performance.now();
-let frames = 0, displayedFps = 0, zoom = 1;
+/* =================== STORE =================== */
+const Store = {
+  key: "jarvis.cfg.v1",
+  defaults: { provider:"offline", model:"", apiKey:"", host:"http://localhost:11434", voice:true, wake:false },
+  load(){ try { return Object.assign({}, this.defaults, JSON.parse(localStorage.getItem(this.key) || "{}")); }
+          catch { return Object.assign({}, this.defaults); } },
+  save(cfg){ try { localStorage.setItem(this.key, JSON.stringify(cfg)); } catch {} }
+};
+let cfg = Store.load();
 
-function status(text) { $("status").textContent = text; }
+const Memory = {
+  key:"jarvis.mem.v1", max:24,
+  load(){ try { return JSON.parse(localStorage.getItem(this.key) || "[]"); } catch { return []; } },
+  push(role, content){
+    const h = this.load(); h.push({ role, content });
+    try { localStorage.setItem(this.key, JSON.stringify(h.slice(-this.max))); } catch {}
+  },
+  wipe(){ try { localStorage.removeItem(this.key); } catch {} }
+};
 
-function addMessage(text, type) {
+/* =================== LOG =================== */
+const logEl = $("#log");
+function log(text, type = "jarvis"){
+  const who = { jarvis:"JARVIS", user:"YOU", sys:"SYSTEM", err:"FAULT" }[type] || "JARVIS";
   const el = document.createElement("div");
-  el.className = "message " + type;
-  el.textContent = text;
-  $("messages").append(el);
-  $("messages").scrollTop = $("messages").scrollHeight;
+  el.className = "msg " + (type === "jarvis" ? "" : type);
+  const h = document.createElement("span"); h.className = "who"; h.textContent = who;
+  el.appendChild(h); el.appendChild(document.createTextNode(text));
+  logEl.appendChild(el);
+  while (logEl.children.length > 120) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
 }
+const setStatus = t => { $("#status").textContent = t; };
 
-async function startScreen() {
-  try {
-    mediaStream = await navigator.mediaDevices.getDisplayMedia({
-      video:{ frameRate:{ ideal:30 } }, audio:true
-    });
-    screenVideo.srcObject = mediaStream;
-    cameraVideo.hidden = true;
-    status("Screen link active.");
-    mediaStream.getVideoTracks()[0].onended = () => status("Screen sharing stopped.");
-  } catch (error) {
-    status("Screen permission was not granted.");
+/* =================== SPEECH OUT =================== */
+const Voice = {
+  ready:false, v:null,
+  init(){
+    if (!("speechSynthesis" in window)) return;
+    const pick = () => {
+      const list = speechSynthesis.getVoices();
+      if (!list.length) return;
+      this.v = list.find(v => /Daniel|George|Arthur|UK English Male/i.test(v.name))
+            || list.find(v => v.lang === "en-GB")
+            || list.find(v => v.lang.startsWith("en")) || list[0];
+      this.ready = true;
+    };
+    pick(); speechSynthesis.onvoiceschanged = pick;
+  },
+  say(text){
+    if (!cfg.voice || !("speechSynthesis" in window) || !text) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.slice(0, 600));
+    if (this.v) u.voice = this.v;
+    u.rate = 1.02; u.pitch = 0.9;
+    u.onstart = () => { Reactor.speaking = true; };
+    u.onend = u.onerror = () => { Reactor.speaking = false; };
+    speechSynthesis.speak(u);
+  },
+  stop(){ if ("speechSynthesis" in window) speechSynthesis.cancel(); Reactor.speaking = false; }
+};
+
+/* =================== SPEECH IN =================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const Ears = {
+  rec:null, mode:null, supported:!!SR,
+  build(continuous){
+    const r = new SR();
+    r.lang = "en-US"; r.interimResults = false; r.continuous = continuous; r.maxAlternatives = 1;
+    return r;
+  },
+  push(){ // push-to-talk
+    if (!this.supported) return log("Speech recognition is unavailable in this browser.", "err");
+    this.stop();
+    const r = this.build(false); this.rec = r; this.mode = "push";
+    $("#micBtn").classList.add("active"); setStatus("LISTENING");
+    r.onresult = e => {
+      const t = (e.results[0][0].transcript || "").trim();
+      if (t) handleCommand(t);
+    };
+    r.onerror = e => { if (e.error !== "aborted") log("Microphone error: " + e.error, "err"); };
+    r.onend = () => { $("#micBtn").classList.remove("active"); setStatus("SYSTEMS NOMINAL");
+                      if (this.mode === "push"){ this.rec = null; this.mode = null; if (cfg.wake) this.wake(); } };
+    try { r.start(); } catch {}
+  },
+  wake(){ // continuous wake-word scan
+    if (!this.supported || !cfg.wake) return;
+    this.stop();
+    const r = this.build(true); this.rec = r; this.mode = "wake";
+    $("#wakeBtn").classList.add("active");
+    r.onresult = e => {
+      const t = (e.results[e.results.length - 1][0].transcript || "").trim();
+      if (/\bjarvis\b/i.test(t)){
+        const cmd = t.replace(/.*\bjarvis\b[,\s]*/i, "").trim();
+        if (cmd) handleCommand(cmd);
+        else { setStatus("AWAITING ORDERS"); Voice.say("Yes, sir?"); }
+      }
+    };
+    r.onerror = e => { if (e.error === "not-allowed"){ cfg.wake = false; syncButtons();
+                        log("Microphone permission denied; wake word disabled.", "err"); } };
+    r.onend = () => { if (this.mode === "wake" && cfg.wake) { try { r.start(); } catch {} } 
+                      else $("#wakeBtn").classList.remove("active"); };
+    try { r.start(); } catch {}
+  },
+  stop(){
+    this.mode = null;
+    if (this.rec){ try { this.rec.onend = null; this.rec.stop(); } catch {} this.rec = null; }
+    $("#wakeBtn").classList.remove("active"); $("#micBtn").classList.remove("active");
   }
-}
+};
 
-async function startHands() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{ width:1280, height:720, facingMode:"user" }, audio:false
-    });
-    cameraVideo.srcObject = stream;
-    cameraVideo.hidden = false;
-    screenVideo.srcObject = null;
-    cursor.style.display = "block";
-
-    hands ||= new Hands({
-      locateFile:file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-
-    hands.setOptions({
-      maxNumHands:2,
-      modelComplexity:1,
-      minDetectionConfidence:.7,
-      minTrackingConfidence:.7
-    });
-
-    hands.onResults(drawHands);
-
-    handCamera = new Camera(cameraVideo, {
-      width:1280,
-      height:720,
-      onFrame:async () => hands.send({ image:cameraVideo })
-    });
-
-    await handCamera.start();
-    status("Optical hand interface active.");
-  } catch (error) {
-    status("Camera access failed: " + error.message);
+/* =================== CAMERA =================== */
+const Camera = {
+  stream:null,
+  async toggle(){
+    if (this.stream) return this.stop();
+    if (!navigator.mediaDevices?.getUserMedia) return log("Camera API unavailable.", "err");
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user", width:640 }, audio:false });
+      const v = $("#cam"); v.srcObject = this.stream; v.classList.add("on");
+      $("#camBtn").classList.add("active");
+      log("Optical feed online.", "sys");
+    } catch (e){ log("Camera access refused: " + e.message, "err"); }
+  },
+  stop(){
+    this.stream?.getTracks().forEach(t => t.stop());
+    this.stream = null;
+    const v = $("#cam"); v.srcObject = null; v.classList.remove("on");
+    $("#camBtn").classList.remove("active");
+    log("Optical feed offline.", "sys");
   }
-}
+};
 
-function distance(a,b) {
-  return Math.hypot(a.x-b.x, a.y-b.y);
-}
+/* =================== REACTOR CANVAS =================== */
+const Reactor = {
+  cv:null, ctx:null, t:0, speaking:false, thinking:false, raf:0, frames:0, last:performance.now(), fps:60,
+  init(){
+    this.cv = $("#reactor"); this.ctx = this.cv.getContext("2d");
+    this.resize(); addEventListener("resize", () => this.resize());
+    document.addEventListener("visibilitychange", () => document.hidden ? this.pause() : this.play());
+    this.play();
+  },
+  resize(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const s = this.cv.clientWidth || 300;
+    this.cv.width = s * dpr; this.cv.height = s * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.size = s;
+  },
+  play(){ if (!this.raf) this.raf = requestAnimationFrame(ts => this.loop(ts)); },
+  pause(){ cancelAnimationFrame(this.raf); this.raf = 0; },
+  loop(ts){
+    this.raf = requestAnimationFrame(t => this.loop(t));
+    this.frames++;
+    if (ts - this.last >= 1000){ this.fps = Math.round(this.frames * 1000 / (ts - this.last)); this.frames = 0; this.last = ts; }
+    this.t += 0.016; this.draw();
+  },
+  ring(c, r, w, from, to, col, alpha){
+    const x = this.ctx; x.beginPath(); x.arc(c, c, r, from, to);
+    x.strokeStyle = col; x.globalAlpha = alpha; x.lineWidth = w; x.stroke(); x.globalAlpha = 1;
+  },
+  draw(){
+    const x = this.ctx, s = this.size, c = s / 2, t = this.t;
+    const cyan = "#4fe3ff", gold = "#ffb347";
+    const pulse = this.speaking ? 0.55 + Math.abs(Math.sin(t * 9)) * 0.45
+                : this.thinking ? 0.4 + Math.abs(Math.sin(t * 3)) * 0.35
+                : 0.45 + Math.sin(t * 1.6) * 0.12;
+    x.clearRect(0, 0, s, s);
 
-function drawHands(results) {
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+    // outer tick ring
+    x.save(); x.translate(c, c); x.rotate(t * 0.12);
+    for (let i = 0; i < 72; i++){
+      const long = i % 6 === 0;
+      x.beginPath(); x.rotate((Math.PI * 2) / 72);
+      x.moveTo(0, -c * 0.96); x.lineTo(0, -c * (long ? 0.88 : 0.92));
+      x.strokeStyle = long ? gold : cyan; x.globalAlpha = long ? 0.8 : 0.35;
+      x.lineWidth = long ? 1.6 : 1; x.stroke();
+    }
+    x.restore(); x.globalAlpha = 1;
 
-  const sets = results.multiHandLandmarks || [];
-  const pinched = [];
+    // rotating arc segments
+    this.ring(c, c * 0.80, 2, t * 0.9, t * 0.9 + 1.5, cyan, 0.85);
+    this.ring(c, c * 0.80, 2, t * 0.9 + Math.PI, t * 0.9 + Math.PI + 1.1, cyan, 0.6);
+    this.ring(c, c * 0.70, 1.5, -t * 1.3, -t * 1.3 + 2.4, gold, 0.7);
+    this.ring(c, c * 0.62, 1, t * 0.5, t * 0.5 + Math.PI * 1.7, cyan, 0.3);
 
-  for (const marks of sets) {
-    drawConnectors(ctx, marks, HAND_CONNECTIONS, {
-      color:"#168fff", lineWidth:5
-    });
-    drawLandmarks(ctx, marks, {
-      color:"#93f6ff", fillColor:"#087cff", lineWidth:2, radius:4
-    });
+    // coil segments
+    x.save(); x.translate(c, c); x.rotate(-t * 0.4);
+    for (let i = 0; i < 10; i++){
+      x.rotate((Math.PI * 2) / 10);
+      x.beginPath(); x.arc(0, -c * 0.42, c * 0.055, 0, Math.PI * 2);
+      x.fillStyle = cyan; x.globalAlpha = 0.18 + 0.5 * Math.abs(Math.sin(t * 2 + i));
+      x.fill();
+    }
+    x.restore(); x.globalAlpha = 1;
 
-    const pinchDistance = distance(marks[4], marks[8]);
-    pinched.push(pinchDistance < calibratedPinch);
+    // core glow
+    const g = x.createRadialGradient(c, c, 0, c, c, c * 0.36);
+    g.addColorStop(0, `rgba(220,250,255,${0.85 * pulse + 0.15})`);
+    g.addColorStop(0.45, `rgba(79,227,255,${0.5 * pulse})`);
+    g.addColorStop(1, "rgba(79,227,255,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(c, c, c * 0.36, 0, Math.PI * 2); x.fill();
 
-    const x = (1 - marks[8].x) * innerWidth;
-    const y = marks[8].y * innerHeight;
-    cursor.style.left = x + "px";
-    cursor.style.top = y + "px";
-
-    if (pinchDistance < calibratedPinch) processPinch(x,y);
+    // core rim (hidden behind camera when active)
+    if (!Camera.stream){
+      this.ring(c, c * 0.22, 2, 0, Math.PI * 2, "#dffaff", 0.55 + pulse * 0.4);
+      x.beginPath(); x.arc(c, c, c * 0.14, 0, Math.PI * 2);
+      x.fillStyle = `rgba(190,245,255,${0.35 + pulse * 0.5})`; x.fill();
+    }
   }
+};
 
-  if (pinched.length === 2 && pinched.every(Boolean)) {
-    zoom = Math.min(1.8, zoom + .01);
-    document.documentElement.style.zoom = zoom;
-    status(`Dual-pinch zoom: ${Math.round(zoom*100)}%`);
+/* =================== TELEMETRY =================== */
+const Telemetry = {
+  start:Date.now(), batt:null,
+  init(){
+    navigator.getBattery?.().then(b => {
+      this.batt = b;
+      ["levelchange","chargingchange"].forEach(ev => b.addEventListener(ev, () => this.tick()));
+    }).catch(() => {});
+    addEventListener("online", () => this.net()); addEventListener("offline", () => this.net());
+    this.net(); this.tick(); setInterval(() => this.tick(), 1000);
+  },
+  net(){
+    const on = navigator.onLine;
+    $("#netDot").classList.toggle("off", !on);
+    $("#netTxt").textContent = on ? "ONLINE" : "NO UPLINK";
+  },
+  tick(){
+    const d = new Date();
+    $("#clock").textContent = d.toLocaleTimeString("en-GB");
+    $("#date").textContent = d.toLocaleDateString("en-GB",{weekday:"long",day:"2-digit",month:"short",year:"numeric"}).toUpperCase();
+
+    if (this.batt){
+      const p = Math.round(this.batt.level * 100);
+      $("#battTxt").textContent = p + "%" + (this.batt.charging ? " ⚡" : "");
+      $("#battBar").style.width = p + "%";
+    } else { $("#battTxt").textContent = "EXTERNAL"; $("#battBar").style.width = "100%"; }
+
+    const m = performance.memory;
+    if (m){
+      const p = Math.min(100, Math.round(m.usedJSHeapSize / m.jsHeapSizeLimit * 100));
+      $("#memTxt").textContent = (m.usedJSHeapSize / 1048576).toFixed(0) + " MB";
+      $("#memBar").style.width = p + "%";
+    } else { $("#memTxt").textContent = "SEALED"; $("#memBar").style.width = "42%"; }
+
+    $("#fpsTxt").textContent = Reactor.fps + " FPS";
+    $("#fpsBar").style.width = Math.min(100, Reactor.fps / 60 * 100) + "%";
+
+    const c = navigator.connection;
+    $("#connTxt").textContent = c ? (c.effectiveType || "?").toUpperCase() + " · " + (c.downlink ?? "?") + " Mb/s" : "STANDARD";
+    $("#vpTxt").textContent = innerWidth + "×" + innerHeight;
+
+    const s = Math.floor((Date.now() - this.start) / 1000);
+    $("#upTxt").textContent = String(Math.floor(s / 60)).padStart(2,"0") + ":" + String(s % 60).padStart(2,"0");
   }
-}
+};
 
-function processPinch(x,y) {
-  const now = Date.now();
-  if (now-lastPinch < 450) {
-    dragging = !dragging;
-    status(dragging ? "Drag mode engaged." : "Drag mode released.");
-  } else if (now-lastPinch > 700) {
-    const target = document.elementFromPoint(x,y);
-    if (target && ["BUTTON","INPUT","SELECT","A"].includes(target.tagName)) target.click();
-    status("Pinch click detected.");
+/* =================== AI LAYER =================== */
+const SYSTEM_PROMPT =
+  "You are J.A.R.V.I.S., Tony Stark's AI assistant. Be concise, precise and dryly witty. " +
+  "Address the user as 'sir'. Keep replies under 90 words unless asked to elaborate.";
+
+const Providers = {
+  claude: {
+    label:"CLAUDE", needsKey:true, defaultModel:"claude-sonnet-4-20250514",
+    async send(prompt, history){
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{
+          "content-type":"application/json",
+          "x-api-key":cfg.apiKey,
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true"
+        },
+        body:JSON.stringify({
+          model: cfg.model || this.defaultModel, max_tokens:600, system:SYSTEM_PROMPT,
+          messages:[...history, { role:"user", content:prompt }]
+        })
+      });
+      if (!res.ok) throw new Error(await errText(res));
+      const j = await res.json();
+      return (j.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim();
+    }
+  },
+  gemini: {
+    label:"GEMINI", needsKey:true, defaultModel:"gemini-2.0-flash",
+    async send(prompt, history){
+      const model = cfg.model || this.defaultModel;
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(cfg.apiKey)}`,
+        { method:"POST", headers:{ "content-type":"application/json" },
+          body:JSON.stringify({
+            systemInstruction:{ parts:[{ text:SYSTEM_PROMPT }] },
+            contents:[...history.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts:[{ text:m.content }] })),
+                      { role:"user", parts:[{ text:prompt }] }]
+          })
+        });
+      if (!res.ok) throw new Error(await errText(res));
+      const j = await res.json();
+      return (j.candidates?.[0]?.content?.parts || []).map(p => p.text).join("").trim();
+    }
+  },
+  ollama: {
+    label:"OLLAMA", needsKey:false, defaultModel:"llama3.2",
+    async send(prompt, history){
+      const host = (cfg.host || "http://localhost:11434").replace(/\/+$/, "");
+      const res = await fetch(host + "/api/chat", {
+        method:"POST", headers:{ "content-type":"application/json" },
+        body:JSON.stringify({
+          model: cfg.model || this.defaultModel, stream:false,
+          messages:[{ role:"system", content:SYSTEM_PROMPT }, ...history, { role:"user", content:prompt }]
+        })
+      });
+      if (!res.ok) throw new Error(await errText(res));
+      const j = await res.json();
+      return (j.message?.content || "").trim();
+    }
+  },
+  offline: {
+    label:"OFFLINE CORE", needsKey:false, defaultModel:"",
+    async send(prompt){
+      const p = prompt.toLowerCase();
+      if (/\b(time)\b/.test(p)) return "It is " + new Date().toLocaleTimeString("en-GB") + ", sir.";
+      if (/\b(date|day)\b/.test(p)) return "Today is " + new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) + ".";
+      if (/\bbattery|power\b/.test(p)) return "Power reserves at " + $("#battTxt").textContent + ", sir.";
+      if (/\b(hello|hi|hey)\b/.test(p)) return "Good to see you, sir. All systems are operating within normal parameters.";
+      if (/\b(who are you|your name)\b/.test(p)) return "J.A.R.V.I.S. — Just A Rather Very Intelligent System. At your service.";
+      if (/\bstatus|report|diagnostic/.test(p))
+        return `Diagnostics: render at ${Reactor.fps} FPS, uplink ${navigator.onLine ? "stable" : "severed"}, optical feed ${Camera.stream ? "active" : "standby"}, uptime ${$("#upTxt").textContent}.`;
+      return "No reasoning core is connected, sir. Open SETTINGS and select Claude, Gemini or a local Ollama model. Local commands available: time, date, power, status, camera on/off, clear.";
+    }
   }
-  lastPinch = now;
+};
+async function errText(res){
+  let body = ""; try { body = (await res.text()).slice(0, 220); } catch {}
+  return `HTTP ${res.status} ${res.statusText}${body ? " · " + body : ""}`;
 }
 
-function calibrate() {
-  const value = prompt(
-    "Pinch threshold (smaller is stricter). Recommended 0.04–0.08:",
-    calibratedPinch
-  );
-  const parsed = Number(value);
-  if (parsed >= .02 && parsed <= .15) {
-    calibratedPinch = parsed;
-    status(`Calibration saved: ${parsed}`);
+const AI = {
+  busy:false,
+  provider(){ return Providers[cfg.provider] || Providers.offline; },
+  async ask(prompt){
+    if (this.busy) return log("One request at a time, sir.", "sys");
+    const p = this.provider();
+    if (p.needsKey && !cfg.apiKey){
+      log("No API key configured for " + p.label + ". Open SETTINGS.", "err");
+      return Voice.say("I need an API key first, sir.");
+    }
+    this.busy = true; Reactor.thinking = true; setStatus("PROCESSING");
+    $("#sendBtn").disabled = true;
+    try {
+      const reply = await p.send(prompt, Memory.load());
+      const text = reply || "I have no answer for that, sir.";
+      log(text, "jarvis"); Voice.say(text);
+      Memory.push("user", prompt); Memory.push("assistant", text);
+    } catch (e){
+      log(p.label + " link failed: " + e.message, "err");
+      Voice.say("I could not reach the reasoning core, sir.");
+    } finally {
+      this.busy = false; Reactor.thinking = false; setStatus("SYSTEMS NOMINAL");
+      $("#sendBtn").disabled = false;
+    }
   }
-}
+};
 
-function stopMedia() {
-  mediaStream?.getTracks().forEach(track => track.stop());
-  cameraVideo.srcObject?.getTracks().forEach(track => track.stop());
-  handCamera?.stop();
-  screenVideo.srcObject = cameraVideo.srcObject = null;
-  cameraVideo.hidden = true;
-  cursor.style.display = "none";
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  status("Media systems offline.");
-}
-
-function research(query) {
-  const q = encodeURIComponent(query);
-  addMessage(`Opening research results for: ${query}`, "jarvis");
-
-  // Google/Amazon block embedding. Opening a user-approved tab is reliable.
-  window.open(`https://www.google.com/search?q=${q}`, "_blank", "noopener");
-  window.open(`https://www.amazon.com/s?k=${q}`, "_blank", "noopener");
-}
-
-async function send() {
-  const input = $("prompt");
-  const text = input.value.trim();
-  if (!text) return;
-
-  input.value = "";
-  addMessage(text, "user");
-
-  const researchMatch = text.match(/^(?:research|search(?: for)?|find)\s+(.+)/i);
-  if (researchMatch) {
-    research(researchMatch[1]);
-    return;
+/* =================== COMMAND ROUTING =================== */
+function handleCommand(text){
+  const t = text.trim(); if (!t) return;
+  log(t, "user");
+  const p = t.toLowerCase();
+  if (/^(camera|cam)\s*(on|off|toggle)?$|open the camera|turn (on|off) the camera/.test(p)){
+    const off = /\boff\b/.test(p);
+    if (off) { if (Camera.stream) Camera.stop(); } else Camera.toggle();
+    return Voice.say(off ? "Optical feed disengaged." : "Bringing the optical feed online, sir.");
   }
-
-  if (/share (?:my )?screen/i.test(text)) return startScreen();
-  if (/camera|hand tracking/i.test(text)) return startHands();
-  if (/stop (?:camera|screen|media)/i.test(text)) return stopMedia();
-  if (/speed test/i.test(text)) return runSpeedTest();
-
-  status("Consulting local Ollama intelligence…");
-
-  try {
-    const response = await fetch(`${$("endpoint").value}/api/chat`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:$("model").value,
-        stream:false,
-        messages:[
-          {
-            role:"system",
-            content:"You are JARVIS, a concise local desktop assistant. Never claim an action occurred unless the browser performed it."
-          },
-          { role:"user", content:text }
-        ]
-      })
-    });
-
-    if (!response.ok) throw new Error(`Ollama returned ${response.status}`);
-    const data = await response.json();
-    const answer = data.message?.content || "No response received.";
-    addMessage(answer, "jarvis");
-    speak(answer);
-    status("Ready.");
-  } catch (error) {
-    addMessage(
-      `Ollama connection failed. Start Ollama and permit this page's origin.\n${error.message}`,
-      "jarvis"
-    );
-    status("Local AI connection unavailable.");
-  }
+  if (/^(clear|clear log|wipe screen)$/.test(p)){ logEl.replaceChildren(); return log("Log cleared.", "sys"); }
+  if (/^(quiet|silence|stop talking|shut up)$/.test(p)){ Voice.stop(); return log("Silenced.", "sys"); }
+  if (/^(settings|configuration|config)$/.test(p)){ openModal(); return; }
+  AI.ask(t);
 }
 
-function listen() {
-  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Recognition) return status("Speech recognition is unsupported in this browser.");
+/* =================== SETTINGS UI =================== */
+function openModal(){
+  $("#cfgProvider").value = cfg.provider;
+  $("#cfgModel").value = cfg.model;
+  $("#cfgModel").placeholder = (Providers[cfg.provider] || {}).defaultModel || "n/a";
+  $("#cfgKey").value = cfg.apiKey;
+  $("#cfgHost").value = cfg.host;
+  $("#cfgVoice").checked = cfg.voice;
+  $("#cfgWake").checked = cfg.wake;
+  $("#modal").classList.add("open");
+}
+function closeModal(){ $("#modal").classList.remove("open"); }
+function syncButtons(){
+  $("#muteBtn").classList.toggle("active", cfg.voice);
+  $("#wakeBtn").classList.toggle("active", cfg.wake && Ears.mode === "wake");
+  $("#providerTxt").textContent = (Providers[cfg.provider] || Providers.offline).label;
+}
 
-  const recognition = new Recognition();
-  recognition.lang = "en-US";
-  recognition.onstart = () => status("Listening…");
-  recognition.onresult = event => {
-    $("prompt").value = event.results[0][0].transcript;
-    send();
+$("#settingsBtn").onclick = openModal;
+$("#cfgClose").onclick = closeModal;
+$("#cfgProvider").onchange = e => { $("#cfgModel").placeholder = Providers[e.target.value].defaultModel || "n/a"; };
+$("#cfgSave").onclick = () => {
+  cfg = { provider:$("#cfgProvider").value, model:$("#cfgModel").value.trim(), apiKey:$("#cfgKey").value.trim(),
+          host:$("#cfgHost").value.trim() || "http://localhost:11434",
+          voice:$("#cfgVoice").checked, wake:$("#cfgWake").checked };
+  Store.save(cfg); syncButtons(); closeModal();
+  log("Configuration saved. Reasoning core: " + Providers[cfg.provider].label + ".", "sys");
+  cfg.wake ? Ears.wake() : Ears.stop();
+};
+$("#cfgWipe").onclick = () => { Memory.wipe(); log("Conversation memory purged.", "sys"); };
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+
+/* =================== CONTROLS =================== */
+$("#sendBtn").onclick = () => { const v = $("#input").value; $("#input").value = ""; handleCommand(v); };
+$("#input").addEventListener("keydown", e => { if (e.key === "Enter") $("#sendBtn").click(); });
+$("#micBtn").onclick = () => Ears.push();
+$("#camBtn").onclick = () => Camera.toggle();
+$("#muteBtn").onclick = () => { cfg.voice = !cfg.voice; if (!cfg.voice) Voice.stop(); Store.save(cfg); syncButtons();
+                                log("Voice output " + (cfg.voice ? "enabled" : "muted") + ".", "sys"); };
+$("#wakeBtn").onclick = () => { cfg.wake = !cfg.wake; Store.save(cfg);
+                                cfg.wake ? Ears.wake() : Ears.stop(); syncButtons();
+                                log("Wake word " + (cfg.wake ? "armed" : "disarmed") + ".", "sys"); };
+addEventListener("keydown", e => {
+  if (e.key === "Escape"){ closeModal(); Voice.stop(); }
+  if (e.code === "Space" && e.target !== $("#input") && !$("#modal").classList.contains("open")){
+    e.preventDefault(); Ears.push();
+  }
+});
+addEventListener("beforeunload", () => { Camera.stop?.(); Ears.stop(); });
+
+/* =================== BOOT SEQUENCE =================== */
+const BOOT_LINES = [
+  "INITIALISING J.A.R.V.I.S. KERNEL",
+  "MOUNTING ARC REACTOR INTERFACE",
+  "CALIBRATING HOLOGRAPHIC DISPLAY",
+  "LOADING SPEECH SUBSYSTEMS",
+  "SCANNING OPTICAL HARDWARE",
+  "ESTABLISHING NEURAL UPLINK",
+  "RESTORING PERSISTENT MEMORY",
+  "ALL SYSTEMS NOMINAL"
+];
+function boot(){
+  const bl = $("#bootLog"), bar = $("#bootBar");
+  let i = 0;
+  const step = () => {
+    if (i < BOOT_LINES.length){
+      const d = document.createElement("div");
+      d.textContent = "> " + BOOT_LINES[i] + " … OK";
+      bl.appendChild(d); bl.scrollTop = bl.scrollHeight;
+      bar.style.width = Math.round(((i + 1) / BOOT_LINES.length) * 100) + "%";
+      i++; setTimeout(step, 210 + Math.random() * 170);
+    } else {
+      setTimeout(() => {
+        $("#boot").classList.add("done");
+        setTimeout(() => $("#boot").remove(), 900);
+        log("Good " + greeting() + ", sir. All systems are online and standing by.", "jarvis");
+        if (!Ears.supported) log("This browser does not expose speech recognition; text input only.", "sys");
+        if (cfg.wake) Ears.wake();
+      }, 420);
+    }
   };
-  recognition.onerror = event => status("Voice error: " + event.error);
-  recognition.start();
+  step();
 }
+const greeting = () => { const h = new Date().getHours(); return h < 12 ? "morning" : h < 18 ? "afternoon" : "evening"; };
 
-function speak(text) {
-  if (!("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text.slice(0,500));
-  utterance.rate = 1.05;
-  utterance.pitch = .8;
-  speechSynthesis.speak(utterance);
-}
-
-async function ping() {
-  const start = performance.now();
-  try {
-    await fetch("https://www.google.com/favicon.ico?x="+Date.now(), {
-      mode:"no-cors", cache:"no-store"
-    });
-    $("ping").textContent = Math.round(performance.now()-start) + " ms";
-  } catch {
-    $("ping").textContent = "Unavailable";
-  }
-}
-
-async function runSpeedTest() {
-  status("Estimating download speed…");
-  const bytes = 2_000_000;
-  const start = performance.now();
-
-  try {
-    await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}&x=${Date.now()}`, {
-      cache:"no-store"
-    });
-    const seconds = (performance.now()-start)/1000;
-    const mbps = (bytes*8/seconds/1_000_000).toFixed(1);
-    $("connection").textContent = `${mbps} Mbps`;
-    status("Download estimate complete. Upload testing requires a cooperating server.");
-  } catch {
-    status("Speed test blocked by the network or browser.");
-  }
-}
-
-function updateTelemetry() {
-  $("resolution").textContent = `${screen.width}×${screen.height}`;
-  $("cores").textContent = navigator.hardwareConcurrency || "Restricted";
-  $("memory").textContent = navigator.deviceMemory
-    ? `${navigator.deviceMemory} GB`
-    : "Restricted";
-
-  const connection = navigator.connection;
-  $("connection").textContent = connection
-    ? `${connection.effectiveType} / ${connection.downlink} Mbps`
-    : "Restricted";
-}
-
-function countFps(now) {
-  frames++;
-  if (now-previousFrame >= 1000) {
-    displayedFps = frames;
-    frames = 0;
-    previousFrame = now;
-    $("fps").textContent = displayedFps;
-  }
-  requestAnimationFrame(countFps);
-}
-
-updateTelemetry();
-ping();
-setInterval(ping,15000);
-requestAnimationFrame(countFps);
+/* =================== START =================== */
+Voice.init(); Reactor.init(); Telemetry.init(); syncButtons(); boot();
 </script>
 </body>
 </html>
