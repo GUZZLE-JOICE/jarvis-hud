@@ -30,6 +30,20 @@
   #app{position:relative;width:100vw;height:100vh;background:var(--void);}
 
   #camLayer{position:absolute;top:50%;left:50%;width:560px;height:420px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.85);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
+
+  #browsePanel{position:absolute;top:50%;left:50%;width:640px;max-width:90vw;background:#050a0c;border:1px solid var(--cyan);z-index:40;opacity:0;transform:translate(-50%,-50%) scale(0.85);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
+  #browsePanel.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 45px rgba(0,229,255,0.3);}
+  #browseTabBar{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--cyan-dim);background:linear-gradient(180deg, rgba(0,229,255,0.06), transparent);}
+  #browseDot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);flex-shrink:0;}
+  #browseTabLabel{font-family:'Orbitron';font-size:10px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #browseCloseBtn{font-family:'Rajdhani';font-size:18px;color:var(--text-dim);cursor:pointer;padding:0 4px;line-height:1;pointer-events:auto;}
+  #browseCloseBtn:hover{color:var(--cyan);}
+  #browseAddressBar{padding:7px 12px;border-bottom:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);}
+  #browseUrlText{font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+  #browseImageWrap{position:relative;width:100%;line-height:0;background:#000;}
+  #browseImageWrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,229,255,0.05), transparent 15%, transparent 85%, rgba(0,229,255,0.05));pointer-events:none;}
+  #browseScreenshot{width:100%;display:block;filter:saturate(0.9) brightness(0.95);}
+  #browseFooter{padding:6px 12px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:var(--text-dim);border-top:1px solid var(--cyan-dim);text-align:center;}
   #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
   #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
   #camLayer.pulse::before{animation:camPulse .6s ease-out;}
@@ -401,6 +415,21 @@
 
   <video id="screenVideo" autoplay muted playsinline style="display:none;"></video>
   <canvas id="screenCaptureCanvas" style="display:none;"></canvas>
+
+  <div id="browsePanel">
+    <div id="browseTabBar">
+      <div id="browseDot"></div>
+      <div id="browseTabLabel">RESEARCHING…</div>
+      <div id="browseCloseBtn">&times;</div>
+    </div>
+    <div id="browseAddressBar">
+      <span id="browseUrlText"></span>
+    </div>
+    <div id="browseImageWrap">
+      <img id="browseScreenshot" alt="">
+    </div>
+    <div id="browseFooter">RESEARCHED BY JARVIS · LOCAL BROWSER BRIDGE</div>
+  </div>
 
   <canvas id="captureCanvas" style="display:none;"></canvas>
 
@@ -853,6 +882,15 @@
     }
     return cmd;
   }
+  function showBrowsePanel(){
+    var panel = document.getElementById('browsePanel');
+    panel.classList.add('on');
+  }
+  function hideBrowsePanel(){
+    document.getElementById('browsePanel').classList.remove('on');
+  }
+  document.getElementById('browseCloseBtn').addEventListener('click', hideBrowsePanel);
+
   function handleBrowseCommand(cmd){
     var query = extractBrowseQuery(cmd);
     if(!query){
@@ -860,6 +898,7 @@
       return;
     }
     setCaption('Opening a browser to research that…');
+    document.getElementById('browseTabLabel').textContent = 'RESEARCHING…';
     fetch('http://localhost:5005/browse', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -868,6 +907,14 @@
       if(data.error){
         speak('Browsing failed. ' + (data.error.length < 80 ? data.error : 'Check the browser bridge is running.'));
       } else {
+        if(data.screenshot){
+          document.getElementById('browseScreenshot').src = 'data:image/jpeg;base64,' + data.screenshot;
+          document.getElementById('browseTabLabel').textContent = data.title || query;
+          document.getElementById('browseUrlText').textContent = data.url || '';
+          showBrowsePanel();
+          clearTimeout(window.__browsePanelAutoHide);
+          window.__browsePanelAutoHide = setTimeout(hideBrowsePanel, 25000);
+        }
         speak(data.answer);
       }
     }).catch(function(err){
