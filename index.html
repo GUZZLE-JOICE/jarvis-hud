@@ -222,6 +222,77 @@
   @media (max-width:900px) and (min-width:641px){
     #camLayer{width:380px;height:285px;}
   }
+
+
+  /* SETTINGS 2.0 */
+  #memPanel{top:18px;left:58px;width:min(760px,calc(100vw - 86px));height:min(650px,calc(100vh - 36px));max-height:none;padding:0;overflow:hidden;border-color:var(--cyan);background:rgba(3,9,11,.98);display:none;grid-template-columns:184px 1fr;box-shadow:0 0 50px rgba(0,229,255,.18);}
+  #memPanel.settings-open{display:grid;}
+  .settingsSidebar{border-right:1px solid var(--cyan-dim);padding:14px 10px;background:linear-gradient(180deg,rgba(0,229,255,.05),transparent);display:flex;flex-direction:column;min-width:0;}
+  .settingsBrand{font-family:'Orbitron';font-size:12px;letter-spacing:3px;color:var(--cyan);padding:8px 9px 16px;border-bottom:1px solid var(--cyan-dim);margin-bottom:10px;}
+  .settingsNav{display:flex;flex-direction:column;gap:5px;}
+  .settingsNavBtn{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:1px solid transparent;background:transparent;color:var(--text-dim);font-family:'Rajdhani';font-size:13px;letter-spacing:1px;text-align:left;cursor:pointer;}
+  .settingsNavBtn svg{width:17px;height:17px;stroke:currentColor;flex:none;}
+  .settingsNavBtn:hover,.settingsNavBtn.active{color:var(--cyan);border-color:var(--cyan-dim);background:rgba(0,229,255,.07);}
+  .settingsClose{margin-top:auto;}
+  .settingsMain{min-width:0;display:flex;flex-direction:column;overflow:hidden;}
+  .settingsTopbar{height:54px;border-bottom:1px solid var(--cyan-dim);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex:none;}
+  #settingsPageTitle{font-family:'Orbitron';font-size:12px;letter-spacing:2px;color:var(--cyan);}
+  .settingsPages{overflow:auto;padding:18px;flex:1;}
+  .settingsPage{display:none;}
+  .settingsPage.active{display:block;}
+  .settingsCard{border:1px solid var(--cyan-dim);background:rgba(0,229,255,.025);padding:14px;margin-bottom:13px;}
+  .settingsCard h3{display:flex;align-items:center;gap:8px;margin:0 0 9px!important;}
+  .settingsCard h3 svg{width:17px;height:17px;stroke:var(--cyan);}
+  .settingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  .settingsHint{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);line-height:1.45;margin:0 0 10px;}
+  .settingsField{width:100%;background:rgba(0,229,255,.04);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:9px;box-sizing:border-box;outline:none;}
+  .settingsField:focus{border-color:var(--cyan);}
+  .settingsLabel{display:block;font-family:'Rajdhani';font-size:12px;color:var(--text-dim);margin:0 0 5px;}
+  .settingsActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+  .codeDisplay{display:flex;gap:7px;align-items:stretch;}
+  .codeDisplay input{font-size:15px;letter-spacing:2px;font-weight:700;}
+  .statusLine{font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.45;white-space:pre-wrap;}
+  .serverBadge{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--cyan-dim);font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim);}
+  .serverBadge.ok{color:var(--mint);border-color:var(--mint);}
+  .serverBadge.bad{color:var(--amber);border-color:var(--amber);}
+  @media(max-width:720px){#memPanel{left:8px;width:calc(100vw - 16px);grid-template-columns:64px 1fr}.settingsBrand{font-size:0;text-align:center}.settingsBrand::after{content:'J';font-size:15px}.settingsNavBtn{justify-content:center;padding:11px 6px;font-size:0}.settingsNavBtn svg{width:20px;height:20px}.settingsGrid{grid-template-columns:1fr}.settingsPages{padding:12px}}
+
+
+  /* TALK / CHAT MODE */
+  #modeSwitch{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:70;display:flex;border:1px solid var(--cyan-dim);background:rgba(3,9,11,.96);padding:3px;box-shadow:0 0 20px rgba(0,229,255,.08)}
+  .modeSwitchBtn{border:0;background:transparent;color:var(--text-dim);font-family:'Orbitron';font-size:10px;letter-spacing:1.5px;padding:9px 16px;cursor:pointer;min-width:98px}
+  .modeSwitchBtn.active{background:rgba(0,229,255,.12);color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan-dim)}
+  #chatWorkspace{position:fixed;inset:0;z-index:45;background:var(--void);display:none;color:var(--cyan)}
+  #chatWorkspace.open{display:grid;grid-template-columns:230px 1fr}
+  .chatSidebar{border-right:1px solid var(--cyan-dim);background:rgba(3,9,11,.98);display:flex;flex-direction:column;min-width:0;padding-top:58px}
+  .chatSidebarTop{padding:14px;border-bottom:1px solid var(--cyan-dim)}
+  .chatNewBtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--cyan-dim);background:rgba(0,229,255,.05);color:var(--cyan);font-family:'Orbitron';font-size:10px;letter-spacing:1.5px;padding:10px;cursor:pointer}
+  .chatNewBtn:hover{border-color:var(--cyan)}
+  .chatHistoryList{padding:10px;display:flex;flex-direction:column;gap:5px;overflow:auto;flex:1}
+  .chatHistoryItem{display:flex;align-items:center;gap:8px;width:100%;border:1px solid transparent;background:transparent;color:var(--text-dim);padding:9px;text-align:left;cursor:pointer;font-family:'Rajdhani';font-size:13px;min-width:0}
+  .chatHistoryItem:hover,.chatHistoryItem.active{border-color:var(--cyan-dim);background:rgba(0,229,255,.055);color:var(--cyan)}
+  .chatHistoryItem span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+  .chatDeleteBtn{border:0;background:transparent;color:var(--text-dim);cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
+  .chatDeleteBtn:hover{color:var(--red)}
+  .chatMain{min-width:0;display:flex;flex-direction:column;padding-top:58px}
+  .chatMessages{flex:1;overflow:auto;padding:34px max(28px,calc((100vw - 920px)/2)) 170px}
+  .chatEmpty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Orbitron';font-size:18px;letter-spacing:1px;color:var(--cyan)}
+  .chatMessage{max-width:780px;margin:0 auto 18px;display:flex;gap:12px;align-items:flex-start}
+  .chatMessage.user{justify-content:flex-end}
+  .chatBubble{max-width:78%;border:1px solid var(--cyan-dim);padding:12px 14px;font-family:'Rajdhani';font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:rgba(0,229,255,.025);color:#b8e9ee}
+  .chatMessage.user .chatBubble{background:rgba(0,229,255,.10);color:var(--cyan);border-color:var(--cyan-mid)}
+  .chatComposerWrap{position:absolute;left:230px;right:0;bottom:0;padding:18px max(28px,calc((100vw - 920px)/2)) 24px;background:linear-gradient(180deg,transparent,var(--void) 22%)}
+  .chatComposer{max-width:780px;margin:auto;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09)}
+  #chatInput{display:block;width:100%;min-height:82px;max-height:190px;resize:none;border:0;background:transparent;color:#d4f8fb;font-family:'Rajdhani';font-size:16px;padding:15px 16px 8px;outline:none;box-sizing:border-box}
+  #chatInput::placeholder{color:var(--text-dim)}
+  .chatComposerBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px 10px}
+  .effortControl{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim)}
+  #chatEffort{background:rgba(0,229,255,.04);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:10px;padding:6px 8px;outline:none}
+  #chatSendBtn{width:36px;height:36px;border:1px solid var(--cyan);background:rgba(0,229,255,.12);color:var(--cyan);font-size:18px;cursor:pointer}
+  #chatSendBtn:disabled{opacity:.35;cursor:default}
+  .chatStatus{font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim)}
+  @media(max-width:720px){#chatWorkspace.open{grid-template-columns:72px 1fr}.chatSidebarTop{padding:8px}.chatNewBtn span{display:none}.chatHistoryItem span{display:none}.chatHistoryItem{justify-content:center}.chatComposerWrap{left:72px}.chatMessages{padding-left:14px;padding-right:14px}.chatComposerWrap{padding-left:14px;padding-right:14px}.modeSwitchBtn{min-width:82px;padding:8px 10px}}
+
 </style>
 </head>
 <body>
@@ -287,60 +358,46 @@
   </div>
 
   <div id="memPanel">
-    <h3>Memory Log</h3>
-    <div id="memList"></div>
-    <button class="smallBtn" id="clearMemBtn">Purge memory</button>
-    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">Voice</h3>
-      <select id="voiceSelect" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;box-sizing:border-box;"></select>
-    </div>
-    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">Hand tracking</h3>
-      <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Turn on the camera, hold your hand up in frame, then calibrate your pinch gesture so Jarvis can tell when you're clicking versus just moving.</p>
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <button class="smallBtn" id="toggleHandTracking">Enable tracking</button>
-        <button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button>
+    <aside class="settingsSidebar">
+      <div class="settingsBrand">JARVIS CONTROL</div>
+      <nav class="settingsNav">
+        <button class="settingsNavBtn active" data-settings-page="memory"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg><span>Memory</span></button>
+        <button class="settingsNavBtn" data-settings-page="voice"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span>Voice</span></button>
+        <button class="settingsNavBtn" data-settings-page="hands"><svg viewBox="0 0 24 24" fill="none"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8-3a2 2 0 014 0v5c0 4-3 7-7 7h-2c-3 0-5-1-7-4l-3-5a2 2 0 013-2l2 2"/></svg><span>Hands</span></button>
+        <button class="settingsNavBtn" data-settings-page="ai"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10h.01M15 10h.01M8 15h8M12 2v3"/></svg><span>AI</span></button>
+        <button class="settingsNavBtn" data-settings-page="server"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg><span>Server</span></button>
+      </nav>
+      <button class="settingsNavBtn settingsClose" id="settingsCloseBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Close</span></button>
+    </aside>
+    <section class="settingsMain">
+      <div class="settingsTopbar"><span id="settingsPageTitle">MEMORY</span><span class="serverBadge" id="bridgeStatusBadge">BRIDGE CHECKING</span></div>
+      <div class="settingsPages">
+        <div class="settingsPage active" data-page="memory">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg>Memory Log</h3><div id="memList"></div><div class="settingsActions"><button class="smallBtn" id="clearMemBtn">Purge memory</button></div></div>
+        </div>
+        <div class="settingsPage" data-page="voice">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"/></svg>Voice Output</h3><p class="settingsHint">Choose the system voice Jarvis uses.</p><select id="voiceSelect" class="settingsField"></select></div>
+        </div>
+        <div class="settingsPage" data-page="hands">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"/></svg>Hand Tracking</h3><p class="settingsHint">The cursor follows wrist landmark 0. Pinch to scroll and use two pinches to resize browser panels.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div id="handStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input type="range" id="manualPinchSlider" min="0.02" max="0.15" step="0.005" style="width:100%;margin-bottom:12px;"><label class="settingsLabel">Skeleton X alignment</label><input type="range" id="alignOffsetX" min="-40" max="40" step="1" value="0" style="width:100%;"><label class="settingsLabel">Skeleton Y alignment</label><input type="range" id="alignOffsetY" min="-40" max="40" step="1" value="0" style="width:100%;"><div class="settingsActions"><button class="smallBtn" id="resetAlignBtn">Reset alignment</button></div></div>
+        </div>
+        <div class="settingsPage" data-page="ai">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10h.01M15 10h.01M8 15h8"/></svg>AI Provider</h3><p class="settingsHint">Use Claude, Gemini, Ollama on this PC, or another Jarvis PC through its access code.</p><div class="settingsActions"><button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button><button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button><button class="smallBtn providerTab" data-provider="local" id="tabLocal">Local</button><button class="smallBtn providerTab" data-provider="remote" id="tabRemote">Remote</button></div>
+            <div id="claudeKeySection" style="margin-top:10px"><input class="settingsField" type="password" id="apiKeyInputClaude" placeholder="sk-ant-..."></div>
+            <div id="geminiKeySection" style="display:none;margin-top:10px"><input class="settingsField" type="password" id="apiKeyInputGemini" placeholder="AIza..."></div>
+            <div id="localKeySection" style="display:none;margin-top:10px"><input class="settingsField" type="text" id="localModelInput" placeholder="llava:7b"></div>
+            <div id="remoteKeySection" style="display:none;margin-top:10px"><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="remoteServerUrl" placeholder="http://192.168.1.50:5005"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="remoteAccessCode" type="password" placeholder="Shared code"></div></div></div>
+            <div class="settingsActions"><button class="smallBtn" id="saveKeyBtn">Save</button><button class="smallBtn" id="clearKeyBtn">Remove</button><button class="smallBtn" id="testRemoteBtn" style="display:none">Test connection</button></div><div id="keyStatus" class="statusLine"></div>
+          </div>
+        </div>
+        <div class="settingsPage" data-page="server">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div id="ownerCodeStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to Someone Else</h3><p class="settingsHint">Enter their server address and access code. They need Ollama; you do not. Choose Remote on the AI page after saving.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="http://192.168.1.50:5005"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" placeholder="Their shared code"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
+        </div>
       </div>
-      <div id="handStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);line-height:1.5;margin-bottom:10px;"></div>
-
-      <div style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin-bottom:4px;">Manual pinch sensitivity</div>
-      <input type="range" id="manualPinchSlider" min="0.02" max="0.15" step="0.005" style="width:100%;margin-bottom:10px;">
-
-      <div style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin-bottom:4px;">Skeleton alignment nudge (if it looks offset from your hand)</div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-        <span style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);width:14px;">X</span>
-        <input type="range" id="alignOffsetX" min="-40" max="40" step="1" value="0" style="flex:1;">
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-        <span style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);width:14px;">Y</span>
-        <input type="range" id="alignOffsetY" min="-40" max="40" step="1" value="0" style="flex:1;">
-      </div>
-      <button class="smallBtn" id="resetAlignBtn">Reset alignment</button>
-    </div>
-    <div style="border-top:1px solid var(--cyan-dim);margin-top:14px;padding-top:12px;">
-      <h3 style="margin-bottom:6px;">AI provider</h3>
-      <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Stored only in this browser. Enables real reasoning and vision commands like "Jarvis, what am I looking at."</p>
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button>
-        <button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button>
-        <button class="smallBtn providerTab" data-provider="local" id="tabLocal">Local</button>
-      </div>
-      <div id="claudeKeySection">
-        <input type="password" id="apiKeyInputClaude" placeholder="sk-ant-..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
-      </div>
-      <div id="geminiKeySection" style="display:none;">
-        <input type="password" id="apiKeyInputGemini" placeholder="AIza..." style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
-      </div>
-      <div id="localKeySection" style="display:none;">
-        <p style="font-family:'Rajdhani';font-size:11px;color:var(--text-dim);margin:0 0 8px;line-height:1.4;">Runs on your own GPU via Ollama. Make sure "ollama serve" is running in the background.</p>
-        <input type="text" id="localModelInput" placeholder="llava:7b" style="width:100%;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;padding:7px 8px;margin-bottom:8px;box-sizing:border-box;">
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="smallBtn" id="saveKeyBtn">Save</button>
-        <button class="smallBtn" id="clearKeyBtn">Remove key</button>
-      </div>
-      <div id="keyStatus" style="font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);margin-top:8px;"></div>
-    </div>
+    </section>
   </div>
 
   <!-- LEFT -->
@@ -463,6 +520,31 @@
 
   <canvas id="captureCanvas" style="display:none;"></canvas>
 
+
+  <div id="modeSwitch" aria-label="Jarvis mode switch">
+    <button class="modeSwitchBtn active" id="hudModeBtn" type="button">HUD</button>
+    <button class="modeSwitchBtn" id="chatModeBtn" type="button">TALK / CHAT</button>
+  </div>
+
+  <section id="chatWorkspace" aria-label="Jarvis chat workspace">
+    <aside class="chatSidebar">
+      <div class="chatSidebarTop"><button class="chatNewBtn" id="chatNewBtn" type="button">＋ <span>NEW CHAT</span></button></div>
+      <div class="chatHistoryList" id="chatHistoryList"></div>
+    </aside>
+    <main class="chatMain">
+      <div class="chatMessages" id="chatMessages"><div class="chatEmpty">What should we work on?</div></div>
+      <div class="chatComposerWrap">
+        <div class="chatComposer">
+          <textarea id="chatInput" placeholder="Message Jarvis" rows="3"></textarea>
+          <div class="chatComposerBar">
+            <div class="effortControl"><span>EFFORT</span><select id="chatEffort"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option></select><span class="chatStatus" id="chatStatus"></span></div>
+            <button id="chatSendBtn" type="button" title="Send">↑</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
   <div id="micBtn" title="Push to talk">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
   </div>
@@ -530,18 +612,23 @@
   var GEMINI_KEY_STORAGE = 'jarvis_gemini_key_v1';
   var LOCAL_MODEL_STORAGE = 'jarvis_local_model_v1';
   var PROVIDER_STORAGE = 'jarvis_provider_v1';
-  var claudeKey = null, geminiKey = null, localModel = null;
+  var REMOTE_URL_STORAGE = 'jarvis_remote_url_v1';
+  var REMOTE_CODE_STORAGE = 'jarvis_remote_code_v1';
+  var claudeKey = null, geminiKey = null, localModel = null, remoteServerUrl = null, remoteAccessCode = null;
   var activeProvider = 'claude';
   try{
     claudeKey = localStorage.getItem(CLAUDE_KEY_STORAGE) || null;
     geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || null;
     localModel = localStorage.getItem(LOCAL_MODEL_STORAGE) || null;
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
+    remoteServerUrl = localStorage.getItem(REMOTE_URL_STORAGE) || null;
+    remoteAccessCode = localStorage.getItem(REMOTE_CODE_STORAGE) || null;
   }catch(e){}
 
   function currentKey(){
     if(activeProvider === 'gemini') return geminiKey;
     if(activeProvider === 'local') return localModel || 'llava:7b';
+    if(activeProvider === 'remote') return remoteAccessCode;
     return claudeKey;
   }
 
@@ -551,9 +638,16 @@
     document.getElementById('tabClaude').classList.toggle('active', p==='claude');
     document.getElementById('tabGemini').classList.toggle('active', p==='gemini');
     document.getElementById('tabLocal').classList.toggle('active', p==='local');
+    document.getElementById('tabRemote').classList.toggle('active', p==='remote');
     document.getElementById('claudeKeySection').style.display = p==='claude' ? 'block' : 'none';
     document.getElementById('geminiKeySection').style.display = p==='gemini' ? 'block' : 'none';
     document.getElementById('localKeySection').style.display = p==='local' ? 'block' : 'none';
+    document.getElementById('remoteKeySection').style.display = p==='remote' ? 'block' : 'none';
+    document.getElementById('testRemoteBtn').style.display = p==='remote' ? 'inline-block' : 'none';
+    if(p === 'remote'){
+      document.getElementById('remoteServerUrl').value = remoteServerUrl || '';
+      document.getElementById('remoteAccessCode').value = remoteAccessCode || '';
+    }
     if(p === 'local' && !document.getElementById('localModelInput').value){
       document.getElementById('localModelInput').value = localModel || 'llava:7b';
     }
@@ -563,9 +657,15 @@
   document.getElementById('tabClaude').addEventListener('click', function(){ setProviderTab('claude'); });
   document.getElementById('tabGemini').addEventListener('click', function(){ setProviderTab('gemini'); });
   document.getElementById('tabLocal').addEventListener('click', function(){ setProviderTab('local'); });
+  document.getElementById('tabRemote').addEventListener('click', function(){ setProviderTab('remote'); });
 
   function refreshKeyStatus(){
     var el = document.getElementById('keyStatus');
+    if(activeProvider === 'remote'){
+      if(remoteServerUrl && remoteAccessCode){ el.textContent = 'Remote Jarvis server saved: ' + remoteServerUrl; el.style.color = 'var(--mint)'; }
+      else { el.textContent = 'Enter a server address and access code.'; el.style.color = 'var(--text-dim)'; }
+      return;
+    }
     if(activeProvider === 'local'){
       var m = localModel || 'llava:7b';
       el.textContent = 'Using local model "' + m + '" via Ollama at localhost:11434. Make sure "ollama serve" is running.';
@@ -583,6 +683,13 @@
     }
   }
   document.getElementById('saveKeyBtn').addEventListener('click', function(){
+    if(activeProvider === 'remote'){
+      remoteServerUrl = document.getElementById('remoteServerUrl').value.trim().replace(/\/$/, '');
+      remoteAccessCode = document.getElementById('remoteAccessCode').value.trim();
+      if(!/^https?:\/\//i.test(remoteServerUrl) || remoteAccessCode.length < 8){ document.getElementById('keyStatus').textContent='Enter a full http:// or https:// address and an access code with at least 8 characters.'; document.getElementById('keyStatus').style.color='var(--amber)'; return; }
+      try{ localStorage.setItem(REMOTE_URL_STORAGE, remoteServerUrl); localStorage.setItem(REMOTE_CODE_STORAGE, remoteAccessCode); }catch(e){}
+      refreshKeyStatus(); return;
+    }
     if(activeProvider === 'local'){
       var modelVal = document.getElementById('localModelInput').value.trim() || 'llava:7b';
       localModel = modelVal;
@@ -608,7 +715,8 @@
     refreshKeyStatus();
   });
   document.getElementById('clearKeyBtn').addEventListener('click', function(){
-    if(activeProvider === 'gemini'){
+    if(activeProvider === 'remote'){ remoteServerUrl=null; remoteAccessCode=null; try{localStorage.removeItem(REMOTE_URL_STORAGE);localStorage.removeItem(REMOTE_CODE_STORAGE);}catch(e){} document.getElementById('remoteServerUrl').value='';document.getElementById('remoteAccessCode').value=''; }
+    else if(activeProvider === 'gemini'){
       geminiKey = null;
       try{ localStorage.removeItem(GEMINI_KEY_STORAGE); }catch(e){}
     } else if(activeProvider === 'local'){
@@ -791,14 +899,27 @@
     });
   }
 
+  function callRemoteText(userText, cb){
+    if(!remoteServerUrl || !remoteAccessCode){ cb(null, 'no_key'); return; }
+    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode},body:JSON.stringify({prompt:'You are JARVIS, a calm, concise voice assistant. Answer in 1-3 short spoken sentences. No markdown.\n\n'+buildOllamaTranscript()+'User: '+userText})})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(x){if(x.ok&&x.data.response)cb(x.data.response.trim(),null);else cb(null,x.data.error||'remote_error');}).catch(function(e){cb(null,e.message||'remote_network_error');});
+  }
+  function callRemoteVision(userText, base64Jpeg, cb){
+    if(!remoteServerUrl || !remoteAccessCode){ cb(null, 'no_key'); return; }
+    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode},body:JSON.stringify({prompt:userText||'What am I looking at? Answer in 1-3 short spoken sentences.',images:[base64Jpeg]})})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(x){if(x.ok&&x.data.response)cb(x.data.response.trim(),null);else cb(null,x.data.error||'remote_error');}).catch(function(e){cb(null,e.message||'remote_network_error');});
+  }
+
   function callAIText(userText, cb){
     if(activeProvider === 'local'){ callLocalText(userText, cb); return; }
+    if(activeProvider === 'remote'){ callRemoteText(userText, cb); return; }
     if(!currentKey()){ cb(null, 'no_key'); return; }
     if(activeProvider === 'gemini'){ callGeminiText(userText, cb); }
     else { callClaudeText(userText, cb); }
   }
   function callAIVision(userText, base64Jpeg, cb){
     if(activeProvider === 'local'){ callLocalVision(userText, base64Jpeg, cb); return; }
+    if(activeProvider === 'remote'){ callRemoteVision(userText, base64Jpeg, cb); return; }
     if(!currentKey()){ cb(null, 'no_key'); return; }
     if(activeProvider === 'gemini'){ callGeminiVision(userText, base64Jpeg, cb); }
     else { callClaudeVision(userText, base64Jpeg, cb); }
@@ -1376,10 +1497,27 @@
     startBrowseInTab(localId, query, true);
   }
 
-  document.getElementById('settingsBtn').addEventListener('click', function(){
-    var p = document.getElementById('memPanel');
-    p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-  });
+  function openSettingsPage(name){
+    var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',ai:'AI PROVIDER',server:'SERVER SHARING'};
+    document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.classList.toggle('active',b.dataset.settingsPage===name);});
+    document.querySelectorAll('.settingsPage').forEach(function(p){p.classList.toggle('active',p.dataset.page===name);});
+    document.getElementById('settingsPageTitle').textContent=titles[name]||'SETTINGS';
+    if(name==='server') loadOwnerCode();
+  }
+  document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.addEventListener('click',function(){openSettingsPage(b.dataset.settingsPage);});});
+  document.getElementById('settingsCloseBtn').addEventListener('click',function(){document.getElementById('memPanel').classList.remove('settings-open');});
+  function bridgeBase(){ return 'http://localhost:5005'; }
+  function updateBridgeBadge(){ fetch(bridgeBase()+'/health').then(function(r){return r.json();}).then(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';}); }
+  function loadOwnerCode(){ fetch(bridgeBase()+'/owner/access-code').then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='Server listens on port '+(d.port||5005)+'. Share your reachable server address plus this code.';}).catch(function(){document.getElementById('ownerCodeStatus').textContent='Start jarvis_browser.py to manage the server code.';}); }
+  document.getElementById('saveOwnerCodeBtn').addEventListener('click',function(){var c=document.getElementById('ownerAccessCode').value.trim();fetch(bridgeBase()+'/owner/access-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){document.getElementById('ownerCodeStatus').textContent=x.ok?'Custom code saved. The old code no longer works.':(x.d.error||'Could not save code.');});});
+  document.getElementById('generateOwnerCodeBtn').addEventListener('click',function(){fetch(bridgeBase()+'/owner/access-code/refresh',{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='New code generated. The old code was disabled.';});});
+  document.getElementById('copyOwnerCodeBtn').addEventListener('click',function(){var i=document.getElementById('ownerAccessCode');i.select();try{document.execCommand('copy');document.getElementById('ownerCodeStatus').textContent='Code copied.';}catch(e){document.getElementById('ownerCodeStatus').textContent='Select and copy the code manually.';}});
+  function testRemoteConnection(url,code,statusEl){url=(url||'').trim().replace(/\/$/,'');fetch(url+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':code}}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){statusEl.textContent=x.ok?'Connected. Model: '+(x.d.model||'Ollama'):(x.d.error||'Connection rejected.');statusEl.style.color=x.ok?'var(--mint)':'var(--amber)';}).catch(function(e){statusEl.textContent='Could not reach that server: '+e.message;statusEl.style.color='var(--amber)';});}
+  document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(document.getElementById('remoteServerUrl').value,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
+  document.getElementById('connectRemoteBtn').addEventListener('click',function(){var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');var c=document.getElementById('serverConnectCode').value.trim();remoteServerUrl=u;remoteAccessCode=c;try{localStorage.setItem(REMOTE_URL_STORAGE,u);localStorage.setItem(REMOTE_CODE_STORAGE,c);}catch(e){}document.getElementById('remoteServerUrl').value=u;document.getElementById('remoteAccessCode').value=c;setProviderTab('remote');testRemoteConnection(u,c,document.getElementById('serverConnectStatus'));});
+  updateBridgeBadge();
+
+  document.getElementById('settingsBtn').addEventListener('click', function(){ var p=document.getElementById('memPanel'); p.classList.toggle('settings-open'); if(p.classList.contains('settings-open')){openSettingsPage('memory');updateBridgeBadge();} });
   document.getElementById('clearMemBtn').addEventListener('click', function(){
     state.memory = [];
     try{ localStorage.removeItem(MEM_KEY); }catch(e){}
@@ -2798,6 +2936,84 @@
       speak('Good to see you. All systems nominal.');
     });
   });
+
+
+  // ---------- Manual Talk / Chat workspace ----------
+  var CHAT_STORE_KEY = 'jarvis_manual_chats_v1';
+  var CHAT_EFFORT_KEY = 'jarvis_chat_effort_v1';
+  var manualChats = [];
+  var activeManualChatId = null;
+  var chatBusy = false;
+  try{ manualChats = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || '[]'); if(!Array.isArray(manualChats)) manualChats=[]; }catch(e){ manualChats=[]; }
+
+  function saveManualChats(){ try{ localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(manualChats)); }catch(e){} }
+  function makeChatId(){ return 'chat-' + Date.now() + '-' + Math.random().toString(36).slice(2,7); }
+  function getActiveManualChat(){ return manualChats.find(function(c){return c.id===activeManualChatId;}) || null; }
+  function createManualChat(){
+    var chat={id:makeChatId(),title:'New chat',created:Date.now(),updated:Date.now(),messages:[]};
+    manualChats.unshift(chat); activeManualChatId=chat.id; saveManualChats(); renderChatHistory(); renderManualChat();
+    setTimeout(function(){document.getElementById('chatInput').focus();},0);
+  }
+  function selectManualChat(id){ activeManualChatId=id; renderChatHistory(); renderManualChat(); }
+  function deleteManualChat(id){
+    manualChats=manualChats.filter(function(c){return c.id!==id;});
+    if(activeManualChatId===id) activeManualChatId=manualChats.length?manualChats[0].id:null;
+    saveManualChats(); renderChatHistory(); renderManualChat();
+  }
+  function renderChatHistory(){
+    var list=document.getElementById('chatHistoryList'); if(!list)return;
+    list.innerHTML='';
+    manualChats.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);}).forEach(function(chat){
+      var row=document.createElement('button'); row.type='button'; row.className='chatHistoryItem'+(chat.id===activeManualChatId?' active':'');
+      var icon=document.createElement('span'); icon.style.flex='none'; icon.textContent='◇';
+      var title=document.createElement('span'); title.textContent=chat.title||'New chat';
+      var del=document.createElement('button'); del.type='button'; del.className='chatDeleteBtn'; del.textContent='×'; del.title='Delete chat';
+      del.addEventListener('click',function(e){e.stopPropagation();deleteManualChat(chat.id);});
+      row.appendChild(icon);row.appendChild(title);row.appendChild(del);row.addEventListener('click',function(){selectManualChat(chat.id);});list.appendChild(row);
+    });
+  }
+  function renderManualChat(){
+    var box=document.getElementById('chatMessages'); if(!box)return; var chat=getActiveManualChat(); box.innerHTML='';
+    if(!chat || chat.messages.length===0){box.innerHTML='<div class="chatEmpty">What should we work on?</div>';return;}
+    chat.messages.forEach(function(m){var wrap=document.createElement('div');wrap.className='chatMessage '+m.role;var bubble=document.createElement('div');bubble.className='chatBubble';bubble.textContent=m.text;wrap.appendChild(bubble);box.appendChild(wrap);});
+    box.scrollTop=box.scrollHeight;
+  }
+  function effortInstruction(level){
+    if(level==='low') return 'Use low effort: answer quickly and briefly, focusing only on the direct result. Keep it under about 4 sentences unless code is needed.';
+    if(level==='high') return 'Use high effort: reason carefully, check assumptions, and give a thorough useful answer with clear structure. Include complete code when coding is requested.';
+    return 'Use medium effort: give a balanced answer with enough explanation to be useful without unnecessary detail.';
+  }
+  function buildManualChatPrompt(chat,userText,effort){
+    var prior=chat.messages.slice(-12).map(function(m){return (m.role==='assistant'?'JARVIS':'User')+': '+m.text;}).join('\n');
+    return 'You are JARVIS in a manual text chat. You may use normal formatting when useful. '+effortInstruction(effort)+'\n\nConversation:\n'+prior+'\nUser: '+userText+'\nJARVIS:';
+  }
+  function sendManualChat(){
+    if(chatBusy)return; var input=document.getElementById('chatInput'); var text=input.value.trim(); if(!text)return;
+    if(!activeManualChatId)createManualChat(); var chat=getActiveManualChat(); if(!chat)return;
+    var effort=document.getElementById('chatEffort').value;
+    chat.messages.push({role:'user',text:text}); if(chat.messages.length===1)chat.title=text.slice(0,38)+(text.length>38?'…':''); chat.updated=Date.now();
+    input.value=''; saveManualChats(); renderChatHistory(); renderManualChat();
+    chatBusy=true;document.getElementById('chatSendBtn').disabled=true;document.getElementById('chatStatus').textContent='THINKING · '+effort.toUpperCase();
+    var savedHistory=conversationHistory; conversationHistory=[];
+    callAIText(buildManualChatPrompt(chat,text,effort),function(reply,err){
+      conversationHistory=savedHistory; chatBusy=false;document.getElementById('chatSendBtn').disabled=false;document.getElementById('chatStatus').textContent='';
+      if(!reply){ reply=err==='no_key'?'No AI provider is ready. Open Settings → AI and choose Claude, Gemini, Local, or Remote.':'Error: '+(err||'unknown error'); }
+      chat.messages.push({role:'assistant',text:reply});chat.updated=Date.now();saveManualChats();renderChatHistory();renderManualChat();
+    });
+  }
+  function setMainMode(mode){
+    var chatOpen=mode==='chat';document.getElementById('chatWorkspace').classList.toggle('open',chatOpen);document.getElementById('hudModeBtn').classList.toggle('active',!chatOpen);document.getElementById('chatModeBtn').classList.toggle('active',chatOpen);
+    if(chatOpen){if(!activeManualChatId&&manualChats.length)activeManualChatId=manualChats[0].id;renderChatHistory();renderManualChat();setTimeout(function(){document.getElementById('chatInput').focus();},0);}
+  }
+  document.getElementById('hudModeBtn').addEventListener('click',function(){setMainMode('hud');});
+  document.getElementById('chatModeBtn').addEventListener('click',function(){setMainMode('chat');});
+  document.getElementById('chatNewBtn').addEventListener('click',createManualChat);
+  document.getElementById('chatSendBtn').addEventListener('click',sendManualChat);
+  document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendManualChat();}});
+  try{var savedEffort=localStorage.getItem(CHAT_EFFORT_KEY);if(savedEffort)document.getElementById('chatEffort').value=savedEffort;}catch(e){}
+  document.getElementById('chatEffort').addEventListener('change',function(){try{localStorage.setItem(CHAT_EFFORT_KEY,this.value);}catch(e){}});
+  if(manualChats.length)activeManualChatId=manualChats[0].id;
+  renderChatHistory();
 
 })();
 </script>
