@@ -1808,24 +1808,31 @@
       }
     }
 
-    // Two-hand resize. The newest open tab is selected when both hands begin
-    // pinching, so the gesture does not fail just because the midpoint between
-    // your hands is outside the panel. Horizontal spread changes width and
-    // vertical spread changes height using pixel deltas, which also works when
-    // the hands begin nearly level or nearly vertical.
-    if(hands.length >= 2 && handPinchStates[0].isPinching && handPinchStates[1].isPinching){
+    // Two-hand resize: both hands must be pinching, but panel size is based
+    // on the two WRIST/base points. Finger movement therefore cannot cancel
+    // or scramble the resize. Spreading the wrists left/right changes width;
+    // spreading them up/down changes height.
+    var resizeThreshold = Math.max(threshold * 1.45, 0.075);
+    var hand0PinchDistance = hands.length > 0 ? distance3D(hands[0][4], hands[0][8]) : 999;
+    var hand1PinchDistance = hands.length > 1 ? distance3D(hands[1][4], hands[1][8]) : 999;
+    var bothHandsPinching = hands.length >= 2 &&
+      hand0PinchDistance < resizeThreshold && hand1PinchDistance < resizeThreshold;
+
+    if(bothHandsPinching){
       twoHandZoomActive = true;
 
-      var p1Canvas = mapNormalizedPoint(handPinchStates[0].point.x, handPinchStates[0].point.y, mapping);
-      var p2Canvas = mapNormalizedPoint(handPinchStates[1].point.x, handPinchStates[1].point.y, mapping);
-      var p1Page = normalizedToViewport(handPinchStates[0].point.x, handPinchStates[0].point.y);
-      var p2Page = normalizedToViewport(handPinchStates[1].point.x, handPinchStates[1].point.y);
+      var wrist0 = hands[0][0];
+      var wrist1 = hands[1][0];
+      var p1Page = normalizedToViewport(wrist0.x, wrist0.y);
+      var p2Page = normalizedToViewport(wrist1.x, wrist1.y);
       var absDx = Math.abs(p2Page.x - p1Page.x);
       var absDy = Math.abs(p2Page.y - p1Page.y);
 
-      ctx.strokeStyle = 'rgba(58,255,196,0.8)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6,6]);
+      var p1Canvas = mapNormalizedPoint(wrist0.x, wrist0.y, mapping, getHandSign(results, 0));
+      var p2Canvas = mapNormalizedPoint(wrist1.x, wrist1.y, mapping, getHandSign(results, 1));
+      ctx.strokeStyle = 'rgba(58,255,196,0.9)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([7,5]);
       ctx.beginPath();
       ctx.moveTo(p1Canvas.x, p1Canvas.y);
       ctx.lineTo(p2Canvas.x, p2Canvas.y);
@@ -1837,39 +1844,55 @@
         var targetId = lastZoomTargetTab && browseTabs[lastZoomTargetTab]
           ? lastZoomTargetTab
           : (openIds.length ? openIds[openIds.length - 1] : null);
+
         if(targetId && browseTabs[targetId]){
           var startRect = browseTabs[targetId].el.getBoundingClientRect();
           twoHandResizeSession = {
             tabId: targetId,
-            startDx: absDx,
-            startDy: absDy,
+            startDx: Math.max(absDx, 60),
+            startDy: Math.max(absDy, 60),
             startW: startRect.width,
             startH: startRect.height
           };
           lastZoomTargetTab = targetId;
+          browseTabs[targetId].el.style.transition = 'none';
         }
       }
 
       if(twoHandResizeSession && browseTabs[twoHandResizeSession.tabId]){
         var targetEl = browseTabs[twoHandResizeSession.tabId].el;
-        var deltaW = (absDx - twoHandResizeSession.startDx) * 1.35;
-        var deltaH = (absDy - twoHandResizeSession.startDy) * 1.35;
-        if(Math.abs(deltaW) < 8) deltaW = 0;
-        if(Math.abs(deltaH) < 8) deltaH = 0;
-        targetEl.style.width = clamp(twoHandResizeSession.startW + deltaW, 220, Math.max(1000, window.innerWidth - 20)) + 'px';
-        targetEl.style.height = clamp(twoHandResizeSession.startH + deltaH, 160, Math.max(800, window.innerHeight - 20)) + 'px';
+        var widthChange = (absDx - twoHandResizeSession.startDx) * 1.8;
+        var heightChange = (absDy - twoHandResizeSession.startDy) * 1.8;
+
+        // A small dead zone prevents camera jitter, while still responding
+        // clearly once the wrists actually move apart or together.
+        if(Math.abs(widthChange) < 5) widthChange = 0;
+        if(Math.abs(heightChange) < 5) heightChange = 0;
+
+        var maxW = Math.max(220, window.innerWidth - 12);
+        var maxH = Math.max(160, window.innerHeight - 12);
+        targetEl.style.width = clamp(twoHandResizeSession.startW + widthChange, 220, maxW) + 'px';
+        targetEl.style.height = clamp(twoHandResizeSession.startH + heightChange, 160, maxH) + 'px';
 
         var resizeIndicator = document.getElementById('pinchIndicator');
         if(resizeIndicator){
           resizeIndicator.classList.add('active');
-          resizeIndicator.textContent = '2 PINCHES · RESIZE';
+          resizeIndicator.textContent = '2 PINCHES · RESIZE ' +
+            Math.round(targetEl.getBoundingClientRect().width) + '×' +
+            Math.round(targetEl.getBoundingClientRect().height);
         }
       }
 
-      // Do not trigger single-hand click/scroll while resizing.
+      // Completely suppress one-hand click and scroll while resizing.
       pinchState.isPinching = false;
       wasPinching = false;
+      pinchHoldStart = null;
+      pinchHoldStartY = null;
+      document.getElementById('globalHandCursor').classList.remove('clicking', 'scrolling');
     } else {
+      if(twoHandResizeSession && browseTabs[twoHandResizeSession.tabId]){
+        browseTabs[twoHandResizeSession.tabId].el.style.transition = '';
+      }
       twoHandZoomActive = false;
       lastTwoHandDistance = null;
       twoHandResizeSession = null;
@@ -2025,15 +2048,11 @@
   // ---------- Pinch = mouse click ----------
   var handCursorX = null, handCursorY = null;
   function getStablePalmPoint(landmarks){
-    // Average the wrist and the four finger-base joints. These points barely
-    // move when the fingers pinch or curl into a fist, unlike the index tip.
-    var ids = [0, 5, 9, 13, 17];
-    var x = 0, y = 0, z = 0;
-    for(var i=0;i<ids.length;i++){
-      var pt = landmarks[ids[i]];
-      x += pt.x; y += pt.y; z += pt.z || 0;
-    }
-    return { x:x/ids.length, y:y/ids.length, z:z/ids.length };
+    // MediaPipe landmark 0 is the wrist/base point: the exact bottom point
+    // where the hand skeleton begins. Using only this point keeps the cursor
+    // steady while the fingers pinch or curl into a fist.
+    var wrist = landmarks[0];
+    return { x:wrist.x, y:wrist.y, z:wrist.z || 0 };
   }
 
   function updateHandCursor(landmarks, mapping, handSign){
@@ -2676,7 +2695,7 @@
       initOrientation();
       initBattery();
       updateTelemetry();
-      speak('Good to see you. All systems nominal.');
+      speak('i hate niggers');
     });
   });
 
