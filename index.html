@@ -368,7 +368,7 @@
     <h1>Interface Standby</h1>
     <p>Grant access to camera, microphone, motion and location sensors for the full HUD experience. Anything denied just falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning and vision commands like "Jarvis, what am I looking at."</p>
     <p id="secWarning" style="display:none;color:var(--amber);font-family:'JetBrains Mono';font-size:11px;max-width:380px;"></p>
-    <button class="startBtn" id="initBtn">Initialize System</button>
+    <button class="startBtn" id="initBtn" type="button" onclick="window.__jarvisStartClick && window.__jarvisStartClick()">Initialize System</button>
   </div>
 
   <div id="bootOverlay" style="display:none;">
@@ -639,6 +639,32 @@
   </div>
 
 </div>
+
+
+<script>
+  (function(){
+    window.__jarvisStartHandled = false;
+    window.__jarvisStartClick = function(){
+      if(window.__jarvisStartHandled) return;
+      if(typeof window.__jarvisMainStart === 'function'){
+        window.__jarvisStartHandled = true;
+        window.__jarvisMainStart();
+        return;
+      }
+      var warning = document.getElementById('secWarning');
+      if(warning){
+        warning.style.display = 'block';
+        warning.textContent = 'Jarvis startup code did not finish loading. Run jarvis_browser.py and open http://127.0.0.1:5005 instead of double-clicking this HTML file.';
+      }
+    };
+    window.addEventListener('error', function(event){
+      var warning = document.getElementById('secWarning');
+      if(!warning) return;
+      warning.style.display = 'block';
+      warning.textContent = 'Startup error: ' + (event.message || 'unknown JavaScript error') + '. Open Jarvis from http://127.0.0.1:5005.';
+    });
+  })();
+</script>
 
 <script>
 (function(){
@@ -3036,14 +3062,15 @@
     var w = document.getElementById('secWarning');
     if(isInIframe()){
       w.style.display = 'block';
-      w.textContent = 'This is running inside an embedded preview (an iframe), which browsers block from using the camera or microphone regardless of site permissions. Download this file and open it directly in its own browser tab — e.g. via "python3 -m http.server" and http://localhost:8000 — to enable those features.';
+      w.textContent = 'This is running inside an embedded preview (an iframe), which browsers block from using the camera or microphone regardless of site permissions. Run jarvis_browser.py and open http://127.0.0.1:5005 in a normal browser tab to enable the full interface.';
     } else if(window.isSecureContext !== true){
       w.style.display = 'block';
       w.textContent = 'Warning: this page is not running on https or localhost (currently ' + window.location.protocol + '). Chrome and most browsers will block camera and microphone access entirely on insecure origins — no permission prompt will appear. Host this file over https, or run it via a local server at http://localhost, to enable those features.';
     }
   })();
 
-  document.getElementById('initBtn').addEventListener('click', function(){
+  window.__jarvisMainStart = function(){
+    if(state.booted || document.getElementById('startGate').style.display === 'none') return;
     document.getElementById('startGate').style.display = 'none';
     runBoot(function(){
       initGeo();
@@ -3052,6 +3079,13 @@
       updateTelemetry();
       speak('Good to see you. All systems nominal.');
     });
+  };
+  document.getElementById('initBtn').addEventListener('click', function(event){
+    event.preventDefault();
+    if(!window.__jarvisStartHandled){
+      window.__jarvisStartHandled = true;
+      window.__jarvisMainStart();
+    }
   });
 
 
