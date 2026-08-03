@@ -131,7 +131,7 @@
   .startBtn:hover{background:var(--cyan);color:#00151a;box-shadow:0 0 24px var(--cyan-glow);}
 
   /* TOP NAV BAR */
-  #topBar{top:0;left:76px;right:170px;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;}
+  #topBar{top:58px;left:76px;right:170px;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;}
   #compassWrap{display:flex;flex-direction:column;align-items:center;}
   #compassTicks{width:280px;height:22px;overflow:hidden;position:relative;}
   #compassStrip{display:flex;position:absolute;left:50%;transform:translateX(-50%);transition:transform .3s ease;}
@@ -255,16 +255,43 @@
   .serverBadge{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--cyan-dim);font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim);}
   .serverBadge.ok{color:var(--mint);border-color:var(--mint);}
   .serverBadge.bad{color:var(--amber);border-color:var(--amber);}
+  .themeToolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .themeSearch{flex:1;min-width:180px}
+  .themeGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .themeOption{border:1px solid var(--cyan-dim);background:rgba(0,229,255,.018);padding:9px;cursor:pointer;text-align:left;color:var(--text-dim);transition:border-color .16s,background .16s,transform .16s}
+  .themeOption:hover{border-color:var(--cyan);transform:translateY(-1px)}
+  .themeOption.active{border-color:var(--cyan);background:rgba(0,229,255,.08);color:var(--cyan)}
+  .themeSwatches{display:grid;grid-template-columns:repeat(5,1fr);height:22px;border:1px solid rgba(255,255,255,.08);margin-bottom:7px}
+  .themeName{font-family:'Rajdhani';font-size:12px;letter-spacing:.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fontGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .fontOption{border:1px solid var(--cyan-dim);background:rgba(0,229,255,.018);padding:11px;cursor:pointer;color:var(--text-dim);text-align:left;min-width:0}
+  .fontOption:hover,.fontOption.active{border-color:var(--cyan);background:rgba(0,229,255,.07);color:var(--cyan)}
+  .fontOptionName{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fontOptionPreview{font-size:11px;margin-top:5px;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .appearancePreview{border:1px solid var(--cyan-dim);padding:14px;background:var(--panel);margin-bottom:12px}
+  .appearancePreviewTitle{font-family:var(--jarvis-display-font,'Orbitron');color:var(--cyan);letter-spacing:2px;font-size:13px}
+  .appearancePreviewText{font-family:var(--jarvis-body-font,'Rajdhani');color:var(--text-dim);font-size:13px;margin-top:7px}
+  @media(max-width:760px){.themeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.fontGrid{grid-template-columns:1fr}}
   @media(max-width:720px){#memPanel{left:8px;width:calc(100vw - 16px);grid-template-columns:64px 1fr}.settingsBrand{font-size:0;text-align:center}.settingsBrand::after{content:'J';font-size:15px}.settingsNavBtn{justify-content:center;padding:11px 6px;font-size:0}.settingsNavBtn svg{width:20px;height:20px}.settingsGrid{grid-template-columns:1fr}.settingsPages{padding:12px}}
 
 
   /* TALK / CHAT MODE */
-  #modeSwitch{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:70;display:flex;border:1px solid var(--cyan-dim);background:rgba(3,9,11,.96);padding:3px;box-shadow:0 0 20px rgba(0,229,255,.08)}
+  #modeSwitch{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:70;display:flex;border:1px solid var(--cyan-dim);background:rgba(3,9,11,.995);backdrop-filter:blur(10px);padding:3px;box-shadow:0 0 20px rgba(0,229,255,.10)}
   .modeSwitchBtn{border:0;background:transparent;color:var(--text-dim);font-family:'Orbitron';font-size:10px;letter-spacing:1.5px;padding:9px 16px;cursor:pointer;min-width:98px}
   .modeSwitchBtn.active{background:rgba(0,229,255,.12);color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan-dim)}
   #chatWorkspace{position:fixed;inset:0;z-index:45;background:var(--void);display:none;color:var(--cyan)}
   #chatWorkspace.open{display:grid;grid-template-columns:230px 1fr}
-  .chatSidebar{border-right:1px solid var(--cyan-dim);background:rgba(3,9,11,.98);display:flex;flex-direction:column;min-width:0;padding-top:58px}
+  .chatSidebar{border-right:1px solid var(--cyan-dim);background:rgba(3,9,11,.98);display:flex;flex-direction:column;min-width:0;padding-top:72px}
+  .chatSidebarBrand{font-family:'Orbitron';font-size:15px;letter-spacing:4px;color:var(--cyan);padding:4px 14px 15px;border-bottom:1px solid var(--cyan-dim);text-align:left}
+  .chatSidebarFooter{padding:10px;border-top:1px solid var(--cyan-dim);display:flex;align-items:center;gap:8px;background:rgba(0,229,255,.018)}
+  .profileIconBtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--cyan-dim);background:rgba(0,229,255,.06);color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+  .profileIconBtn:hover{border-color:var(--cyan);background:rgba(0,229,255,.11)}
+  .profileIconBtn svg{width:19px;height:19px;stroke:currentColor}
+  .chatSettingsRect{height:36px;flex:1;border:1px solid var(--cyan-dim);background:rgba(0,229,255,.035);color:var(--text-dim);font-family:'Orbitron';font-size:9px;letter-spacing:1.3px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
+  .chatSettingsRect:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.07)}
+  .chatSettingsRect svg{width:15px;height:15px;stroke:currentColor}
+  .profileStateDot{width:7px;height:7px;border-radius:50%;background:#43565a;box-shadow:none}
+  .profileStateDot.online{background:var(--mint);box-shadow:0 0 8px var(--mint)}
   .chatSidebarTop{padding:14px;border-bottom:1px solid var(--cyan-dim)}
   .chatNewBtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--cyan-dim);background:rgba(0,229,255,.05);color:var(--cyan);font-family:'Orbitron';font-size:10px;letter-spacing:1.5px;padding:10px;cursor:pointer}
   .chatNewBtn:hover{border-color:var(--cyan)}
@@ -274,13 +301,21 @@
   .chatHistoryItem span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
   .chatDeleteBtn{border:0;background:transparent;color:var(--text-dim);cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
   .chatDeleteBtn:hover{color:var(--red)}
-  .chatMain{min-width:0;display:flex;flex-direction:column;padding-top:58px}
+  .chatMain{min-width:0;display:flex;flex-direction:column;padding-top:72px}
   .chatMessages{flex:1;overflow:auto;padding:34px max(28px,calc((100vw - 920px)/2)) 170px}
   .chatEmpty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Orbitron';font-size:18px;letter-spacing:1px;color:var(--cyan)}
-  .chatMessage{max-width:780px;margin:0 auto 18px;display:flex;gap:12px;align-items:flex-start}
+  .chatMessage{max-width:780px;margin:0 auto 18px;display:flex;gap:12px;align-items:flex-start;opacity:0;transform:translateY(12px) scale(.988);animation:chatMessageIn .30s cubic-bezier(.2,.8,.3,1) forwards}
   .chatMessage.user{justify-content:flex-end}
-  .chatBubble{max-width:78%;border:1px solid var(--cyan-dim);padding:12px 14px;font-family:'Rajdhani';font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:rgba(0,229,255,.025);color:#b8e9ee}
+  .chatBubble{max-width:78%;border:1px solid var(--cyan-dim);padding:12px 14px;font-family:'Rajdhani';font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:rgba(0,229,255,.025);color:#b8e9ee;box-shadow:0 0 0 rgba(0,229,255,0);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+  .chatBubble:hover{transform:translateY(-1px);box-shadow:0 0 18px rgba(0,229,255,.08);border-color:rgba(0,229,255,.32)}
   .chatMessage.user .chatBubble{background:rgba(0,229,255,.10);color:var(--cyan);border-color:var(--cyan-mid)}
+  .chatMessage.thinking .chatBubble{min-width:70px}
+  .typingDots{display:inline-flex;align-items:center;gap:6px;height:12px}
+  .typingDots span{width:6px;height:6px;border-radius:50%;background:var(--cyan);opacity:.35;animation:typingPulse 1s ease-in-out infinite}
+  .typingDots span:nth-child(2){animation-delay:.18s}
+  .typingDots span:nth-child(3){animation-delay:.36s}
+  @keyframes chatMessageIn{to{opacity:1;transform:none}}
+  @keyframes typingPulse{0%,80%,100%{transform:translateY(0);opacity:.28}40%{transform:translateY(-3px);opacity:1}}
   .chatComposerWrap{position:absolute;left:230px;right:0;bottom:0;padding:18px max(28px,calc((100vw - 920px)/2)) 24px;background:linear-gradient(180deg,transparent,var(--void) 22%)}
   .chatComposer{max-width:780px;margin:auto;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09)}
   #chatInput{display:block;width:100%;min-height:82px;max-height:190px;resize:none;border:0;background:transparent;color:#d4f8fb;font-family:'Rajdhani';font-size:16px;padding:15px 16px 8px;outline:none;box-sizing:border-box}
@@ -291,6 +326,25 @@
   #chatSendBtn{width:36px;height:36px;border:1px solid var(--cyan);background:rgba(0,229,255,.12);color:var(--cyan);font-size:18px;cursor:pointer}
   #chatSendBtn:disabled{opacity:.35;cursor:default}
   .chatStatus{font-family:'JetBrains Mono';font-size:9px;color:var(--text-dim)}
+
+  #profileModal{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;background:rgba(0,5,7,.72);backdrop-filter:blur(8px);padding:20px}
+  #profileModal.open{display:flex}
+  .profilePanel{width:min(440px,100%);border:1px solid var(--cyan);background:#050b0d;box-shadow:0 0 45px rgba(0,229,255,.16)}
+  .profilePanelHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--cyan-dim)}
+  .profilePanelTitle{font-family:'Orbitron';font-size:12px;letter-spacing:2px;color:var(--cyan)}
+  .profileCloseBtn{border:0;background:transparent;color:var(--text-dim);font-size:22px;cursor:pointer}
+  .profileCloseBtn:hover{color:var(--cyan)}
+  .profilePanelBody{padding:16px}
+  .profileTabs{display:flex;gap:6px;margin-bottom:14px}
+  .profileTabBtn{flex:1;border:1px solid var(--cyan-dim);background:transparent;color:var(--text-dim);font-family:'Orbitron';font-size:9px;letter-spacing:1px;padding:8px;cursor:pointer}
+  .profileTabBtn.active{color:var(--cyan);background:rgba(0,229,255,.08);border-color:var(--cyan)}
+  .profileLoggedIn{display:none}
+  .profileLoggedIn.on{display:block}
+  .profileAuthForm.hidden{display:none}
+  .profileUserCard{border:1px solid var(--cyan-dim);padding:12px;background:rgba(0,229,255,.025);margin-bottom:12px}
+  .profileUserName{font-family:'Orbitron';font-size:13px;letter-spacing:1px;color:var(--cyan);margin-bottom:5px}
+  .profileSyncInfo{font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);line-height:1.5}
+
   @media(max-width:720px){#chatWorkspace.open{grid-template-columns:72px 1fr}.chatSidebarTop{padding:8px}.chatNewBtn span{display:none}.chatHistoryItem span{display:none}.chatHistoryItem{justify-content:center}.chatComposerWrap{left:72px}.chatMessages{padding-left:14px;padding-right:14px}.chatComposerWrap{padding-left:14px;padding-right:14px}.modeSwitchBtn{min-width:82px;padding:8px 10px}}
 
 </style>
@@ -366,6 +420,8 @@
         <button class="settingsNavBtn" data-settings-page="hands"><svg viewBox="0 0 24 24" fill="none"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8-3a2 2 0 014 0v5c0 4-3 7-7 7h-2c-3 0-5-1-7-4l-3-5a2 2 0 013-2l2 2"/></svg><span>Hands</span></button>
         <button class="settingsNavBtn" data-settings-page="ai"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10h.01M15 10h.01M8 15h8M12 2v3"/></svg><span>AI</span></button>
         <button class="settingsNavBtn" data-settings-page="server"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg><span>Server</span></button>
+        <button class="settingsNavBtn" data-settings-page="appearance"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"/><circle cx="8" cy="9" r="1"/><circle cx="11" cy="6" r="1"/><circle cx="15" cy="7" r="1"/></svg><span>Colors</span></button>
+        <button class="settingsNavBtn" data-settings-page="fonts"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14M8 19h8"/><path d="M7 9V5h10v4"/></svg><span>Fonts</span></button>
       </nav>
       <button class="settingsNavBtn settingsClose" id="settingsCloseBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Close</span></button>
     </aside>
@@ -395,6 +451,13 @@
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div id="ownerCodeStatus" class="statusLine"></div></div>
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to Someone Else</h3><p class="settingsHint">Enter their server address and access code. They need Ollama; you do not. Choose Remote on the AI page after saving.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="http://192.168.1.50:5005"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" placeholder="Their shared code"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
           <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 17l5 3 5-3V7l-5-3-5 3v10z"/><path d="M7 7l5 3 5-3"/><path d="M12 10v10"/></svg>Cloudflare Quick Tunnel</h3><p class="settingsHint">For internet sharing without giving anyone your IP, run the two commands below in separate terminals. Paste the <code>.trycloudflare.com</code> address here so you can copy it again anytime from settings.</p><div class="settingsGrid"><div><label class="settingsLabel">Start Jarvis server</label><input class="settingsField" id="cloudflareCmdServer" readonly value='python "C:\\Users\\Oguz\\OneDrive\\Desktop\\Games\\jarvis_browser.py"'></div><div><label class="settingsLabel">Start Cloudflare tunnel</label><input class="settingsField" id="cloudflareCmdTunnel" readonly value='cloudflared tunnel --url http://127.0.0.1:5005'></div></div><div class="settingsActions"><button class="smallBtn" id="copyServerRunCmdBtn">Copy server cmd</button><button class="smallBtn" id="copyTunnelCmdBtn">Copy tunnel cmd</button></div><label class="settingsLabel" style="margin-top:10px">Current public tunnel URL</label><div class="codeDisplay"><input class="settingsField" id="cloudflarePublicUrl" placeholder="https://your-name.trycloudflare.com"><button class="smallBtn" id="saveCloudflareUrlBtn">Save</button><button class="smallBtn" id="copyCloudflareUrlBtn">Copy</button><button class="smallBtn" id="clearCloudflareUrlBtn">Clear</button></div><div id="cloudflareStatus" class="statusLine"></div></div>
+        </div>
+        <div class="settingsPage" data-page="appearance">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"/></svg>Color Combinations</h3><p class="settingsHint">Choose a complete Jarvis color system. These dark-interface palettes are curated around cyber, sci-fi, terminal, and accessible high-contrast combinations.</p><div class="appearancePreview"><div class="appearancePreviewTitle">JARVIS INTERFACE PREVIEW</div><div class="appearancePreviewText">Neural core online · systems nominal · theme changes apply instantly.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="themeSearchInput" placeholder="Search 60+ themes"><button class="smallBtn" id="resetThemeBtn" type="button">Reset</button></div><div class="themeGrid" id="themeGrid"></div><div class="statusLine" id="themeStatus"></div></div>
+        </div>
+        <div class="settingsPage" data-page="fonts">
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14M8 19h8"/><path d="M7 9V5h10v4"/></svg>Interface Font</h3><p class="settingsHint">Choose from 35+ UI, futuristic, and coding fonts. The selected font is loaded only when needed and saved on this browser.</p><div class="appearancePreview"><div class="appearancePreviewTitle" id="fontPreviewTitle">JARVIS NEURAL INTERFACE</div><div class="appearancePreviewText" id="fontPreviewText">The quick brown fox jumps over 0123456789.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="fontSearchInput" placeholder="Search fonts"><button class="smallBtn" id="resetFontBtn" type="button">Reset</button></div><div class="fontGrid" id="fontGrid"></div><div class="statusLine" id="fontStatus"></div></div>
         </div>
       </div>
     </section>
@@ -528,8 +591,13 @@
 
   <section id="chatWorkspace" aria-label="Jarvis chat workspace">
     <aside class="chatSidebar">
+      <div class="chatSidebarBrand">JARVIS</div>
       <div class="chatSidebarTop"><button class="chatNewBtn" id="chatNewBtn" type="button">＋ <span>NEW CHAT</span></button></div>
       <div class="chatHistoryList" id="chatHistoryList"></div>
+      <div class="chatSidebarFooter">
+        <button class="profileIconBtn" id="profileBtn" type="button" title="Profile and sync"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></button>
+        <button class="chatSettingsRect" id="chatSettingsBtn" type="button"><span class="profileStateDot" id="profileStateDot"></span><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1-2.9 2.9-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21h-4v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1-2.9-2.9.1-.1a1.7 1.7 0 00.3-1.8A1.7 1.7 0 003 14H3v-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.8l-.1-.1 2.9-2.9.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1 2.9 2.9-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1h.1v4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>SETTINGS</button>
+      </div>
     </aside>
     <main class="chatMain">
       <div class="chatMessages" id="chatMessages"><div class="chatEmpty">What should we work on?</div></div>
@@ -544,6 +612,27 @@
       </div>
     </main>
   </section>
+
+  <div id="profileModal" aria-hidden="true">
+    <div class="profilePanel" role="dialog" aria-modal="true" aria-label="Jarvis profile">
+      <div class="profilePanelHead"><div class="profilePanelTitle">JARVIS PROFILE</div><button class="profileCloseBtn" id="profileCloseBtn" type="button">×</button></div>
+      <div class="profilePanelBody">
+        <div class="profileAuthForm" id="profileAuthForm">
+          <div class="profileTabs"><button class="profileTabBtn active" id="profileLoginTab" type="button">LOG IN</button><button class="profileTabBtn" id="profileRegisterTab" type="button">CREATE ACCOUNT</button></div>
+          <label class="settingsLabel">Profile server address</label><input class="settingsField" id="profileServerUrl" placeholder="http://127.0.0.1:5005 or your tunnel URL">
+          <label class="settingsLabel" style="margin-top:10px">Username</label><input class="settingsField" id="profileUsername" autocomplete="username" placeholder="Username">
+          <label class="settingsLabel" style="margin-top:10px">Password</label><input class="settingsField" id="profilePassword" type="password" autocomplete="current-password" placeholder="Password">
+          <div class="settingsActions"><button class="smallBtn" id="profileSubmitBtn" type="button">LOG IN</button></div>
+          <div class="statusLine" id="profileStatus">Your chats and Jarvis memory sync to the profile server after you log in.</div>
+        </div>
+        <div class="profileLoggedIn" id="profileLoggedIn">
+          <div class="profileUserCard"><div class="profileUserName" id="profileDisplayName">SIGNED IN</div><div class="profileSyncInfo" id="profileSyncInfo"></div></div>
+          <div class="settingsActions"><button class="smallBtn" id="profileSyncNowBtn" type="button">SYNC NOW</button><button class="smallBtn" id="profileLogoutBtn" type="button">LOG OUT</button></div>
+          <div class="statusLine" id="profileLoggedStatus"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="micBtn" title="Push to talk">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -606,6 +695,7 @@
     if(state.memory.length > 200) state.memory.shift();
     try{ localStorage.setItem(MEM_KEY, JSON.stringify(state.memory)); }catch(e){}
     renderMemory();
+    if(typeof scheduleProfileSync==='function') scheduleProfileSync();
   }
 
   var CLAUDE_KEY_STORAGE = 'jarvis_claude_key_v1';
@@ -614,7 +704,8 @@
   var PROVIDER_STORAGE = 'jarvis_provider_v1';
   var REMOTE_URL_STORAGE = 'jarvis_remote_url_v1';
   var REMOTE_CODE_STORAGE = 'jarvis_remote_code_v1';
-  var claudeKey = null, geminiKey = null, localModel = null, remoteServerUrl = null, remoteAccessCode = null;
+  var PUBLIC_TUNNEL_URL_STORAGE = 'jarvis_public_tunnel_url_v1';
+  var claudeKey = null, geminiKey = null, localModel = null, remoteServerUrl = null, remoteAccessCode = null, publicTunnelUrl = null;
   var activeProvider = 'claude';
   try{
     claudeKey = localStorage.getItem(CLAUDE_KEY_STORAGE) || null;
@@ -623,6 +714,7 @@
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
     remoteServerUrl = localStorage.getItem(REMOTE_URL_STORAGE) || null;
     remoteAccessCode = localStorage.getItem(REMOTE_CODE_STORAGE) || null;
+    publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || null;
   }catch(e){}
 
   function currentKey(){
@@ -751,7 +843,7 @@
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-6',
-        max_tokens:300,
+        max_tokens:effortConfig(activeChatEffort).maxTokens,
         system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, no emojis, plain spoken text only.',
         messages: buildClaudeMessages(userText)
       })
@@ -814,7 +906,8 @@
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
-        contents: buildGeminiContents(userText)
+        contents: buildGeminiContents(userText),
+        generationConfig:{maxOutputTokens:effortConfig(activeChatEffort).maxTokens,temperature:effortConfig(activeChatEffort).temperature}
       })
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data && data.candidates && data.candidates[0]){
@@ -863,8 +956,9 @@
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         model: model,
-        prompt: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, plain spoken text only.\n\n' + transcript + 'User: ' + userText,
-        stream: false
+        prompt: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. '+effortInstruction(activeChatEffort)+'\n\n' + transcript + 'User: ' + userText,
+        stream: false,
+        options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}
       })
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data && data.response){
@@ -901,7 +995,7 @@
 
   function callRemoteText(userText, cb){
     if(!remoteServerUrl || !remoteAccessCode){ cb(null, 'no_key'); return; }
-    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode},body:JSON.stringify({prompt:'You are JARVIS, a calm, concise voice assistant. Answer in 1-3 short spoken sentences. No markdown.\n\n'+buildOllamaTranscript()+'User: '+userText})})
+    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode},body:JSON.stringify({prompt:'You are JARVIS, a calm text assistant. '+effortInstruction(activeChatEffort)+'\n\n'+buildOllamaTranscript()+'User: '+userText,effort:activeChatEffort,options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}})})
       .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(x){if(x.ok&&x.data.response)cb(x.data.response.trim(),null);else cb(null,x.data.error||'remote_error');}).catch(function(e){cb(null,e.message||'remote_network_error');});
   }
   function callRemoteVision(userText, base64Jpeg, cb){
@@ -1497,27 +1591,54 @@
     startBrowseInTab(localId, query, true);
   }
 
+
+  function hexToRgba(hex,alpha){var h=(hex||'#000000').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');var n=parseInt(h,16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+alpha+')';}
+  function applyTheme(theme,save){if(!theme)return;var root=document.documentElement;root.style.setProperty('--void',theme.void);root.style.setProperty('--panel',theme.panel);root.style.setProperty('--cyan',theme.accent);root.style.setProperty('--cyan-dim',hexToRgba(theme.accent,.22));root.style.setProperty('--cyan-mid',hexToRgba(theme.accent,.46));root.style.setProperty('--cyan-glow',hexToRgba(theme.accent,.55));root.style.setProperty('--mint',theme.secondary);root.style.setProperty('--amber',theme.secondary);root.style.setProperty('--text-dim',hexToRgba(theme.text,.62));selectedThemeName=theme.name;if(save){try{localStorage.setItem(THEME_STORAGE_KEY,theme.name);}catch(e){}scheduleProfileSync();}renderThemeGrid(document.getElementById('themeSearchInput')?document.getElementById('themeSearchInput').value:'');var st=document.getElementById('themeStatus');if(st)st.textContent='ACTIVE: '+theme.name.toUpperCase();}
+  function renderThemeGrid(filter){var grid=document.getElementById('themeGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_THEMES.filter(function(t){return t.name.toLowerCase().includes(filter);}).forEach(function(t){var b=document.createElement('button');b.type='button';b.className='themeOption'+(t.name===selectedThemeName?' active':'');b.innerHTML='<div class="themeSwatches"><span style="background:'+t.void+'"></span><span style="background:'+t.panel+'"></span><span style="background:'+t.accent+'"></span><span style="background:'+t.secondary+'"></span><span style="background:'+t.text+'"></span></div><div class="themeName"></div>';b.querySelector('.themeName').textContent=t.name;b.addEventListener('click',function(){applyTheme(t,true);});grid.appendChild(b);});}
+  function loadGoogleFont(name){if(!name)return;var id='jarvisDynamicFont';var old=document.getElementById(id);if(old)old.remove();var link=document.createElement('link');link.id=id;link.rel='stylesheet';link.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(name).replace(/%20/g,'+')+':wght@400;500;600;700&display=swap';document.head.appendChild(link);}
+  function applyFont(name,save){if(!name)return;loadGoogleFont(name);selectedFontName=name;document.documentElement.style.setProperty('--jarvis-body-font',"'"+name+"'");document.documentElement.style.setProperty('--jarvis-display-font',"'"+name+"'");document.body.style.fontFamily="'"+name+"', sans-serif";if(save){try{localStorage.setItem(FONT_STORAGE_KEY,name);}catch(e){}scheduleProfileSync();}setTimeout(function(){renderFontGrid(document.getElementById('fontSearchInput')?document.getElementById('fontSearchInput').value:'');var st=document.getElementById('fontStatus');if(st)st.textContent='ACTIVE: '+name.toUpperCase();},80);}
+  function renderFontGrid(filter){var grid=document.getElementById('fontGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_FONTS.filter(function(n){return n.toLowerCase().includes(filter);}).forEach(function(n){var b=document.createElement('button');b.type='button';b.className='fontOption'+(n===selectedFontName?' active':'');b.style.fontFamily="'"+n+"', sans-serif";b.innerHTML='<div class="fontOptionName"></div><div class="fontOptionPreview">JARVIS 0123 · System online</div>';b.querySelector('.fontOptionName').textContent=n;b.addEventListener('mouseenter',function(){loadGoogleFont(n);});b.addEventListener('click',function(){applyFont(n,true);});grid.appendChild(b);});}
+  try{selectedThemeName=localStorage.getItem(THEME_STORAGE_KEY)||'Arc Reactor';selectedFontName=localStorage.getItem(FONT_STORAGE_KEY)||'Rajdhani';}catch(e){}
+  applyTheme(JARVIS_THEMES.find(function(t){return t.name===selectedThemeName;})||JARVIS_THEMES[0],false);
+  applyFont(JARVIS_FONTS.indexOf(selectedFontName)>=0?selectedFontName:'Rajdhani',false);
+
   function openSettingsPage(name){
-    var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',ai:'AI PROVIDER',server:'SERVER SHARING'};
+    var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',ai:'AI PROVIDER',server:'SERVER SHARING',appearance:'COLOR COMBINATIONS',fonts:'INTERFACE FONTS'};
     document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.classList.toggle('active',b.dataset.settingsPage===name);});
     document.querySelectorAll('.settingsPage').forEach(function(p){p.classList.toggle('active',p.dataset.page===name);});
     document.getElementById('settingsPageTitle').textContent=titles[name]||'SETTINGS';
     if(name==='server') loadOwnerCode();
   }
   document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.addEventListener('click',function(){openSettingsPage(b.dataset.settingsPage);});});
+  document.getElementById('themeSearchInput').addEventListener('input',function(){renderThemeGrid(this.value);});
+  document.getElementById('fontSearchInput').addEventListener('input',function(){renderFontGrid(this.value);});
+  document.getElementById('resetThemeBtn').addEventListener('click',function(){applyTheme(JARVIS_THEMES[0],true);document.getElementById('themeSearchInput').value='';});
+  document.getElementById('resetFontBtn').addEventListener('click',function(){applyFont('Rajdhani',true);document.getElementById('fontSearchInput').value='';});
+  renderThemeGrid('');renderFontGrid('');
   document.getElementById('settingsCloseBtn').addEventListener('click',function(){document.getElementById('memPanel').classList.remove('settings-open');});
   function bridgeBase(){ return 'http://localhost:5005'; }
   function updateBridgeBadge(){ fetch(bridgeBase()+'/health').then(function(r){return r.json();}).then(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';}); }
-  function loadOwnerCode(){ fetch(bridgeBase()+'/owner/access-code').then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='Server listens on port '+(d.port||5005)+'. Share your reachable server address plus this code.';}).catch(function(){document.getElementById('ownerCodeStatus').textContent='Start jarvis_browser.py to manage the server code.';}); }
+  function loadOwnerCode(){ fetch(bridgeBase()+'/owner/access-code').then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';var shareUrl=(publicTunnelUrl||'').trim();document.getElementById('ownerCodeStatus').textContent='Server listens on port '+(d.port||5005)+'. Share '+(shareUrl?shareUrl:'your reachable server address')+' plus this code.';}).catch(function(){document.getElementById('ownerCodeStatus').textContent='Start jarvis_browser.py to manage the server code.';}); }
   document.getElementById('saveOwnerCodeBtn').addEventListener('click',function(){var c=document.getElementById('ownerAccessCode').value.trim();fetch(bridgeBase()+'/owner/access-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){document.getElementById('ownerCodeStatus').textContent=x.ok?'Custom code saved. The old code no longer works.':(x.d.error||'Could not save code.');});});
   document.getElementById('generateOwnerCodeBtn').addEventListener('click',function(){fetch(bridgeBase()+'/owner/access-code/refresh',{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='New code generated. The old code was disabled.';});});
   document.getElementById('copyOwnerCodeBtn').addEventListener('click',function(){var i=document.getElementById('ownerAccessCode');i.select();try{document.execCommand('copy');document.getElementById('ownerCodeStatus').textContent='Code copied.';}catch(e){document.getElementById('ownerCodeStatus').textContent='Select and copy the code manually.';}});
   function testRemoteConnection(url,code,statusEl){url=(url||'').trim().replace(/\/$/,'');fetch(url+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':code}}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){statusEl.textContent=x.ok?'Connected. Model: '+(x.d.model||'Ollama'):(x.d.error||'Connection rejected.');statusEl.style.color=x.ok?'var(--mint)':'var(--amber)';}).catch(function(e){statusEl.textContent='Could not reach that server: '+e.message;statusEl.style.color='var(--amber)';});}
+  function savePublicTunnelUrl(){ var input=document.getElementById('cloudflarePublicUrl'); var status=document.getElementById('cloudflareStatus'); if(!input||!status) return; var url=(input.value||'').trim().replace(/\/$/,''); publicTunnelUrl=url; try{ if(url) localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,url); else localStorage.removeItem(PUBLIC_TUNNEL_URL_STORAGE); }catch(e){} status.textContent=url?'Saved public tunnel URL. Share this URL plus your access code.':'Cleared the saved public tunnel URL.'; status.style.color=url?'var(--mint)':'var(--text-dim)'; loadOwnerCode(); }
+  function copyTextValue(v,statusEl,msg){ if(!v) return; navigator.clipboard.writeText(v).then(function(){ if(statusEl){statusEl.textContent=msg||'Copied.'; statusEl.style.color='var(--mint)'; }}).catch(function(){ if(statusEl){statusEl.textContent='Copy failed.'; statusEl.style.color='var(--amber)'; }}); }
   document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(document.getElementById('remoteServerUrl').value,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
   document.getElementById('connectRemoteBtn').addEventListener('click',function(){var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');var c=document.getElementById('serverConnectCode').value.trim();remoteServerUrl=u;remoteAccessCode=c;try{localStorage.setItem(REMOTE_URL_STORAGE,u);localStorage.setItem(REMOTE_CODE_STORAGE,c);}catch(e){}document.getElementById('remoteServerUrl').value=u;document.getElementById('remoteAccessCode').value=c;setProviderTab('remote');testRemoteConnection(u,c,document.getElementById('serverConnectStatus'));});
   updateBridgeBadge();
 
-  document.getElementById('settingsBtn').addEventListener('click', function(){ var p=document.getElementById('memPanel'); p.classList.toggle('settings-open'); if(p.classList.contains('settings-open')){openSettingsPage('memory');updateBridgeBadge();} });
+  document.getElementById('settingsBtn').addEventListener('click', function(e){ e.stopPropagation(); var p=document.getElementById('memPanel'); p.classList.toggle('settings-open'); if(p.classList.contains('settings-open')){openSettingsPage('memory');updateBridgeBadge();} });
+  document.addEventListener('mousedown', function(e){ var p=document.getElementById('memPanel'); var btn=document.getElementById('settingsBtn'); if(p.classList.contains('settings-open') && !p.contains(e.target) && !btn.contains(e.target)){ p.classList.remove('settings-open'); } });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ document.getElementById('memPanel').classList.remove('settings-open'); } });
+  var cfInput=document.getElementById('cloudflarePublicUrl'); if(cfInput && publicTunnelUrl) cfInput.value=publicTunnelUrl;
+  if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Paste your current .trycloudflare.com link here if you want quick access later.';
+  document.getElementById('saveCloudflareUrlBtn').addEventListener('click', savePublicTunnelUrl);
+  document.getElementById('clearCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=''; savePublicTunnelUrl(); });
+  document.getElementById('copyCloudflareUrlBtn').addEventListener('click', function(){ copyTextValue((document.getElementById('cloudflarePublicUrl').value||'').trim(), document.getElementById('cloudflareStatus'), 'Public tunnel URL copied.'); });
+  document.getElementById('copyServerRunCmdBtn').addEventListener('click', function(){ copyTextValue(document.getElementById('cloudflareCmdServer').value, document.getElementById('cloudflareStatus'), 'Server command copied.'); });
+  document.getElementById('copyTunnelCmdBtn').addEventListener('click', function(){ copyTextValue(document.getElementById('cloudflareCmdTunnel').value, document.getElementById('cloudflareStatus'), 'Tunnel command copied.'); });
   document.getElementById('clearMemBtn').addEventListener('click', function(){
     state.memory = [];
     try{ localStorage.removeItem(MEM_KEY); }catch(e){}
@@ -2941,12 +3062,29 @@
   // ---------- Manual Talk / Chat workspace ----------
   var CHAT_STORE_KEY = 'jarvis_manual_chats_v1';
   var CHAT_EFFORT_KEY = 'jarvis_chat_effort_v1';
+  var THEME_STORAGE_KEY = 'jarvis_theme_v1';
+  var FONT_STORAGE_KEY = 'jarvis_font_v1';
+  var JARVIS_THEMES = [{"name":"Arc Reactor","void":"#03090c","panel":"#071317","accent":"#00e5ff","secondary":"#3affc4","text":"#b8e9ee"},{"name":"Stark Gold","void":"#090806","panel":"#171108","accent":"#ffb020","secondary":"#ffe082","text":"#f5e6c8"},{"name":"Mark VII","void":"#0b0607","panel":"#190b0d","accent":"#ff3b30","secondary":"#ffb020","text":"#f3d7d5"},{"name":"Ultron Red","void":"#080405","panel":"#16090b","accent":"#ff1744","secondary":"#ff5252","text":"#f3c9d1"},{"name":"Vibranium","void":"#04070d","panel":"#091426","accent":"#2979ff","secondary":"#00b0ff","text":"#d4e4ff"},{"name":"Wakanda Purple","void":"#07040d","panel":"#130a22","accent":"#b388ff","secondary":"#7c4dff","text":"#eadfff"},{"name":"Gamma","void":"#030a05","panel":"#07180c","accent":"#76ff03","secondary":"#00e676","text":"#d9ffd0"},{"name":"Quantum Pink","void":"#0b050b","panel":"#1a0a18","accent":"#ff4ecd","secondary":"#b388ff","text":"#ffd7f5"},{"name":"Nano Orange","void":"#0b0704","panel":"#1b1008","accent":"#ff6d00","secondary":"#ffab40","text":"#ffe0c2"},{"name":"Hologram Blue","void":"#03080c","panel":"#061521","accent":"#40c4ff","secondary":"#18ffff","text":"#d2f4ff"},{"name":"Cyber Lime","void":"#050805","panel":"#0d160b","accent":"#c6ff00","secondary":"#76ff03","text":"#efffc7"},{"name":"Neon Violet","void":"#07050b","panel":"#120c1d","accent":"#d500f9","secondary":"#7c4dff","text":"#f3d6ff"},{"name":"Laser Magenta","void":"#0a0408","panel":"#190914","accent":"#ff00a8","secondary":"#ff4081","text":"#ffd2ec"},{"name":"Plasma Teal","void":"#030a09","panel":"#071816","accent":"#00e5c3","secondary":"#64ffda","text":"#d1fff8"},{"name":"Electric Indigo","void":"#050611","panel":"#0c1025","accent":"#536dfe","secondary":"#8c9eff","text":"#dce1ff"},{"name":"Solar Flare","void":"#0d0703","panel":"#1e1005","accent":"#ff9100","secondary":"#ffea00","text":"#fff0c4"},{"name":"Ice Core","void":"#040a0d","panel":"#091820","accent":"#80d8ff","secondary":"#84ffff","text":"#dcf8ff"},{"name":"Toxic Terminal","void":"#030703","panel":"#071307","accent":"#39ff14","secondary":"#b2ff59","text":"#dcffd4"},{"name":"Rose Circuit","void":"#0b0507","panel":"#190b10","accent":"#ff5c8a","secondary":"#ff80ab","text":"#ffd8e4"},{"name":"Amber Terminal","void":"#090703","panel":"#171105","accent":"#ffc400","secondary":"#ffab00","text":"#fff0bd"},{"name":"Midnight Cyan","void":"#02070a","panel":"#061116","accent":"#00b8d4","secondary":"#00e5ff","text":"#c7f7ff"},{"name":"Deep Space","void":"#03040a","panel":"#080b18","accent":"#7c4dff","secondary":"#448aff","text":"#dad7ff"},{"name":"Ocean Drive","void":"#020909","panel":"#061817","accent":"#00bfa5","secondary":"#1de9b6","text":"#c9fff5"},{"name":"Emerald Matrix","void":"#030805","panel":"#07150c","accent":"#00c853","secondary":"#69f0ae","text":"#ccffe0"},{"name":"Ruby Core","void":"#0a0305","panel":"#18070b","accent":"#d50000","secondary":"#ff5252","text":"#ffd1d1"},{"name":"Cobalt Grid","void":"#03060d","panel":"#081226","accent":"#2962ff","secondary":"#448aff","text":"#d5e0ff"},{"name":"Purple Rain","void":"#09050d","panel":"#160b20","accent":"#aa00ff","secondary":"#e040fb","text":"#efd4ff"},{"name":"Mint Glass","void":"#040a08","panel":"#0a1814","accent":"#69f0ae","secondary":"#a7ffeb","text":"#dbfff4"},{"name":"Arctic Violet","void":"#06070d","panel":"#101324","accent":"#8c9eff","secondary":"#b388ff","text":"#e5e7ff"},{"name":"Copper Wire","void":"#0a0705","panel":"#191009","accent":"#ff8a65","secondary":"#ffb74d","text":"#ffe3d7"},{"name":"Synthwave Sunset","void":"#0a0510","panel":"#180a23","accent":"#ff2a6d","secondary":"#05d9e8","text":"#ffe0f0"},{"name":"Retro Wave","void":"#080512","panel":"#140b24","accent":"#f72585","secondary":"#4cc9f0","text":"#f4dcff"},{"name":"Night City","void":"#05060a","panel":"#0c1019","accent":"#00f5d4","secondary":"#f15bb5","text":"#d9fff8"},{"name":"Tron Legacy","void":"#02070a","panel":"#05131b","accent":"#00a8e8","secondary":"#00ffff","text":"#cff9ff"},{"name":"Blade Runner","void":"#0b0703","panel":"#191006","accent":"#ff9f1c","secondary":"#e71d36","text":"#ffe4bd"},{"name":"Ghost Shell","void":"#04090b","panel":"#0a171c","accent":"#4dd0e1","secondary":"#ff4081","text":"#d5f7fb"},{"name":"Digital Lavender","void":"#080711","panel":"#121024","accent":"#b39ddb","secondary":"#80cbc4","text":"#eee9ff"},{"name":"Cherry Neon","void":"#0a0407","panel":"#180910","accent":"#ff1744","secondary":"#ff80ab","text":"#ffd7df"},{"name":"Blue Steel","void":"#04070a","panel":"#0a1218","accent":"#78909c","secondary":"#40c4ff","text":"#e1edf2"},{"name":"Green Phosphor","void":"#020602","panel":"#061006","accent":"#00ff41","secondary":"#7cff9b","text":"#d4ffdc"},{"name":"Monochrome Ice","void":"#050607","panel":"#101315","accent":"#eceff1","secondary":"#90a4ae","text":"#ffffff"},{"name":"Graphite Cyan","void":"#050708","panel":"#0b1113","accent":"#26c6da","secondary":"#80deea","text":"#d8f5f7"},{"name":"Slate Blue","void":"#06080c","panel":"#101622","accent":"#5c6bc0","secondary":"#9fa8da","text":"#e1e5ff"},{"name":"Carbon Gold","void":"#080705","panel":"#151208","accent":"#ffd54f","secondary":"#ffb300","text":"#fff1bd"},{"name":"Obsidian Rose","void":"#080507","panel":"#160b10","accent":"#ec407a","secondary":"#f48fb1","text":"#ffdae6"},{"name":"Void White","void":"#030405","panel":"#0b0d0e","accent":"#f5f5f5","secondary":"#9e9e9e","text":"#ffffff"},{"name":"Gunmetal Mint","void":"#050908","panel":"#0d1715","accent":"#4db6ac","secondary":"#80cbc4","text":"#daf7f2"},{"name":"Storm Electric","void":"#05070b","panel":"#0d1420","accent":"#82b1ff","secondary":"#18ffff","text":"#deebff"},{"name":"Ash Orange","void":"#090705","panel":"#17110c","accent":"#ff7043","secondary":"#ffcc80","text":"#ffe1d6"},{"name":"Royal Circuit","void":"#07050c","panel":"#130d20","accent":"#9575cd","secondary":"#ffd740","text":"#eee2ff"},{"name":"Aurora","void":"#030908","panel":"#071614","accent":"#00e676","secondary":"#7c4dff","text":"#d8ffe9"},{"name":"Northern Lights","void":"#03080a","panel":"#07141b","accent":"#64ffda","secondary":"#82b1ff","text":"#d8fff7"},{"name":"Candy Circuit","void":"#0a050b","panel":"#180b1a","accent":"#ff80ab","secondary":"#84ffff","text":"#ffe1ed"},{"name":"Sunset Grid","void":"#0c0706","panel":"#1c100e","accent":"#ff6e40","secondary":"#ffd740","text":"#ffe2d7"},{"name":"Lunar Silver","void":"#05070a","panel":"#0d1218","accent":"#b0bec5","secondary":"#80d8ff","text":"#edf5f8"},{"name":"Mars Dust","void":"#0b0604","panel":"#1b0e08","accent":"#ff5722","secondary":"#ffab91","text":"#ffe0d6"},{"name":"Deep Sea","void":"#02080b","panel":"#06151d","accent":"#00b0ff","secondary":"#00bfa5","text":"#d0f4ff"},{"name":"Biohazard","void":"#060803","panel":"#101607","accent":"#aeea00","secondary":"#ffd600","text":"#efffc8"},{"name":"Royal Blue","void":"#03050d","panel":"#09102a","accent":"#304ffe","secondary":"#00b0ff","text":"#dbe2ff"},{"name":"Crimson Gold","void":"#0a0404","panel":"#190909","accent":"#ff1744","secondary":"#ffc400","text":"#ffd7d7"},{"name":"Frost Mint","void":"#040a0a","panel":"#0a1818","accent":"#a7ffeb","secondary":"#00e5ff","text":"#e0fffa"},{"name":"Velvet Neon","void":"#09040c","panel":"#17091f","accent":"#e040fb","secondary":"#ff4081","text":"#f8dcff"},{"name":"Data Orange","void":"#090604","panel":"#171008","accent":"#ff9800","secondary":"#00e5ff","text":"#ffe6bf"},{"name":"Signal Yellow","void":"#090803","panel":"#171505","accent":"#ffea00","secondary":"#ffc400","text":"#fff9c4"},{"name":"Aqua Rose","void":"#03090a","panel":"#071719","accent":"#18ffff","secondary":"#ff80ab","text":"#d9ffff"}];
+  var JARVIS_FONTS = ["Orbitron","Rajdhani","JetBrains Mono","Audiowide","Exo 2","Space Grotesk","Oxanium","Chakra Petch","Michroma","Syncopate","Quantico","Share Tech Mono","Space Mono","IBM Plex Mono","Roboto Mono","Fira Code","Source Code Pro","Ubuntu Mono","Inconsolata","VT323","Teko","Saira","Saira Condensed","Titillium Web","Barlow","Barlow Condensed","Inter","Manrope","Montserrat","Poppins","Raleway","Nunito Sans","Rubik","Lato","Roboto","Open Sans","Noto Sans","Kanit","Aldrich","Electrolize"];
+  var selectedThemeName = 'Arc Reactor';
+  var selectedFontName = 'Rajdhani';
+  var activeChatEffort = 'medium';
+  var PROFILE_SERVER_KEY = 'jarvis_profile_server_v1';
+  var PROFILE_USER_KEY = 'jarvis_profile_user_v1';
+  var PROFILE_TOKEN_KEY = 'jarvis_profile_token_v1';
   var manualChats = [];
   var activeManualChatId = null;
   var chatBusy = false;
+  var chatThinkingForId = null;
+  var profileServerUrl = '';
+  var profileUsername = '';
+  var profileToken = '';
+  var profileAuthMode = 'login';
+  var profileSyncTimer = null;
+  try{ profileServerUrl=localStorage.getItem(PROFILE_SERVER_KEY)||''; profileUsername=localStorage.getItem(PROFILE_USER_KEY)||''; profileToken=sessionStorage.getItem(PROFILE_TOKEN_KEY)||''; }catch(e){}
   try{ manualChats = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || '[]'); if(!Array.isArray(manualChats)) manualChats=[]; }catch(e){ manualChats=[]; }
 
-  function saveManualChats(){ try{ localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(manualChats)); }catch(e){} }
+  function saveManualChats(){ try{ localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(manualChats)); }catch(e){} scheduleProfileSync(); }
   function makeChatId(){ return 'chat-' + Date.now() + '-' + Math.random().toString(36).slice(2,7); }
   function getActiveManualChat(){ return manualChats.find(function(c){return c.id===activeManualChatId;}) || null; }
   function createManualChat(){
@@ -2974,29 +3112,31 @@
   }
   function renderManualChat(){
     var box=document.getElementById('chatMessages'); if(!box)return; var chat=getActiveManualChat(); box.innerHTML='';
-    if(!chat || chat.messages.length===0){box.innerHTML='<div class="chatEmpty">What should we work on?</div>';return;}
+    if(!chat || (chat.messages.length===0 && chatThinkingForId!== (chat&&chat.id))){box.innerHTML='<div class="chatEmpty">What should we work on?</div>';return;}
     chat.messages.forEach(function(m){var wrap=document.createElement('div');wrap.className='chatMessage '+m.role;var bubble=document.createElement('div');bubble.className='chatBubble';bubble.textContent=m.text;wrap.appendChild(bubble);box.appendChild(wrap);});
+    if(chat && chatThinkingForId===chat.id){ var thinking=document.createElement('div'); thinking.className='chatMessage assistant thinking'; var bubble=document.createElement('div'); bubble.className='chatBubble'; bubble.innerHTML='<span class="typingDots"><span></span><span></span><span></span></span>'; thinking.appendChild(bubble); box.appendChild(thinking); }
     box.scrollTop=box.scrollHeight;
   }
   function effortInstruction(level){
-    if(level==='low') return 'Use low effort: answer quickly and briefly, focusing only on the direct result. Keep it under about 4 sentences unless code is needed.';
-    if(level==='high') return 'Use high effort: reason carefully, check assumptions, and give a thorough useful answer with clear structure. Include complete code when coding is requested.';
-    return 'Use medium effort: give a balanced answer with enough explanation to be useful without unnecessary detail.';
+    if(level==='low') return 'FAST MODE. Give the direct answer immediately. Do not deliberate aloud, do not add background, and use at most 2 short sentences unless the user explicitly asks for code.';
+    if(level==='high') return 'DEEP MODE. Analyze carefully, verify assumptions, consider edge cases, and produce a detailed complete answer. For coding, include robust complete code and explain important choices.';
+    return 'BALANCED MODE. Give a useful answer with moderate detail and clear reasoning, without unnecessary length.';
   }
+  function effortConfig(level){if(level==='low')return {history:2,maxTokens:96,numPredict:96,temperature:.15};if(level==='high')return {history:24,maxTokens:1400,numPredict:1200,temperature:.45};return {history:12,maxTokens:500,numPredict:420,temperature:.3};}
   function buildManualChatPrompt(chat,userText,effort){
-    var prior=chat.messages.slice(-12).map(function(m){return (m.role==='assistant'?'JARVIS':'User')+': '+m.text;}).join('\n');
+    var cfg=effortConfig(effort);var prior=chat.messages.slice(-cfg.history).map(function(m){return (m.role==='assistant'?'JARVIS':'User')+': '+m.text;}).join('\n');
     return 'You are JARVIS in a manual text chat. You may use normal formatting when useful. '+effortInstruction(effort)+'\n\nConversation:\n'+prior+'\nUser: '+userText+'\nJARVIS:';
   }
   function sendManualChat(){
     if(chatBusy)return; var input=document.getElementById('chatInput'); var text=input.value.trim(); if(!text)return;
     if(!activeManualChatId)createManualChat(); var chat=getActiveManualChat(); if(!chat)return;
-    var effort=document.getElementById('chatEffort').value;
+    var effort=document.getElementById('chatEffort').value;activeChatEffort=effort;
     chat.messages.push({role:'user',text:text}); if(chat.messages.length===1)chat.title=text.slice(0,38)+(text.length>38?'…':''); chat.updated=Date.now();
-    input.value=''; saveManualChats(); renderChatHistory(); renderManualChat();
+    input.value=''; saveManualChats(); renderChatHistory(); chatThinkingForId=chat.id; renderManualChat();
     chatBusy=true;document.getElementById('chatSendBtn').disabled=true;document.getElementById('chatStatus').textContent='THINKING · '+effort.toUpperCase();
     var savedHistory=conversationHistory; conversationHistory=[];
     callAIText(buildManualChatPrompt(chat,text,effort),function(reply,err){
-      conversationHistory=savedHistory; chatBusy=false;document.getElementById('chatSendBtn').disabled=false;document.getElementById('chatStatus').textContent='';
+      conversationHistory=savedHistory; chatBusy=false; chatThinkingForId=null; activeChatEffort='medium'; document.getElementById('chatSendBtn').disabled=false;document.getElementById('chatStatus').textContent='';
       if(!reply){ reply=err==='no_key'?'No AI provider is ready. Open Settings → AI and choose Claude, Gemini, Local, or Remote.':'Error: '+(err||'unknown error'); }
       chat.messages.push({role:'assistant',text:reply});chat.updated=Date.now();saveManualChats();renderChatHistory();renderManualChat();
     });
@@ -3012,6 +3152,53 @@
   document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendManualChat();}});
   try{var savedEffort=localStorage.getItem(CHAT_EFFORT_KEY);if(savedEffort)document.getElementById('chatEffort').value=savedEffort;}catch(e){}
   document.getElementById('chatEffort').addEventListener('change',function(){try{localStorage.setItem(CHAT_EFFORT_KEY,this.value);}catch(e){}});
+
+  function normalizeServerUrl(url){ return (url||'').trim().replace(/\/$/,''); }
+  function profileHeaders(){ return {'Content-Type':'application/json','Authorization':'Bearer '+profileToken}; }
+  function setProfileStatus(text,ok,logged){ var el=document.getElementById(logged?'profileLoggedStatus':'profileStatus'); if(!el)return; el.textContent=text; el.style.color=ok===true?'var(--mint)':ok===false?'var(--amber)':'var(--text-dim)'; }
+  function updateProfileUI(){
+    var signed=!!(profileServerUrl&&profileUsername&&profileToken);
+    document.getElementById('profileAuthForm').classList.toggle('hidden',signed);
+    document.getElementById('profileLoggedIn').classList.toggle('on',signed);
+    document.getElementById('profileStateDot').classList.toggle('online',signed);
+    document.getElementById('profileServerUrl').value=profileServerUrl||remoteServerUrl||publicTunnelUrl||'http://127.0.0.1:5005';
+    document.getElementById('profileUsername').value=profileUsername||'';
+    if(signed){ document.getElementById('profileDisplayName').textContent=profileUsername.toUpperCase(); document.getElementById('profileSyncInfo').textContent='SYNC SERVER: '+profileServerUrl+'\nChats and Jarvis memory are saved to your account.'; }
+  }
+  function openProfileModal(){ document.getElementById('memPanel').classList.remove('settings-open'); document.getElementById('profileModal').classList.add('open'); document.getElementById('profileModal').setAttribute('aria-hidden','false'); updateProfileUI(); }
+  function closeProfileModal(){ document.getElementById('profileModal').classList.remove('open'); document.getElementById('profileModal').setAttribute('aria-hidden','true'); }
+  function setProfileMode(mode){ profileAuthMode=mode; document.getElementById('profileLoginTab').classList.toggle('active',mode==='login'); document.getElementById('profileRegisterTab').classList.toggle('active',mode==='register'); document.getElementById('profileSubmitBtn').textContent=mode==='login'?'LOG IN':'CREATE ACCOUNT'; document.getElementById('profilePassword').autocomplete=mode==='login'?'current-password':'new-password'; }
+  function profileAuthSubmit(){
+    var server=normalizeServerUrl(document.getElementById('profileServerUrl').value);
+    var username=document.getElementById('profileUsername').value.trim();
+    var password=document.getElementById('profilePassword').value;
+    if(!/^https?:\/\//i.test(server)){setProfileStatus('Enter a full http:// or https:// server address.',false,false);return;}
+    if(username.length<3||password.length<8){setProfileStatus('Username needs 3+ characters and password needs 8+ characters.',false,false);return;}
+    setProfileStatus(profileAuthMode==='login'?'Logging in…':'Creating account…',null,false);
+    fetch(server+'/profile/'+profileAuthMode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,password:password})})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+      .then(function(x){if(!x.ok)throw new Error(x.d.error||'Account request failed.'); profileServerUrl=server;profileUsername=x.d.username||username;profileToken=x.d.token||'';try{localStorage.setItem(PROFILE_SERVER_KEY,profileServerUrl);localStorage.setItem(PROFILE_USER_KEY,profileUsername);sessionStorage.setItem(PROFILE_TOKEN_KEY,profileToken);}catch(e){}document.getElementById('profilePassword').value='';updateProfileUI();setProfileStatus('Logged in. Loading your synced data…',true,true);return loadProfileData();})
+      .catch(function(e){setProfileStatus(e.message||'Could not reach profile server.',false,false);});
+  }
+  function collectProfileData(){ return {version:2,chats:manualChats,memory:state.memory,theme:selectedThemeName,font:selectedFontName,effort:document.getElementById('chatEffort').value,updated_at:Date.now()}; }
+  function applyProfileData(data){ if(!data||typeof data!=='object')return; if(Array.isArray(data.chats))manualChats=data.chats; if(Array.isArray(data.memory))state.memory=data.memory;if(data.theme){selectedThemeName=data.theme;applyTheme(JARVIS_THEMES.find(function(t){return t.name===selectedThemeName;})||JARVIS_THEMES[0],true);}if(data.font){selectedFontName=data.font;applyFont(selectedFontName,true);}if(data.effort&&['low','medium','high'].includes(data.effort)){document.getElementById('chatEffort').value=data.effort;try{localStorage.setItem(CHAT_EFFORT_KEY,data.effort);}catch(e){}} if(!activeManualChatId||!manualChats.some(function(c){return c.id===activeManualChatId;}))activeManualChatId=manualChats.length?manualChats[0].id:null; try{localStorage.setItem(CHAT_STORE_KEY,JSON.stringify(manualChats));localStorage.setItem(MEM_KEY,JSON.stringify(state.memory));}catch(e){}renderMemory();renderChatHistory();renderManualChat(); }
+  function loadProfileData(){ if(!profileToken)return Promise.resolve(); return fetch(profileServerUrl+'/profile/data',{headers:{'Authorization':'Bearer '+profileToken}}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){if(!x.ok)throw new Error(x.d.error||'Could not load profile.'); if(x.d.data&&Object.keys(x.d.data).length)applyProfileData(x.d.data);else return pushProfileData(); setProfileStatus('Profile synced from server.',true,true);}).catch(function(e){setProfileStatus(e.message,false,true);}); }
+  function pushProfileData(){ if(!profileToken)return Promise.resolve(); return fetch(profileServerUrl+'/profile/data',{method:'POST',headers:profileHeaders(),body:JSON.stringify({data:collectProfileData()})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){if(!x.ok)throw new Error(x.d.error||'Sync failed.');setProfileStatus('Synced just now.',true,true);}).catch(function(e){setProfileStatus(e.message,false,true);}); }
+  function scheduleProfileSync(){ if(!profileToken)return; clearTimeout(profileSyncTimer);profileSyncTimer=setTimeout(pushProfileData,900); }
+  function logoutProfile(){ profileToken='';try{sessionStorage.removeItem(PROFILE_TOKEN_KEY);}catch(e){}updateProfileUI();setProfileStatus('Logged out. Local chats remain on this PC.',null,false); }
+  document.getElementById('profileBtn').addEventListener('click',openProfileModal);
+  document.getElementById('profileCloseBtn').addEventListener('click',closeProfileModal);
+  document.getElementById('profileModal').addEventListener('mousedown',function(e){if(e.target===this)closeProfileModal();});
+  document.getElementById('profileLoginTab').addEventListener('click',function(){setProfileMode('login');});
+  document.getElementById('profileRegisterTab').addEventListener('click',function(){setProfileMode('register');});
+  document.getElementById('profileSubmitBtn').addEventListener('click',profileAuthSubmit);
+  document.getElementById('profilePassword').addEventListener('keydown',function(e){if(e.key==='Enter')profileAuthSubmit();});
+  document.getElementById('profileSyncNowBtn').addEventListener('click',pushProfileData);
+  document.getElementById('profileLogoutBtn').addEventListener('click',logoutProfile);
+  document.getElementById('chatSettingsBtn').addEventListener('click',function(){closeProfileModal();var p=document.getElementById('memPanel');p.classList.add('settings-open');openSettingsPage('memory');updateBridgeBadge();});
+  updateProfileUI();
+  if(profileToken)loadProfileData();
+
   if(manualChats.length)activeManualChatId=manualChats[0].id;
   renderChatHistory();
 
