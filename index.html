@@ -1598,9 +1598,6 @@
   function loadGoogleFont(name){if(!name)return;var id='jarvisDynamicFont';var old=document.getElementById(id);if(old)old.remove();var link=document.createElement('link');link.id=id;link.rel='stylesheet';link.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(name).replace(/%20/g,'+')+':wght@400;500;600;700&display=swap';document.head.appendChild(link);}
   function applyFont(name,save){if(!name)return;loadGoogleFont(name);selectedFontName=name;document.documentElement.style.setProperty('--jarvis-body-font',"'"+name+"'");document.documentElement.style.setProperty('--jarvis-display-font',"'"+name+"'");document.body.style.fontFamily="'"+name+"', sans-serif";if(save){try{localStorage.setItem(FONT_STORAGE_KEY,name);}catch(e){}scheduleProfileSync();}setTimeout(function(){renderFontGrid(document.getElementById('fontSearchInput')?document.getElementById('fontSearchInput').value:'');var st=document.getElementById('fontStatus');if(st)st.textContent='ACTIVE: '+name.toUpperCase();},80);}
   function renderFontGrid(filter){var grid=document.getElementById('fontGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_FONTS.filter(function(n){return n.toLowerCase().includes(filter);}).forEach(function(n){var b=document.createElement('button');b.type='button';b.className='fontOption'+(n===selectedFontName?' active':'');b.style.fontFamily="'"+n+"', sans-serif";b.innerHTML='<div class="fontOptionName"></div><div class="fontOptionPreview">JARVIS 0123 · System online</div>';b.querySelector('.fontOptionName').textContent=n;b.addEventListener('mouseenter',function(){loadGoogleFont(n);});b.addEventListener('click',function(){applyFont(n,true);});grid.appendChild(b);});}
-  try{selectedThemeName=localStorage.getItem(THEME_STORAGE_KEY)||'Arc Reactor';selectedFontName=localStorage.getItem(FONT_STORAGE_KEY)||'Rajdhani';}catch(e){}
-  applyTheme(JARVIS_THEMES.find(function(t){return t.name===selectedThemeName;})||JARVIS_THEMES[0],false);
-  applyFont(JARVIS_FONTS.indexOf(selectedFontName)>=0?selectedFontName:'Rajdhani',false);
 
   function openSettingsPage(name){
     var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',ai:'AI PROVIDER',server:'SERVER SHARING',appearance:'COLOR COMBINATIONS',fonts:'INTERFACE FONTS'};
@@ -1614,7 +1611,6 @@
   document.getElementById('fontSearchInput').addEventListener('input',function(){renderFontGrid(this.value);});
   document.getElementById('resetThemeBtn').addEventListener('click',function(){applyTheme(JARVIS_THEMES[0],true);document.getElementById('themeSearchInput').value='';});
   document.getElementById('resetFontBtn').addEventListener('click',function(){applyFont('Rajdhani',true);document.getElementById('fontSearchInput').value='';});
-  renderThemeGrid('');renderFontGrid('');
   document.getElementById('settingsCloseBtn').addEventListener('click',function(){document.getElementById('memPanel').classList.remove('settings-open');});
   function bridgeBase(){ return 'http://localhost:5005'; }
   function updateBridgeBadge(){ fetch(bridgeBase()+'/health').then(function(r){return r.json();}).then(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';}); }
@@ -3069,6 +3065,15 @@
   var selectedThemeName = 'Arc Reactor';
   var selectedFontName = 'Rajdhani';
   var activeChatEffort = 'medium';
+  // Apply saved appearance only after the theme/font catalogs and storage keys exist.
+  try{
+    selectedThemeName = localStorage.getItem(THEME_STORAGE_KEY) || 'Arc Reactor';
+    selectedFontName = localStorage.getItem(FONT_STORAGE_KEY) || 'Rajdhani';
+  }catch(e){}
+  applyTheme(JARVIS_THEMES.find(function(t){ return t.name === selectedThemeName; }) || JARVIS_THEMES[0], false);
+  applyFont(JARVIS_FONTS.indexOf(selectedFontName) >= 0 ? selectedFontName : 'Rajdhani', false);
+  renderThemeGrid('');
+  renderFontGrid('');
   var PROFILE_SERVER_KEY = 'jarvis_profile_server_v1';
   var PROFILE_USER_KEY = 'jarvis_profile_user_v1';
   var PROFILE_TOKEN_KEY = 'jarvis_profile_token_v1';
