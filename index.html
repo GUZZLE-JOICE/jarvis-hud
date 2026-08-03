@@ -46,7 +46,10 @@
   .browseUrlText{font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
   .browseImageWrap{position:relative;flex:1;line-height:0;background:#000;overflow:hidden;}
   .browseImageWrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,229,255,0.05), transparent 15%, transparent 85%, rgba(0,229,255,0.05));pointer-events:none;}
-  .browseScreenshot{width:100%;height:100%;object-fit:contain;display:block;filter:saturate(0.9) brightness(0.95);}
+  .browseScreenshot{width:100%;height:100%;object-fit:contain;display:none;filter:saturate(0.9) brightness(0.95);}
+  .browseScreenshot.ready{display:block;}
+  .browseOverlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:var(--text-dim);background:rgba(0,0,0,0.55);white-space:pre-wrap;}
+  .browseOverlay.error{color:var(--amber);}
   .browseFooter{padding:6px 12px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:var(--text-dim);border-top:1px solid var(--cyan-dim);text-align:center;flex-shrink:0;}
   #browseTabsLayer{position:absolute;inset:0;z-index:40;pointer-events:none;}
   #globalHandCursor{position:fixed;width:26px;height:26px;margin-left:-13px;margin-top:-13px;border:2px solid var(--cyan);border-radius:50%;z-index:9999;pointer-events:none;display:none;transition:border-color .12s ease, background .12s ease, transform .1s ease;box-shadow:0 0 10px rgba(0,229,255,0.6);}
@@ -445,6 +448,7 @@
       </div>
       <div class="browseImageWrap">
         <img class="browseScreenshot" alt="">
+        <div class="browseOverlay">Waiting for research…</div>
       </div>
       <div class="browseFooter">JARVIS · LOCAL BROWSER BRIDGE</div>
       <div class="browseResizeHandle"></div>
@@ -1023,42 +1027,76 @@
     });
   }
 
-  function pollTabStatus(tabId){
-    var tab = browseTabs[tabId];
-    if(!tab) return;
-    fetch('http://localhost:5005/status/' + tabId).then(function(r){ return r.json(); }).then(function(data){
-      if(!browseTabs[tabId]) return; // closed while this request was in flight
-      if(data.error){
-        clearInterval(tab.pollTimer);
-        return;
-      }
-      var el = tab.el;
-      var dot = el.querySelector('.browseDot');
-      var label = el.querySelector('.browseTabLabel');
-      var urlText = el.querySelector('.browseUrlText');
-      var img = el.querySelector('.browseScreenshot');
+  function setBrowseOverlay(tab, text, isError){
+    if(!tab || !tab.el) return;
+    var overlay = tab.el.querySelector('.browseOverlay');
+    if(!overlay) return;
+    overlay.textContent = text || '';
+    overlay.classList.toggle('error', !!isError);
+    overlay.style.display = text ? 'flex' : 'none';
+  }
 
-      var busy = (data.status !== 'ready' && data.status !== 'error');
-      dot.classList.toggle('busy', busy);
-      label.textContent = busy ? (data.status || 'working…').toUpperCase() : (data.title || 'Tab');
-      urlText.textContent = data.url || '';
-      if(data.screenshot && data.screenshot !== tab.screenshotB64){
-        tab.screenshotB64 = data.screenshot;
-        img.src = 'data:image/jpeg;base64,' + data.screenshot;
-      }
+  function setBrowseScreenshot(tab, b64){
+    if(!tab || !tab.el) return;
+    var img = tab.el.querySelector('.browseScreenshot');
+    if(!img) return;
+    if(b64){
+      tab.screenshotB64 = b64;
+      img.src = 'data:image/jpeg;base64,' + b64;
+      img.classList.add('ready');
+      setBrowseOverlay(tab, '', false);
+    } else {
+      img.classList.remove('ready');
+    }
+  }
 
-      if(data.status === 'ready' || data.status === 'error'){
-        clearInterval(tab.pollTimer);
-        tab.pollTimer = null;
-        if(data.answer && !tab.answerSpoken){
-          tab.answerSpoken = true;
-          speak(data.answer);
+  function pollTabStatus(localId){
+    var tab = browseTabs[localId];
+    if(!tab || !tab.backendTabId) return;
+
+    fetch('http://localhost:5005/status/' + encodeURIComponent(tab.backendTabId))
+      .then(function(r){
+        if(!r.ok) throw new Error('Status request failed: ' + r.status);
+        return r.json();
+      })
+      .then(function(data){
+        if(!browseTabs[localId]) return;
+
+        var el = tab.el;
+        var dot = el.querySelector('.browseDot');
+        var label = el.querySelector('.browseTabLabel');
+        var urlText = el.querySelector('.browseUrlText');
+        var busy = (data.status !== 'ready' && data.status !== 'error');
+
+        dot.classList.toggle('busy', busy);
+        label.textContent = busy ? (data.status || 'working…').toUpperCase() : (data.title || 'Tab');
+        urlText.textContent = data.url || '';
+
+        if(data.screenshot && data.screenshot !== tab.screenshotB64){
+          setBrowseScreenshot(tab, data.screenshot);
+        } else if(!data.screenshot && busy){
+          setBrowseOverlay(tab, 'Status: ' + (data.status || 'waiting') + '…', false);
         }
-        if(data.error){
-          speak('Browsing hit a problem: ' + data.error);
+
+        if(data.status === 'ready' || data.status === 'error'){
+          if(tab.pollTimer){
+            clearInterval(tab.pollTimer);
+            tab.pollTimer = null;
+          }
+          if(data.status === 'ready' && data.answer && !tab.answerSpoken){
+            tab.answerSpoken = true;
+            speak(data.answer);
+          }
+          if(data.status === 'error'){
+            setBrowseOverlay(tab, 'Research error:\n' + (data.error || 'Unknown error'), true);
+            speak('Browsing hit a problem: ' + (data.error || 'unknown error'));
+          }
         }
-      }
-    }).catch(function(){});
+      })
+      .catch(function(err){
+        if(!browseTabs[localId]) return;
+        setBrowseOverlay(tab, 'Could not poll browser bridge.\n' + err.message, true);
+      });
   }
 
   function openNewTab(initialLabel){
@@ -1071,6 +1109,7 @@
 
     var localId = 'local-' + Date.now();
     browseTabs[localId] = { el: el, pollTimer: null, screenshotB64: null, backendTabId: null };
+    setBrowseOverlay(browseTabs[localId], 'Say "Jarvis, research ___" to load something here.', false);
 
     el.querySelector('.browseCloseBtn').addEventListener('click', function(){
       closeTabById(localId);
@@ -1138,8 +1177,7 @@
       body: JSON.stringify({tab_id: tab.backendTabId, x: Math.round(relX*scaleX), y: Math.round(relY*scaleY)})
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data.screenshot){
-        tab.screenshotB64 = data.screenshot;
-        img.src = 'data:image/jpeg;base64,' + data.screenshot;
+        setBrowseScreenshot(tab, data.screenshot);
         tab.el.querySelector('.browseTabLabel').textContent = data.title || '';
         tab.el.querySelector('.browseUrlText').textContent = data.url || '';
       }
@@ -1154,8 +1192,7 @@
       body: JSON.stringify({tab_id: tab.backendTabId, delta_y: deltaY})
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data.screenshot){
-        tab.screenshotB64 = data.screenshot;
-        tab.el.querySelector('.browseScreenshot').src = 'data:image/jpeg;base64,' + data.screenshot;
+        setBrowseScreenshot(tab, data.screenshot);
       }
     }).catch(function(){});
   }
@@ -1228,28 +1265,36 @@
       speak('What would you like me to look up?');
       return;
     }
+
     setCaption('Opening a browser to research that…');
     var localId = openNewTab('RESEARCHING…');
+    var openingTab = browseTabs[localId];
+    setBrowseOverlay(openingTab, 'Launching DuckDuckGo research…\n' + query, false);
 
     fetch('http://localhost:5005/browse', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({query: query})
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if(data.error){
-        speak('Browsing failed. ' + (data.error.length < 80 ? data.error : 'Check the browser bridge is running.'));
-        closeTabById(localId);
-        return;
-      }
-      var tab = browseTabs[localId];
-      if(!tab) return; // user closed it already
-      tab.backendTabId = data.tab_id;
-      tab.pollTimer = setInterval(function(){ pollTabStatus(localId); }, 1000);
-      pollTabStatus(localId);
-    }).catch(function(err){
-      speak('I could not reach the browsing bridge. Make sure jarvis underscore browser dot p y is running on your computer.');
-      closeTabById(localId);
-    });
+    })
+      .then(function(r){
+        if(!r.ok) throw new Error('Browse request failed: ' + r.status);
+        return r.json();
+      })
+      .then(function(data){
+        if(data.error) throw new Error(data.error);
+        var tab = browseTabs[localId];
+        if(!tab) return;
+
+        tab.backendTabId = String(data.tab_id);
+        setBrowseOverlay(tab, 'DuckDuckGo opened.\nSearching for:\n' + query, false);
+        tab.pollTimer = setInterval(function(){ pollTabStatus(localId); }, 800);
+        pollTabStatus(localId);
+      })
+      .catch(function(err){
+        var tab = browseTabs[localId];
+        if(tab) setBrowseOverlay(tab, 'Could not start research.\n' + err.message, true);
+        speak('I could not start browsing. Check the local browser bridge.');
+      });
   }
 
   document.getElementById('settingsBtn').addEventListener('click', function(){
@@ -1565,6 +1610,24 @@
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
   }
 
+  var CURSOR_MARGIN_X = 0.22;
+  var CURSOR_MARGIN_Y = 0.18;
+  var CURSOR_SMOOTHING = 0.42;
+  var smoothedCursorX = window.innerWidth / 2;
+  var smoothedCursorY = window.innerHeight / 2;
+
+  function clamp(v, min, max){
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function normalizedToViewport(nx, ny){
+    // The camera preview is mirrored, so invert X for natural pointer movement.
+    var mirroredX = 1 - nx;
+    var x01 = clamp((mirroredX - CURSOR_MARGIN_X) / (1 - CURSOR_MARGIN_X * 2), 0, 1);
+    var y01 = clamp((ny - CURSOR_MARGIN_Y) / (1 - CURSOR_MARGIN_Y * 2), 0, 1);
+    return { x:x01 * window.innerWidth, y:y01 * window.innerHeight };
+  }
+
   function canvasPointToPageCoords(cx, cy){
     var camLayer = document.getElementById('camLayer');
     var rect = camLayer.getBoundingClientRect();
@@ -1577,6 +1640,7 @@
   ];
   var twoHandZoomActive = false;
   var lastTwoHandDistance = null;
+  var twoHandResizeSession = null;
   var handZoomScale = 1.0;
   var MIN_ZOOM = 0.4, MAX_ZOOM = 3.0;
 
@@ -1741,40 +1805,61 @@
       }
     }
 
-    // Two-hand pinch-zoom: both hands pinching simultaneously.
-    // Tracks horizontal and vertical separation independently, so a mostly
-    // vertical hand movement stretches height, mostly horizontal stretches
-    // width, and a diagonal movement does both - no explicit angle check
-    // needed, it falls out naturally from tracking dx/dy separately.
+    // Two-hand resize: horizontal separation controls width and vertical
+    // separation controls height. The panel size is anchored when the gesture
+    // begins so it does not compound or jump frame-to-frame.
     if(hands.length >= 2 && handPinchStates[0].isPinching && handPinchStates[1].isPinching){
       twoHandZoomActive = true;
-      var p1 = mapNormalizedPoint(handPinchStates[0].point.x, handPinchStates[0].point.y, mapping);
-      var p2 = mapNormalizedPoint(handPinchStates[1].point.x, handPinchStates[1].point.y, mapping);
-      var absDx = Math.abs(p2.x - p1.x), absDy = Math.abs(p2.y - p1.y);
+
+      var p1Canvas = mapNormalizedPoint(handPinchStates[0].point.x, handPinchStates[0].point.y, mapping);
+      var p2Canvas = mapNormalizedPoint(handPinchStates[1].point.x, handPinchStates[1].point.y, mapping);
+      var p1Page = normalizedToViewport(handPinchStates[0].point.x, handPinchStates[0].point.y);
+      var p2Page = normalizedToViewport(handPinchStates[1].point.x, handPinchStates[1].point.y);
+      var absDx = Math.abs(p2Page.x - p1Page.x);
+      var absDy = Math.abs(p2Page.y - p1Page.y);
 
       ctx.strokeStyle = 'rgba(58,255,196,0.8)';
       ctx.lineWidth = 2;
       ctx.setLineDash([6,6]);
       ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
+      ctx.moveTo(p1Canvas.x, p1Canvas.y);
+      ctx.lineTo(p2Canvas.x, p2Canvas.y);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      if(lastTwoHandDistance !== null){
-        var widthRatio = absDx / Math.max(lastTwoHandDistance.dx, 1);
-        var heightRatio = absDy / Math.max(lastTwoHandDistance.dy, 1);
-        var midCanvas = { x:(p1.x+p2.x)/2, y:(p1.y+p2.y)/2 };
-        var midPage = canvasPointToPageCoords(midCanvas.x, midCanvas.y);
-        if(typeof window.__onHandZoomChangeDirectional === 'function'){
-          window.__onHandZoomChangeDirectional(widthRatio, heightRatio, midPage.x, midPage.y);
+      var midPageX = (p1Page.x + p2Page.x) / 2;
+      var midPageY = (p1Page.y + p2Page.y) / 2;
+
+      if(!twoHandResizeSession){
+        var hit = findTabUnderPoint(midPageX, midPageY);
+        if(hit){
+          var startRect = hit.tab.el.getBoundingClientRect();
+          twoHandResizeSession = {
+            tabId: hit.id,
+            startDx: Math.max(absDx, 40),
+            startDy: Math.max(absDy, 40),
+            startW: startRect.width,
+            startH: startRect.height
+          };
+          lastZoomTargetTab = hit.id;
         }
       }
-      lastTwoHandDistance = { dx: absDx, dy: absDy };
+
+      if(twoHandResizeSession && browseTabs[twoHandResizeSession.tabId]){
+        var targetEl = browseTabs[twoHandResizeSession.tabId].el;
+        var widthScale = absDx / Math.max(twoHandResizeSession.startDx, 1);
+        var heightScale = absDy / Math.max(twoHandResizeSession.startDy, 1);
+        if(Math.abs(widthScale - 1) < 0.04) widthScale = 1;
+        if(Math.abs(heightScale - 1) < 0.04) heightScale = 1;
+        targetEl.style.width = clamp(twoHandResizeSession.startW * widthScale, 220, 1000) + 'px';
+        targetEl.style.height = clamp(twoHandResizeSession.startH * heightScale, 160, 800) + 'px';
+      }
+
       setPinchActive(false);
     } else {
       twoHandZoomActive = false;
       lastTwoHandDistance = null;
+      twoHandResizeSession = null;
       setPinchActive(handPinchStates[0].isPinching);
     }
   }
@@ -1973,13 +2058,14 @@
     // Update the full-screen cursor so you can see exactly where a click
     // or scroll would land when browsing hands-only.
     if(mapping){
-      var mappedForPage = mapNormalizedPoint(indexTip.x, indexTip.y, mapping, handSign);
-      var pagePoint = canvasPointToPageCoords(mappedForPage.x, mappedForPage.y);
-      lastCursorPageX = pagePoint.x;
-      lastCursorPageY = pagePoint.y;
+      var pagePoint = normalizedToViewport(indexTip.x, indexTip.y);
+      smoothedCursorX += (pagePoint.x - smoothedCursorX) * CURSOR_SMOOTHING;
+      smoothedCursorY += (pagePoint.y - smoothedCursorY) * CURSOR_SMOOTHING;
+      lastCursorPageX = smoothedCursorX;
+      lastCursorPageY = smoothedCursorY;
       var cursorEl = document.getElementById('globalHandCursor');
-      cursorEl.style.left = pagePoint.x + 'px';
-      cursorEl.style.top = pagePoint.y + 'px';
+      cursorEl.style.left = smoothedCursorX + 'px';
+      cursorEl.style.top = smoothedCursorY + 'px';
       cursorEl.classList.add('visible');
     }
   }
