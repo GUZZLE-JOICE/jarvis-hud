@@ -1600,7 +1600,7 @@
     lines.push('Tracking: ' + (handTrackingActive ? 'ON' : 'OFF'));
     lines.push('Pinch threshold: ' + (pinchThreshold ? pinchThreshold.toFixed(3) : 'not calibrated (using default)'));
     if(handTrackingActive){
-      lines.push('Pinch with both hands and move them apart or together to zoom.');
+      lines.push('Two pinches resize the newest tab: horizontal spread changes width, vertical spread changes height.');
     }
     el.innerHTML = lines.join('<br>');
   }
@@ -1612,7 +1612,10 @@
 
   var CURSOR_MARGIN_X = 0.22;
   var CURSOR_MARGIN_Y = 0.18;
-  var CURSOR_SMOOTHING = 0.42;
+  // Palm tracking is naturally steadier than fingertip tracking. A slightly
+  // stronger smoothing value keeps it responsive without letting a pinch or
+  // fist throw the pointer around.
+  var CURSOR_SMOOTHING = 0.30;
   var smoothedCursorX = window.innerWidth / 2;
   var smoothedCursorY = window.innerHeight / 2;
 
@@ -1805,9 +1808,11 @@
       }
     }
 
-    // Two-hand resize: horizontal separation controls width and vertical
-    // separation controls height. The panel size is anchored when the gesture
-    // begins so it does not compound or jump frame-to-frame.
+    // Two-hand resize. The newest open tab is selected when both hands begin
+    // pinching, so the gesture does not fail just because the midpoint between
+    // your hands is outside the panel. Horizontal spread changes width and
+    // vertical spread changes height using pixel deltas, which also works when
+    // the hands begin nearly level or nearly vertical.
     if(hands.length >= 2 && handPinchStates[0].isPinching && handPinchStates[1].isPinching){
       twoHandZoomActive = true;
 
@@ -1827,35 +1832,43 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      var midPageX = (p1Page.x + p2Page.x) / 2;
-      var midPageY = (p1Page.y + p2Page.y) / 2;
-
       if(!twoHandResizeSession){
-        var hit = findTabUnderPoint(midPageX, midPageY);
-        if(hit){
-          var startRect = hit.tab.el.getBoundingClientRect();
+        var openIds = Object.keys(browseTabs);
+        var targetId = lastZoomTargetTab && browseTabs[lastZoomTargetTab]
+          ? lastZoomTargetTab
+          : (openIds.length ? openIds[openIds.length - 1] : null);
+        if(targetId && browseTabs[targetId]){
+          var startRect = browseTabs[targetId].el.getBoundingClientRect();
           twoHandResizeSession = {
-            tabId: hit.id,
-            startDx: Math.max(absDx, 40),
-            startDy: Math.max(absDy, 40),
+            tabId: targetId,
+            startDx: absDx,
+            startDy: absDy,
             startW: startRect.width,
             startH: startRect.height
           };
-          lastZoomTargetTab = hit.id;
+          lastZoomTargetTab = targetId;
         }
       }
 
       if(twoHandResizeSession && browseTabs[twoHandResizeSession.tabId]){
         var targetEl = browseTabs[twoHandResizeSession.tabId].el;
-        var widthScale = absDx / Math.max(twoHandResizeSession.startDx, 1);
-        var heightScale = absDy / Math.max(twoHandResizeSession.startDy, 1);
-        if(Math.abs(widthScale - 1) < 0.04) widthScale = 1;
-        if(Math.abs(heightScale - 1) < 0.04) heightScale = 1;
-        targetEl.style.width = clamp(twoHandResizeSession.startW * widthScale, 220, 1000) + 'px';
-        targetEl.style.height = clamp(twoHandResizeSession.startH * heightScale, 160, 800) + 'px';
+        var deltaW = (absDx - twoHandResizeSession.startDx) * 1.35;
+        var deltaH = (absDy - twoHandResizeSession.startDy) * 1.35;
+        if(Math.abs(deltaW) < 8) deltaW = 0;
+        if(Math.abs(deltaH) < 8) deltaH = 0;
+        targetEl.style.width = clamp(twoHandResizeSession.startW + deltaW, 220, Math.max(1000, window.innerWidth - 20)) + 'px';
+        targetEl.style.height = clamp(twoHandResizeSession.startH + deltaH, 160, Math.max(800, window.innerHeight - 20)) + 'px';
+
+        var resizeIndicator = document.getElementById('pinchIndicator');
+        if(resizeIndicator){
+          resizeIndicator.classList.add('active');
+          resizeIndicator.textContent = '2 PINCHES · RESIZE';
+        }
       }
 
-      setPinchActive(false);
+      // Do not trigger single-hand click/scroll while resizing.
+      pinchState.isPinching = false;
+      wasPinching = false;
     } else {
       twoHandZoomActive = false;
       lastTwoHandDistance = null;
@@ -2011,13 +2024,26 @@
 
   // ---------- Pinch = mouse click ----------
   var handCursorX = null, handCursorY = null;
+  function getStablePalmPoint(landmarks){
+    // Average the wrist and the four finger-base joints. These points barely
+    // move when the fingers pinch or curl into a fist, unlike the index tip.
+    var ids = [0, 5, 9, 13, 17];
+    var x = 0, y = 0, z = 0;
+    for(var i=0;i<ids.length;i++){
+      var pt = landmarks[ids[i]];
+      x += pt.x; y += pt.y; z += pt.z || 0;
+    }
+    return { x:x/ids.length, y:y/ids.length, z:z/ids.length };
+  }
+
   function updateHandCursor(landmarks, mapping, handSign){
     var indexTip = landmarks[8];
-    handCursorX = indexTip.x;
-    handCursorY = indexTip.y;
+    var palmPoint = getStablePalmPoint(landmarks);
+    handCursorX = palmPoint.x;
+    handCursorY = palmPoint.y;
 
     if(mapping && handCanvasCtx){
-      var mapped = mapNormalizedPoint(indexTip.x, indexTip.y, mapping, handSign);
+      var mapped = mapNormalizedPoint(palmPoint.x, palmPoint.y, mapping, handSign);
       var ctx = handCanvasCtx;
       var isPinch = handPinchStates[0].isPinching;
       var r = isPinch ? 10 : 14;
@@ -2055,10 +2081,10 @@
       }
     }
 
-    // Update the full-screen cursor so you can see exactly where a click
-    // or scroll would land when browsing hands-only.
+    // The global pointer follows the stable palm center. Pinching and making a
+    // fist now leave the cursor almost stationary, so clicks land accurately.
     if(mapping){
-      var pagePoint = normalizedToViewport(indexTip.x, indexTip.y);
+      var pagePoint = normalizedToViewport(palmPoint.x, palmPoint.y);
       smoothedCursorX += (pagePoint.x - smoothedCursorX) * CURSOR_SMOOTHING;
       smoothedCursorY += (pagePoint.y - smoothedCursorY) * CURSOR_SMOOTHING;
       lastCursorPageX = smoothedCursorX;
