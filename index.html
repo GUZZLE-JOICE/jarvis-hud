@@ -31,21 +31,29 @@
 
   #camLayer{position:absolute;top:50%;left:50%;width:560px;height:420px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.85);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
 
-  #browsePanel{position:absolute;top:100px;left:16px;width:360px;background:#050a0c;border:1px solid var(--cyan);z-index:40;opacity:0;transform:scale(0.9);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
-  #browsePanel.on{opacity:1;transform:scale(1);pointer-events:auto;box-shadow:0 0 45px rgba(0,229,255,0.3);}
-  #browseResizeHandle{position:absolute;bottom:2px;right:2px;width:14px;height:14px;cursor:nwse-resize;pointer-events:auto;}
-  #browseResizeHandle::after{content:'';position:absolute;bottom:2px;right:2px;width:8px;height:8px;border-right:2px solid var(--cyan-dim);border-bottom:2px solid var(--cyan-dim);}
-  #browseTabBar{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--cyan-dim);background:linear-gradient(180deg, rgba(0,229,255,0.06), transparent);}
-  #browseDot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);flex-shrink:0;}
-  #browseTabLabel{font-family:'Orbitron';font-size:10px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #browseCloseBtn{font-family:'Rajdhani';font-size:18px;color:var(--text-dim);cursor:pointer;padding:0 4px;line-height:1;pointer-events:auto;}
-  #browseCloseBtn:hover{color:var(--cyan);}
-  #browseAddressBar{padding:7px 12px;border-bottom:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);}
-  #browseUrlText{font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
-  #browseImageWrap{position:relative;width:100%;line-height:0;background:#000;}
-  #browseImageWrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,229,255,0.05), transparent 15%, transparent 85%, rgba(0,229,255,0.05));pointer-events:none;}
-  #browseScreenshot{width:100%;display:block;filter:saturate(0.9) brightness(0.95);}
-  #browseFooter{padding:6px 12px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:var(--text-dim);border-top:1px solid var(--cyan-dim);text-align:center;}
+  .browsePanel{position:absolute;width:360px;height:300px;background:#050a0c;border:1px solid var(--cyan);z-index:40;opacity:0;transform:scale(0.9);transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);display:flex;flex-direction:column;}
+  .browsePanel.on{opacity:1;transform:scale(1);box-shadow:0 0 45px rgba(0,229,255,0.3);}
+  .browseResizeHandle{position:absolute;bottom:2px;right:2px;width:14px;height:14px;cursor:nwse-resize;}
+  .browseResizeHandle::after{content:'';position:absolute;bottom:2px;right:2px;width:8px;height:8px;border-right:2px solid var(--cyan-dim);border-bottom:2px solid var(--cyan-dim);}
+  .browseTabBar{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--cyan-dim);background:linear-gradient(180deg, rgba(0,229,255,0.06), transparent);cursor:move;flex-shrink:0;}
+  .browseDot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);flex-shrink:0;}
+  .browseDot.busy{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:browseBusyPulse 1s ease-in-out infinite;}
+  @keyframes browseBusyPulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+  .browseTabLabel{font-family:'Orbitron';font-size:10px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .browseCloseBtn{font-family:'Rajdhani';font-size:18px;color:var(--text-dim);cursor:pointer;padding:0 4px;line-height:1;}
+  .browseCloseBtn:hover{color:var(--cyan);}
+  .browseAddressBar{padding:7px 12px;border-bottom:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);flex-shrink:0;}
+  .browseUrlText{font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+  .browseImageWrap{position:relative;flex:1;line-height:0;background:#000;overflow:hidden;}
+  .browseImageWrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,229,255,0.05), transparent 15%, transparent 85%, rgba(0,229,255,0.05));pointer-events:none;}
+  .browseScreenshot{width:100%;height:100%;object-fit:contain;display:block;filter:saturate(0.9) brightness(0.95);}
+  .browseFooter{padding:6px 12px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:var(--text-dim);border-top:1px solid var(--cyan-dim);text-align:center;flex-shrink:0;}
+  #browseTabsLayer{position:absolute;inset:0;z-index:40;pointer-events:none;}
+  #globalHandCursor{position:fixed;width:26px;height:26px;margin-left:-13px;margin-top:-13px;border:2px solid var(--cyan);border-radius:50%;z-index:9999;pointer-events:none;display:none;transition:border-color .12s ease, background .12s ease, transform .1s ease;box-shadow:0 0 10px rgba(0,229,255,0.6);}
+  #globalHandCursor.visible{display:block;}
+  #globalHandCursor.clicking{border-color:var(--mint);background:rgba(58,255,196,0.3);transform:scale(0.75);box-shadow:0 0 16px rgba(58,255,196,0.8);}
+  #globalHandCursor.scrolling{border-color:var(--amber);background:rgba(255,176,32,0.2);box-shadow:0 0 14px rgba(255,176,32,0.6);}
+  #browseTabsLayer .browsePanel{pointer-events:auto;}
   #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
   #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
   #camLayer.pulse::before{animation:camPulse .6s ease-out;}
@@ -425,21 +433,25 @@
   <video id="screenVideo" autoplay muted playsinline style="display:none;"></video>
   <canvas id="screenCaptureCanvas" style="display:none;"></canvas>
 
-  <div id="browsePanel">
-    <div id="browseTabBar">
-      <div id="browseDot"></div>
-      <div id="browseTabLabel">NEW TAB</div>
-      <div id="browseCloseBtn">&times;</div>
+  <template id="browsePanelTemplate">
+    <div class="browsePanel">
+      <div class="browseTabBar">
+        <div class="browseDot"></div>
+        <div class="browseTabLabel">NEW TAB</div>
+        <div class="browseCloseBtn">&times;</div>
+      </div>
+      <div class="browseAddressBar">
+        <span class="browseUrlText"></span>
+      </div>
+      <div class="browseImageWrap">
+        <img class="browseScreenshot" alt="">
+      </div>
+      <div class="browseFooter">JARVIS · LOCAL BROWSER BRIDGE</div>
+      <div class="browseResizeHandle"></div>
     </div>
-    <div id="browseAddressBar">
-      <span id="browseUrlText"></span>
-    </div>
-    <div id="browseImageWrap">
-      <img id="browseScreenshot" alt="">
-    </div>
-    <div id="browseFooter">RESEARCHED BY JARVIS · LOCAL BROWSER BRIDGE</div>
-    <div id="browseResizeHandle"></div>
-  </div>
+  </template>
+  <div id="browseTabsLayer"></div>
+  <div id="globalHandCursor"></div>
 
   <canvas id="captureCanvas" style="display:none;"></canvas>
 
@@ -861,7 +873,16 @@
       speak('I could not capture your screen. Try again in a moment.');
       return;
     }
-    callAIVision(cmd, frame, function(text, err){
+    var visionPrompt = 'You are looking at a screenshot of the user\'s screen. '
+      + 'Your job is to read the actual words and content shown, and answer '
+      + 'the user\'s question using that content. Do NOT describe the '
+      + 'appearance of the screen (do not mention colors, highlighting, '
+      + 'fonts, "screen share", or that it is a screenshot at all). '
+      + 'For example, if text is highlighted in blue and says "quarterly '
+      + 'revenue rose 12 percent", the correct answer talks about the 12 '
+      + 'percent revenue increase - not that there is blue highlighted text. '
+      + 'User asked: ' + cmd;
+    callAIVision(visionPrompt, frame, function(text, err){
       if(err === 'no_key'){
         speak('I need an API key or local model to analyze your screen. Check settings.');
       } else if(err){
@@ -936,90 +957,229 @@
     }
     return cmd;
   }
-  var browseLastScreenshotB64 = null;
 
-  function showBrowsePanel(){
-    var panel = document.getElementById('browsePanel');
-    panel.classList.add('on');
-  }
-  function hideBrowsePanel(){
-    document.getElementById('browsePanel').classList.remove('on');
-  }
-  document.getElementById('browseCloseBtn').addEventListener('click', hideBrowsePanel);
+  // ---------- Multi-tab browser panel system ----------
+  var browseTabs = {};   // tab_id -> { el, pollTimer, screenshotB64 }
+  var browseTabCount = 0;
 
-  // --- Drag: grab the tab bar to move the panel ---
-  (function setupBrowseDrag(){
-    var panel = document.getElementById('browsePanel');
-    var bar = document.getElementById('browseTabBar');
+  function createTabPanel(){
+    var template = document.getElementById('browsePanelTemplate');
+    var node = template.content.firstElementChild.cloneNode(true);
+    document.getElementById('browseTabsLayer').appendChild(node);
+
+    browseTabCount++;
+    var offset = ((browseTabCount - 1) % 6) * 28;
+    node.style.left = (16 + offset) + 'px';
+    node.style.top = (100 + offset) + 'px';
+
+    return node;
+  }
+
+  function wirePanelDrag(panelEl){
+    var bar = panelEl.querySelector('.browseTabBar');
     var dragging = false, startX, startY, startLeft, startTop;
-
     bar.addEventListener('mousedown', function(e){
-      if(e.target.id === 'browseCloseBtn') return;
+      if(e.target.classList.contains('browseCloseBtn')) return;
       dragging = true;
-      var rect = panel.getBoundingClientRect();
+      var rect = panelEl.getBoundingClientRect();
       startX = e.clientX; startY = e.clientY;
       startLeft = rect.left; startTop = rect.top;
-      panel.style.transition = 'none';
+      panelEl.style.transition = 'none';
       e.preventDefault();
     });
     window.addEventListener('mousemove', function(e){
       if(!dragging) return;
-      var dx = e.clientX - startX, dy = e.clientY - startY;
-      panel.style.left = (startLeft + dx) + 'px';
-      panel.style.top = (startTop + dy) + 'px';
+      panelEl.style.left = (startLeft + (e.clientX - startX)) + 'px';
+      panelEl.style.top = (startTop + (e.clientY - startY)) + 'px';
     });
     window.addEventListener('mouseup', function(){
-      if(dragging){
-        dragging = false;
-        panel.style.transition = '';
-      }
+      if(dragging){ dragging = false; panelEl.style.transition = ''; }
     });
-  })();
+  }
 
-  // --- Resize: drag the corner handle ---
-  (function setupBrowseResize(){
-    var panel = document.getElementById('browsePanel');
-    var handle = document.getElementById('browseResizeHandle');
-    var resizing = false, startX, startY, startW;
-
+  function wirePanelResize(panelEl){
+    // Independent width/height: corner drag moves both, based on horizontal
+    // vs vertical mouse movement separately - not locked to one uniform scale.
+    var handle = panelEl.querySelector('.browseResizeHandle');
+    var resizing = false, startX, startY, startW, startH;
     handle.addEventListener('mousedown', function(e){
       resizing = true;
       startX = e.clientX; startY = e.clientY;
-      startW = panel.getBoundingClientRect().width;
-      panel.style.transition = 'none';
+      var rect = panelEl.getBoundingClientRect();
+      startW = rect.width; startH = rect.height;
+      panelEl.style.transition = 'none';
       e.preventDefault();
       e.stopPropagation();
     });
     window.addEventListener('mousemove', function(e){
       if(!resizing) return;
-      var dx = e.clientX - startX;
-      var newW = Math.max(240, Math.min(900, startW + dx));
-      panel.style.width = newW + 'px';
+      var newW = Math.max(220, Math.min(1000, startW + (e.clientX - startX)));
+      var newH = Math.max(160, Math.min(800, startH + (e.clientY - startY)));
+      panelEl.style.width = newW + 'px';
+      panelEl.style.height = newH + 'px';
     });
     window.addEventListener('mouseup', function(){
-      if(resizing){
-        resizing = false;
-        panel.style.transition = '';
-      }
+      if(resizing){ resizing = false; panelEl.style.transition = ''; }
     });
-  })();
+  }
 
-  // --- Pinch-zoom hook: resize the panel via two-hand pinch-zoom ---
-  window.__onHandZoomChange = function(scale){
-    var panel = document.getElementById('browsePanel');
-    if(panel.classList.contains('on')){
-      var baseWidth = 360;
-      panel.style.width = Math.max(240, Math.min(900, baseWidth * scale)) + 'px';
+  function pollTabStatus(tabId){
+    var tab = browseTabs[tabId];
+    if(!tab) return;
+    fetch('http://localhost:5005/status/' + tabId).then(function(r){ return r.json(); }).then(function(data){
+      if(!browseTabs[tabId]) return; // closed while this request was in flight
+      if(data.error){
+        clearInterval(tab.pollTimer);
+        return;
+      }
+      var el = tab.el;
+      var dot = el.querySelector('.browseDot');
+      var label = el.querySelector('.browseTabLabel');
+      var urlText = el.querySelector('.browseUrlText');
+      var img = el.querySelector('.browseScreenshot');
+
+      var busy = (data.status !== 'ready' && data.status !== 'error');
+      dot.classList.toggle('busy', busy);
+      label.textContent = busy ? (data.status || 'working…').toUpperCase() : (data.title || 'Tab');
+      urlText.textContent = data.url || '';
+      if(data.screenshot && data.screenshot !== tab.screenshotB64){
+        tab.screenshotB64 = data.screenshot;
+        img.src = 'data:image/jpeg;base64,' + data.screenshot;
+      }
+
+      if(data.status === 'ready' || data.status === 'error'){
+        clearInterval(tab.pollTimer);
+        tab.pollTimer = null;
+        if(data.answer && !tab.answerSpoken){
+          tab.answerSpoken = true;
+          speak(data.answer);
+        }
+        if(data.error){
+          speak('Browsing hit a problem: ' + data.error);
+        }
+      }
+    }).catch(function(){});
+  }
+
+  function openNewTab(initialLabel){
+    var el = createTabPanel();
+    wirePanelDrag(el);
+    wirePanelResize(el);
+    el.classList.add('on');
+    el.querySelector('.browseTabLabel').textContent = initialLabel || 'NEW TAB';
+    el.querySelector('.browseUrlText').textContent = 'Say "Jarvis, research ___" to load something here.';
+
+    var localId = 'local-' + Date.now();
+    browseTabs[localId] = { el: el, pollTimer: null, screenshotB64: null, backendTabId: null };
+
+    el.querySelector('.browseCloseBtn').addEventListener('click', function(){
+      closeTabById(localId);
+    });
+
+    var imgWrap = el.querySelector('.browseImageWrap');
+    imgWrap.addEventListener('click', function(e){
+      clickInTab(localId, e.clientX, e.clientY);
+    });
+    imgWrap.addEventListener('wheel', function(e){
+      e.preventDefault();
+      scrollInTab(localId, e.deltaY);
+    }, { passive: false });
+
+    return localId;
+  }
+
+  function closeTabById(localId){
+    var tab = browseTabs[localId];
+    if(!tab) return;
+    if(tab.pollTimer) clearInterval(tab.pollTimer);
+    if(tab.backendTabId){
+      fetch('http://localhost:5005/close_tab', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({tab_id: tab.backendTabId})
+      }).catch(function(){});
     }
+    tab.el.classList.remove('on');
+    setTimeout(function(){ tab.el.remove(); }, 400);
+    delete browseTabs[localId];
+  }
+
+  function closeMostRecentTab(){
+    var ids = Object.keys(browseTabs);
+    if(ids.length === 0){
+      speak('There is no tab open.');
+      return;
+    }
+    closeTabById(ids[ids.length - 1]);
+    speak('Closing the tab.');
+  }
+
+  function findTabUnderPoint(clientX, clientY){
+    var ids = Object.keys(browseTabs);
+    for(var i = ids.length - 1; i >= 0; i--){
+      var tab = browseTabs[ids[i]];
+      var rect = tab.el.getBoundingClientRect();
+      if(clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom){
+        return { id: ids[i], tab: tab, rect: rect };
+      }
+    }
+    return null;
+  }
+
+  function clickInTab(localId, clientX, clientY){
+    var tab = browseTabs[localId];
+    if(!tab || !tab.backendTabId) return;
+    var img = tab.el.querySelector('.browseScreenshot');
+    var rect = img.getBoundingClientRect();
+    var relX = clientX - rect.left, relY = clientY - rect.top;
+    // Map from displayed image size back to the real 1000x700 screenshot space
+    var scaleX = 1000 / rect.width, scaleY = 700 / rect.height;
+    fetch('http://localhost:5005/click', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tab_id: tab.backendTabId, x: Math.round(relX*scaleX), y: Math.round(relY*scaleY)})
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data.screenshot){
+        tab.screenshotB64 = data.screenshot;
+        img.src = 'data:image/jpeg;base64,' + data.screenshot;
+        tab.el.querySelector('.browseTabLabel').textContent = data.title || '';
+        tab.el.querySelector('.browseUrlText').textContent = data.url || '';
+      }
+    }).catch(function(){});
+  }
+
+  function scrollInTab(localId, deltaY){
+    var tab = browseTabs[localId];
+    if(!tab || !tab.backendTabId) return;
+    fetch('http://localhost:5005/scroll', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tab_id: tab.backendTabId, delta_y: deltaY})
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data.screenshot){
+        tab.screenshotB64 = data.screenshot;
+        tab.el.querySelector('.browseScreenshot').src = 'data:image/jpeg;base64,' + data.screenshot;
+      }
+    }).catch(function(){});
+  }
+
+  // --- Pinch-zoom hook: directional resize. The angle of the line between
+  // your two pinch points decides whether width, height, or both change -
+  // horizontal line = width, vertical line = height, diagonal = both.
+  var lastZoomTargetTab = null;
+  window.__onHandZoomChangeDirectional = function(dxRatio, dyRatio, cursorX, cursorY){
+    var hit = findTabUnderPoint(cursorX, cursorY);
+    var targetId = hit ? hit.id : lastZoomTargetTab;
+    if(!targetId || !browseTabs[targetId]) return;
+    lastZoomTargetTab = targetId;
+    var el = browseTabs[targetId].el;
+    var rect = el.getBoundingClientRect();
+    var newW = Math.max(220, Math.min(1000, rect.width * dxRatio));
+    var newH = Math.max(160, Math.min(800, rect.height * dyRatio));
+    el.style.width = newW + 'px';
+    el.style.height = newH + 'px';
   };
 
-  // --- New Tab button: opens an empty panel, ready for a research command ---
+  // --- New Tab button ---
   document.getElementById('newTabBtn').addEventListener('click', function(){
-    document.getElementById('browseTabLabel').textContent = 'NEW TAB';
-    document.getElementById('browseUrlText').textContent = 'Say "Jarvis, research ___" to load something here.';
-    document.getElementById('browseScreenshot').src = '';
-    browseLastScreenshotB64 = null;
-    showBrowsePanel();
+    openNewTab('NEW TAB');
   });
 
   // --- Voice command: "Jarvis, close the tab" ---
@@ -1031,7 +1191,7 @@
     return false;
   }
 
-  // --- Follow-up Q&A about what's currently shown in the tab ---
+  // --- Follow-up Q&A about the most recently opened tab ---
   var tabQuestionTriggers = ['on the tab', 'on this tab', 'in the tab', 'about the tab', 'what does it say'];
   function isTabQuestionCommand(cmd){
     for(var i=0;i<tabQuestionTriggers.length;i++){
@@ -1040,12 +1200,18 @@
     return false;
   }
   function handleTabQuestionCommand(cmd){
-    if(!browseLastScreenshotB64){
-      speak('There is nothing open in the tab right now.');
+    var ids = Object.keys(browseTabs);
+    if(ids.length === 0){
+      speak('There is nothing open in a tab right now.');
+      return;
+    }
+    var tab = browseTabs[ids[ids.length - 1]];
+    if(!tab.screenshotB64){
+      speak('That tab has not loaded anything yet.');
       return;
     }
     setCaption('Checking the tab…');
-    callAIVision(cmd, browseLastScreenshotB64, function(text, err){
+    callAIVision(cmd, tab.screenshotB64, function(text, err){
       if(err === 'no_key'){
         speak('I need an API key or local model to check the tab. Check settings.');
       } else if(err){
@@ -1063,7 +1229,8 @@
       return;
     }
     setCaption('Opening a browser to research that…');
-    document.getElementById('browseTabLabel').textContent = 'RESEARCHING…';
+    var localId = openNewTab('RESEARCHING…');
+
     fetch('http://localhost:5005/browse', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -1071,18 +1238,17 @@
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data.error){
         speak('Browsing failed. ' + (data.error.length < 80 ? data.error : 'Check the browser bridge is running.'));
-      } else {
-        if(data.screenshot){
-          browseLastScreenshotB64 = data.screenshot;
-          document.getElementById('browseScreenshot').src = 'data:image/jpeg;base64,' + data.screenshot;
-          document.getElementById('browseTabLabel').textContent = data.title || query;
-          document.getElementById('browseUrlText').textContent = data.url || '';
-          showBrowsePanel();
-        }
-        speak(data.answer);
+        closeTabById(localId);
+        return;
       }
+      var tab = browseTabs[localId];
+      if(!tab) return; // user closed it already
+      tab.backendTabId = data.tab_id;
+      tab.pollTimer = setInterval(function(){ pollTabStatus(localId); }, 1000);
+      pollTabStatus(localId);
     }).catch(function(err){
       speak('I could not reach the browsing bridge. Make sure jarvis underscore browser dot p y is running on your computer.');
+      closeTabById(localId);
     });
   }
 
@@ -1399,6 +1565,12 @@
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
   }
 
+  function canvasPointToPageCoords(cx, cy){
+    var camLayer = document.getElementById('camLayer');
+    var rect = camLayer.getBoundingClientRect();
+    return { x: rect.left + cx, y: rect.top + cy };
+  }
+
   var handPinchStates = [
     { isPinching:false, point:null },
     { isPinching:false, point:null }
@@ -1533,6 +1705,7 @@
       twoHandZoomActive = false;
       lastTwoHandDistance = null;
       setPinchActive(false);
+      document.getElementById('globalHandCursor').classList.remove('visible');
       return;
     }
 
@@ -1562,16 +1735,22 @@
       ctx.lineTo(mappedIndex.x, mappedIndex.y);
       ctx.stroke();
 
-      if(hIdx === 0) updateHandCursor(landmarks, mapping, handSign);
+      if(hIdx === 0){
+        updateHandCursor(landmarks, mapping, handSign);
+        handleFistAndScrollGestures(landmarks);
+      }
     }
 
-    // Two-hand pinch-zoom: both hands pinching simultaneously
+    // Two-hand pinch-zoom: both hands pinching simultaneously.
+    // Tracks horizontal and vertical separation independently, so a mostly
+    // vertical hand movement stretches height, mostly horizontal stretches
+    // width, and a diagonal movement does both - no explicit angle check
+    // needed, it falls out naturally from tracking dx/dy separately.
     if(hands.length >= 2 && handPinchStates[0].isPinching && handPinchStates[1].isPinching){
       twoHandZoomActive = true;
       var p1 = mapNormalizedPoint(handPinchStates[0].point.x, handPinchStates[0].point.y, mapping);
       var p2 = mapNormalizedPoint(handPinchStates[1].point.x, handPinchStates[1].point.y, mapping);
-      var dx = p2.x - p1.x, dy = p2.y - p1.y;
-      var dist = Math.sqrt(dx*dx + dy*dy);
+      var absDx = Math.abs(p2.x - p1.x), absDy = Math.abs(p2.y - p1.y);
 
       ctx.strokeStyle = 'rgba(58,255,196,0.8)';
       ctx.lineWidth = 2;
@@ -1583,10 +1762,15 @@
       ctx.setLineDash([]);
 
       if(lastTwoHandDistance !== null){
-        var ratio = dist / lastTwoHandDistance;
-        applyHandZoom(handZoomScale * ratio);
+        var widthRatio = absDx / Math.max(lastTwoHandDistance.dx, 1);
+        var heightRatio = absDy / Math.max(lastTwoHandDistance.dy, 1);
+        var midCanvas = { x:(p1.x+p2.x)/2, y:(p1.y+p2.y)/2 };
+        var midPage = canvasPointToPageCoords(midCanvas.x, midCanvas.y);
+        if(typeof window.__onHandZoomChangeDirectional === 'function'){
+          window.__onHandZoomChangeDirectional(widthRatio, heightRatio, midPage.x, midPage.y);
+        }
       }
-      lastTwoHandDistance = dist;
+      lastTwoHandDistance = { dx: absDx, dy: absDy };
       setPinchActive(false);
     } else {
       twoHandZoomActive = false;
@@ -1685,6 +1869,7 @@
       handCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     }
     setPinchActive(false);
+    document.getElementById('globalHandCursor').classList.remove('visible');
     updateHandStatus();
     document.getElementById('toggleHandTracking').textContent = 'Enable tracking';
   }
@@ -1783,6 +1968,79 @@
         calibrationSamples.push(d);
         document.getElementById('handStatus').textContent = 'Calibrating… pinch your thumb and index finger together firmly, then release. Repeat a few times. (' + calibrationSamples.length + ' samples)';
       }
+    }
+
+    // Update the full-screen cursor so you can see exactly where a click
+    // or scroll would land when browsing hands-only.
+    if(mapping){
+      var mappedForPage = mapNormalizedPoint(indexTip.x, indexTip.y, mapping, handSign);
+      var pagePoint = canvasPointToPageCoords(mappedForPage.x, mappedForPage.y);
+      lastCursorPageX = pagePoint.x;
+      lastCursorPageY = pagePoint.y;
+      var cursorEl = document.getElementById('globalHandCursor');
+      cursorEl.style.left = pagePoint.x + 'px';
+      cursorEl.style.top = pagePoint.y + 'px';
+      cursorEl.classList.add('visible');
+    }
+  }
+
+  // --- Fist detection: all four fingers (not thumb) curled toward the palm ---
+  function isFingerCurled(landmarks, tipIdx, pipIdx){
+    var wrist = landmarks[0];
+    return distance3D(landmarks[tipIdx], wrist) < distance3D(landmarks[pipIdx], wrist);
+  }
+  function isFist(landmarks){
+    return isFingerCurled(landmarks, 8, 6) &&
+           isFingerCurled(landmarks, 12, 10) &&
+           isFingerCurled(landmarks, 16, 14) &&
+           isFingerCurled(landmarks, 20, 18);
+  }
+
+  var lastCursorPageX = null, lastCursorPageY = null;
+  var wasFist = false;
+  var pinchHoldStart = null;
+  var pinchHoldStartY = null;
+  var PINCH_HOLD_MS = 350;
+
+  function handleFistAndScrollGestures(landmarks){
+    var fistNow = isFist(landmarks);
+    var cursorEl = document.getElementById('globalHandCursor');
+
+    if(fistNow && !wasFist){
+      // Fist just closed - treat as a click at the current cursor position.
+      cursorEl.classList.add('clicking');
+      if(lastCursorPageX !== null){
+        var hit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
+        if(hit){
+          clickInTab(hit.id, lastCursorPageX, lastCursorPageY);
+        }
+      }
+    } else if(!fistNow && wasFist){
+      cursorEl.classList.remove('clicking');
+    }
+    wasFist = fistNow;
+
+    // Pinch held (not just a quick pinch) = scroll, while the pinch continues.
+    var isPinchingNow = handPinchStates[0].isPinching;
+    if(isPinchingNow){
+      if(pinchHoldStart === null){
+        pinchHoldStart = Date.now();
+        pinchHoldStartY = lastCursorPageY;
+      } else if(Date.now() - pinchHoldStart > PINCH_HOLD_MS && lastCursorPageY !== null && pinchHoldStartY !== null){
+        cursorEl.classList.add('scrolling');
+        var deltaY = (lastCursorPageY - pinchHoldStartY) * 4;
+        if(Math.abs(deltaY) > 4){
+          var hit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
+          if(hit){
+            scrollInTab(hit.id, deltaY);
+          }
+          pinchHoldStartY = lastCursorPageY;
+        }
+      }
+    } else {
+      pinchHoldStart = null;
+      pinchHoldStartY = null;
+      cursorEl.classList.remove('scrolling');
     }
   }
 
