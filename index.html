@@ -68,6 +68,7 @@
   #globalHandCursor.visible{display:block;}
   #globalHandCursor.clicking{border-color:var(--mint);background:rgba(58,255,196,0.3);transform:scale(0.75);box-shadow:0 0 16px rgba(58,255,196,0.8);}
   #globalHandCursor.scrolling{border-color:var(--amber);background:rgba(255,176,32,0.2);box-shadow:0 0 14px rgba(255,176,32,0.6);}
+  #globalHandCursor.precision{border-color:var(--mint);box-shadow:0 0 18px rgba(58,255,196,.8);}
   .hand-hover-target{outline:1px solid var(--mint) !important;outline-offset:3px;box-shadow:0 0 18px rgba(58,255,196,.22) !important;}
   #browseTabsLayer .browsePanel{pointer-events:auto;}
   #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
@@ -499,7 +500,7 @@
 <div class="settingsPage" data-page="mouse">
 <div class="settingsCard">
 <h3><svg fill="none" viewbox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="5"></rect><path d="M12 6v4"></path></svg>Hand Mouse Speed</h3>
-<p class="settingsHint">Controls how far the on-screen cursor moves for the same amount of hand movement. Very low values give tiny precision movement; very high values make small hand movements cross the screen.</p>
+<p class="settingsHint">Controls how far the cursor moves for the same hand movement. Tiny jitters are ignored automatically, movement is smoothed, and the pointer locks near its target while you pinch or make a fist so clicking is easier.</p>
 <label class="settingsLabel">Cursor speed</label>
 <input id="handMouseSpeedSlider" max="20" min="0.01" step="0.01" style="width:100%;" type="range" value="1"/>
 <div class="statusLine" id="handMouseSpeedValue" style="margin-top:8px">1.00× · Normal</div>
@@ -1092,12 +1093,12 @@
 
   function callRemoteText(userText, cb){
     if(!remoteServerUrl || !remoteAccessCode){ cb(null, 'no_key'); return; }
-    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode},body:JSON.stringify({prompt:'You are JARVIS, a calm text assistant. '+effortInstruction(activeChatEffort)+'\n\n'+buildOllamaTranscript()+'User: '+userText,effort:activeChatEffort,options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}})})
+    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode,'ngrok-skip-browser-warning':'true'},body:JSON.stringify({prompt:'You are JARVIS, a calm text assistant. '+effortInstruction(activeChatEffort)+'\n\n'+buildOllamaTranscript()+'User: '+userText,effort:activeChatEffort,options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}})})
       .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(x){if(x.ok&&x.data.response)cb(x.data.response.trim(),null);else cb(null,x.data.error||'remote_error');}).catch(function(e){cb(null,e.message||'remote_network_error');});
   }
   function callRemoteVision(userText, base64Jpeg, cb){
     if(!remoteServerUrl || !remoteAccessCode){ cb(null, 'no_key'); return; }
-    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode},body:JSON.stringify({prompt:userText||'What am I looking at? Answer in 1-3 short spoken sentences.',images:[base64Jpeg]})})
+    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode,'ngrok-skip-browser-warning':'true'},body:JSON.stringify({prompt:userText||'What am I looking at? Answer in 1-3 short spoken sentences.',images:[base64Jpeg]})})
       .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(x){if(x.ok&&x.data.response)cb(x.data.response.trim(),null);else cb(null,x.data.error||'remote_error');}).catch(function(e){cb(null,e.message||'remote_network_error');});
   }
 
@@ -1382,6 +1383,9 @@
         return Promise.reject(new Error('Enter the Jarvis access code in Settings → Server before using research on this computer.'));
       }
       options.headers['X-Jarvis-Code']=remoteAccessCode;
+      // Prevent ngrok's free-domain interstitial from replacing JSON API
+      // responses with an HTML warning page.
+      options.headers['ngrok-skip-browser-warning']='true';
     }
     return fetch(base+path,options).then(function(response){
       if(response.ok)return response;
@@ -1698,7 +1702,7 @@
           currentTab.el.querySelector('.browseDot').classList.remove('busy');
           setBrowseOverlay(currentTab, 'Could not start search.\n' + err.message, true);
         }
-        if(speakResult) speak('I could not start browsing. Check the server address, access code, Python bridge, and ngrok tunnel.');
+        if(speakResult) speak('I could not start browsing. Make sure Python and ngrok are both running, then reconnect with the access code.');
       });
   }
 
@@ -1737,7 +1741,7 @@
   document.getElementById('resetFontBtn').addEventListener('click',function(){applyFont('Rajdhani',true);document.getElementById('fontSearchInput').value='';});
   document.getElementById('settingsCloseBtn').addEventListener('click',function(){document.getElementById('memPanel').classList.remove('settings-open');});
   function bridgeBase(){ return 'http://localhost:5005'; }
-  function updateBridgeBadge(){var b=document.getElementById('bridgeStatusBadge');fetch(bridgeBase()+'/health').then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='LOCAL BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){if(!remoteAccessCode){b.textContent='CODE REQUIRED';b.className='serverBadge bad';return;}fetch((remoteServerUrl||DEFAULT_REMOTE_SERVER)+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode}}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='REMOTE BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';});}); }
+  function updateBridgeBadge(){var b=document.getElementById('bridgeStatusBadge');fetch(bridgeBase()+'/health').then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='LOCAL BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){if(!remoteAccessCode){b.textContent='CODE REQUIRED';b.className='serverBadge bad';return;}fetch((remoteServerUrl||DEFAULT_REMOTE_SERVER)+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode,'ngrok-skip-browser-warning':'true'}}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='REMOTE BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';});}); }
   function loadOwnerCode(){ fetch(bridgeBase()+'/owner/access-code').then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';var shareUrl=(publicTunnelUrl||'').trim();document.getElementById('ownerCodeStatus').textContent='Server listens on port '+(d.port||5005)+'. Share '+(shareUrl?shareUrl:'your reachable server address')+' plus this code.';}).catch(function(){document.getElementById('ownerCodeStatus').textContent='Start jarvis_browser.py to manage the server code.';}); }
   document.getElementById('saveOwnerCodeBtn').addEventListener('click',function(){var c=document.getElementById('ownerAccessCode').value.trim();fetch(bridgeBase()+'/owner/access-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){document.getElementById('ownerCodeStatus').textContent=x.ok?'Custom code saved. The old code no longer works.':(x.d.error||'Could not save code.');});});
   document.getElementById('generateOwnerCodeBtn').addEventListener('click',function(){fetch(bridgeBase()+'/owner/access-code/refresh',{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='New code generated. The old code was disabled.';});});
@@ -2222,10 +2226,14 @@
     var savedHandMouseSpeed = parseFloat(localStorage.getItem(HAND_MOUSE_SPEED_STORAGE));
     if(Number.isFinite(savedHandMouseSpeed)) handMouseSpeed = clamp(savedHandMouseSpeed, 0.01, 20);
   }catch(e){}
-  // Palm tracking is naturally steadier than fingertip tracking. A slightly
-  // stronger smoothing value keeps it responsive without letting a pinch or
-  // fist throw the pointer around.
-  var CURSOR_SMOOTHING = 0.30;
+  // Hand-pointer stabilization. Tiny camera/hand movement is ignored while
+  // intentional movement remains responsive.
+  var CURSOR_MIN_SMOOTHING = 0.08;
+  var CURSOR_MAX_SMOOTHING = 0.34;
+  var CURSOR_JITTER_DEADZONE_PX = 6;
+  var CURSOR_CLICK_LOCK_RADIUS_PX = 30;
+  var CURSOR_SAMPLE_COUNT = 5;
+  var cursorSamples = [];
   var smoothedCursorX = window.innerWidth / 2;
   var smoothedCursorY = window.innerHeight / 2;
 
@@ -2241,6 +2249,56 @@
     x01 = clamp(0.5 + (x01 - 0.5) * handMouseSpeed, 0, 1);
     y01 = clamp(0.5 + (y01 - 0.5) * handMouseSpeed, 0, 1);
     return { x:x01 * window.innerWidth, y:y01 * window.innerHeight };
+  }
+
+  function medianNumber(values){
+    var sorted=values.slice().sort(function(a,b){return a-b;});
+    var mid=Math.floor(sorted.length/2);
+    return sorted.length%2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+  }
+
+  function stabilizeHandCursor(pagePoint, precisionGesture){
+    cursorSamples.push({x:pagePoint.x,y:pagePoint.y});
+    if(cursorSamples.length>CURSOR_SAMPLE_COUNT)cursorSamples.shift();
+
+    var targetX=medianNumber(cursorSamples.map(function(p){return p.x;}));
+    var targetY=medianNumber(cursorSamples.map(function(p){return p.y;}));
+    var dx=targetX-smoothedCursorX;
+    var dy=targetY-smoothedCursorY;
+    var distance=Math.sqrt(dx*dx+dy*dy);
+
+    // High speed magnifies camera noise, so the ignored jitter area grows a
+    // little as sensitivity rises.
+    var deadzone=CURSOR_JITTER_DEADZONE_PX+
+      Math.min(10,Math.max(0,handMouseSpeed-1)*0.6);
+
+    // Pinching/fist gestures lock the pointer near its aim point so clicks do
+    // not slide away at the last moment.
+    if(precisionGesture && distance<CURSOR_CLICK_LOCK_RADIUS_PX){
+      return {x:smoothedCursorX,y:smoothedCursorY};
+    }
+
+    if(distance<=deadzone){
+      return {x:smoothedCursorX,y:smoothedCursorY};
+    }
+
+    // Remove the deadzone gradually instead of jumping over it.
+    var usable=distance-deadzone;
+    targetX=smoothedCursorX+(dx/distance)*usable;
+    targetY=smoothedCursorY+(dy/distance)*usable;
+
+    // Small movement gets stronger smoothing. Large intentional movement
+    // catches up faster so the cursor does not feel delayed.
+    var smoothing=clamp(
+      CURSOR_MIN_SMOOTHING+(usable/480),
+      CURSOR_MIN_SMOOTHING,
+      CURSOR_MAX_SMOOTHING
+    );
+    if(precisionGesture)smoothing=Math.min(smoothing,0.055);
+
+    smoothedCursorX+=(targetX-smoothedCursorX)*smoothing;
+    smoothedCursorY+=(targetY-smoothedCursorY)*smoothing;
+    return {x:smoothedCursorX,y:smoothedCursorY};
   }
 
   (function setupHandMouseSpeedControls(){
@@ -2756,15 +2814,19 @@
     // fist now leave the cursor almost stationary, so clicks land accurately.
     if(mapping){
       var pagePoint = normalizedToViewport(palmPoint.x, palmPoint.y);
-      smoothedCursorX += (pagePoint.x - smoothedCursorX) * CURSOR_SMOOTHING;
-      smoothedCursorY += (pagePoint.y - smoothedCursorY) * CURSOR_SMOOTHING;
-      lastCursorPageX = smoothedCursorX;
-      lastCursorPageY = smoothedCursorY;
-      var cursorEl = document.getElementById('globalHandCursor');
-      cursorEl.style.left = smoothedCursorX + 'px';
-      cursorEl.style.top = smoothedCursorY + 'px';
+      var precisionGesture=!!(
+        (handPinchStates[0]&&handPinchStates[0].isPinching)||
+        isFist(landmarks)
+      );
+      var stablePoint=stabilizeHandCursor(pagePoint,precisionGesture);
+      lastCursorPageX=stablePoint.x;
+      lastCursorPageY=stablePoint.y;
+      var cursorEl=document.getElementById('globalHandCursor');
+      cursorEl.style.left=stablePoint.x+'px';
+      cursorEl.style.top=stablePoint.y+'px';
       cursorEl.classList.add('visible');
-      updateHandHoverTarget(smoothedCursorX, smoothedCursorY);
+      cursorEl.classList.toggle('precision',precisionGesture);
+      updateHandHoverTarget(stablePoint.x,stablePoint.y);
     }
   }
 
