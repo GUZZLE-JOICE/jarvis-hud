@@ -24,7 +24,7 @@
     --red:#ff3b30;
     --mint:#3affc4;
     --text-dim:#5fa8b0;
-    --jarvis-font:'Rajdhani';a
+    --jarvis-font:'Rajdhani';
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:var(--jarvis-font,'Rajdhani'),sans-serif;}
@@ -668,6 +668,13 @@
 
 </div>
 
+  <!-- Internal compatibility fields. Hidden from users; the ngrok address is fixed in code. -->
+  <div hidden aria-hidden="true">
+    <input id="remoteServerUrl" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly>
+    <input id="cloudflarePublicUrl" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly>
+    <div id="cloudflareStatus"></div>
+  </div>
+
 
 <script>
   (function(){
@@ -682,14 +689,14 @@
       var warning = document.getElementById('secWarning');
       if(warning){
         warning.style.display = 'block';
-        warning.textContent = 'Jarvis startup code did not finish loading. Run jarvis_browser.py and open http://127.0.0.1:5005 instead of double-clicking this HTML file.';
+        warning.textContent = 'Jarvis startup code did not finish loading. Refresh the page after the latest GitHub Pages deployment finishes.';
       }
     };
     window.addEventListener('error', function(event){
       var warning = document.getElementById('secWarning');
       if(!warning) return;
       warning.style.display = 'block';
-      warning.textContent = 'Startup error: ' + (event.message || 'unknown JavaScript error') + '. Open Jarvis from http://127.0.0.1:5005.';
+      warning.textContent = 'Startup error: ' + (event.message || 'unknown JavaScript error') + '. Refresh the page and try again.';
     });
   })();
 </script>
