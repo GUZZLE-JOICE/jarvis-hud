@@ -1731,6 +1731,330 @@ body.jarvis-ready #newTabBtn{animation:hudRevealControls .65s .76s both}
   }
 }
 
+
+/* =========================================================
+   ULTIMATE STARTUP UPGRADE + NO FLASH + PERFECT TOP CENTER
+   ========================================================= */
+#modeSwitch{
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  margin-left:0 !important;
+  width:max-content;
+}
+@media (max-width:720px){
+  #modeSwitch{
+    left:50% !important;
+    transform:translate3d(-50%,0,0) scale(.98) !important;
+  }
+}
+
+#startGate{
+  background:
+    radial-gradient(circle at 50% 41%, rgba(0,229,255,.11), transparent 16%),
+    radial-gradient(circle at 50% 50%, rgba(0,229,255,.06), transparent 28%),
+    radial-gradient(circle at 50% 58%, rgba(255,120,0,.05), transparent 46%),
+    linear-gradient(180deg, rgba(5,15,18,.96), rgba(1,5,7,.985));
+}
+#startGate::before{
+  opacity:.26 !important;
+}
+#startGate::after{
+  opacity:.88;
+}
+#startGate .startGateVisual{
+  position:relative;
+  width:min(520px,72vw);
+  height:min(520px,72vw);
+  max-width:520px;
+  max-height:520px;
+  margin-bottom:2px;
+  display:grid;
+  place-items:center;
+}
+#startGate .startGateCoreRing,
+#startGate .startGateCoreRingB,
+#startGate .startGateCoreRingC{
+  position:absolute;
+  border:1px solid rgba(0,229,255,.20);
+  border-radius:50%;
+}
+#startGate .startGateCoreRing{
+  inset:8%;
+  box-shadow:0 0 55px rgba(0,229,255,.08), inset 0 0 40px rgba(0,229,255,.04);
+  animation:startCoreRotate 14s linear infinite;
+}
+#startGate .startGateCoreRingB{
+  inset:18%;
+  border-style:dashed;
+  animation:startCoreRotateReverse 11s linear infinite;
+}
+#startGate .startGateCoreRingC{
+  inset:30%;
+  opacity:.7;
+  animation:startCorePulse 2.8s ease-in-out infinite;
+}
+#startGate .startGateCrosshairH,
+#startGate .startGateCrosshairV{
+  position:absolute;
+  background:linear-gradient(90deg, transparent, rgba(0,229,255,.44), transparent);
+  opacity:.55;
+}
+#startGate .startGateCrosshairH{
+  width:100%;
+  height:1px;
+}
+#startGate .startGateCrosshairV{
+  width:1px;
+  height:100%;
+  background:linear-gradient(180deg, transparent, rgba(0,229,255,.44), transparent);
+}
+#startGate .startGateReactor{
+  position:relative;
+  width:132px;
+  height:132px;
+  border-radius:50%;
+  border:1px solid rgba(0,229,255,.40);
+  box-shadow:
+    0 0 0 14px rgba(0,229,255,.03),
+    0 0 0 34px rgba(0,229,255,.02),
+    0 0 65px rgba(0,229,255,.18),
+    inset 0 0 34px rgba(0,229,255,.07);
+  background:
+    radial-gradient(circle, rgba(255,255,255,.95) 0 4px, transparent 5px),
+    radial-gradient(circle, rgba(255,120,0,.82) 0 10px, transparent 11px),
+    radial-gradient(circle, rgba(0,229,255,.22), rgba(0,0,0,0) 66%);
+  animation:startCorePulse 2.4s ease-in-out infinite;
+}
+#startGate .startGateReactor::before,
+#startGate .startGateReactor::after{
+  content:'';
+  position:absolute;
+  inset:18px;
+  border-radius:50%;
+  border:2px solid rgba(255,120,0,.78);
+  border-top-color:transparent;
+  border-left-color:transparent;
+}
+#startGate .startGateReactor::before{
+  animation:startCoreRotate 3.5s linear infinite;
+}
+#startGate .startGateReactor::after{
+  inset:34px;
+  border-color:rgba(0,229,255,.88);
+  border-right-color:transparent;
+  border-bottom-color:transparent;
+  animation:startCoreRotateReverse 4.2s linear infinite;
+}
+#startGate .startGateKicker{
+  font:10px 'JetBrains Mono', monospace;
+  letter-spacing:3px;
+  color:var(--amber);
+  opacity:.88;
+  margin-top:-6px;
+}
+#startGate .startGateHint{
+  font:10px 'JetBrains Mono', monospace;
+  letter-spacing:2.7px;
+  color:#87a8ad;
+  margin-top:-6px;
+}
+#startGate #bootLogo{
+  margin-top:-4px;
+}
+#startGate h1{
+  font-size:13px;
+  letter-spacing:5.5px;
+  margin-top:-8px;
+}
+#startGate p{
+  max-width:640px;
+}
+#startGate .startBtn{
+  margin-top:4px;
+}
+
+@keyframes startCoreRotate{to{transform:rotate(360deg)}}
+@keyframes startCoreRotateReverse{to{transform:rotate(-360deg)}}
+@keyframes startCorePulse{
+  0%,100%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.038);filter:brightness(1.18)}
+}
+
+#bootOverlay{
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0,229,255,.10), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(255,120,0,.05), transparent 34%),
+    linear-gradient(180deg, rgba(4,13,16,.98), rgba(1,5,7,.99));
+}
+#bootOverlay .bootDataRain,
+#bootOverlay .bootParticles,
+#bootOverlay .bootHudTop,
+#bootOverlay .bootTerminal{
+  position:absolute;
+}
+#bootOverlay .bootDataRain{
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  opacity:.18;
+  z-index:-2;
+}
+#bootOverlay .bootDataRain span{
+  position:absolute;
+  top:-120%;
+  color:rgba(0,229,255,.32);
+  font:10px/1 'JetBrains Mono', monospace;
+  letter-spacing:1px;
+  white-space:nowrap;
+  animation:bootRainFall var(--rainDur,8s) linear infinite;
+  animation-delay:var(--rainDelay,0s);
+}
+@keyframes bootRainFall{
+  to{transform:translateY(240vh)}
+}
+#bootOverlay .bootParticles{
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:-1;
+}
+#bootOverlay .bootParticles i{
+  position:absolute;
+  bottom:-8%;
+  width:var(--psize,2px);
+  height:var(--psize,2px);
+  border-radius:50%;
+  background:rgba(0,229,255,.75);
+  box-shadow:0 0 10px rgba(0,229,255,.55);
+  animation:bootParticleRise var(--pdur,4.8s) linear infinite;
+  animation-delay:var(--pdelay,0s);
+}
+@keyframes bootParticleRise{
+  0%{transform:translate3d(0,0,0) scale(.8);opacity:0}
+  10%{opacity:.9}
+  100%{transform:translate3d(var(--pdrift,0px),-115vh,0) scale(1.4);opacity:0}
+}
+#bootOverlay .bootHudTop{
+  top:4.5%;
+  left:5.5%;
+  right:5.5%;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+  z-index:3;
+  pointer-events:none;
+}
+#bootOverlay .bootHudIdentity{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+#bootOverlay .bootHudMini{
+  color:#8caeb2;
+  font:10px 'JetBrains Mono', monospace;
+  letter-spacing:2.3px;
+}
+#bootOverlay .bootHudName{
+  color:#efffff;
+  font:700 clamp(26px,4vw,44px) 'Orbitron', sans-serif;
+  letter-spacing:10px;
+  text-shadow:0 0 22px rgba(0,229,255,.18);
+}
+#bootOverlay .bootHudSub{
+  color:var(--amber);
+  font:11px 'JetBrains Mono', monospace;
+  letter-spacing:2.7px;
+}
+#bootOverlay .bootHudMetrics{
+  display:grid;
+  grid-template-columns:repeat(3,max-content);
+  gap:10px 18px;
+  justify-items:end;
+}
+#bootOverlay .bootHudMetrics span{
+  color:#8caeb2;
+  font:10px 'JetBrains Mono', monospace;
+  letter-spacing:1.7px;
+}
+#bootOverlay .bootHudMetrics b{
+  color:#efffff;
+  margin-left:6px;
+  font-weight:700;
+}
+#bootOverlay .bootTerminal{
+  left:5.8%;
+  right:5.8%;
+  bottom:8.5%;
+  min-height:74px;
+  max-height:108px;
+  border:1px solid rgba(0,229,255,.18);
+  background:linear-gradient(180deg, rgba(4,14,17,.72), rgba(2,8,10,.92));
+  box-shadow:0 0 32px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.015);
+  padding:10px 14px 12px;
+  overflow:hidden;
+  backdrop-filter:blur(8px);
+  z-index:3;
+}
+#bootOverlay .bootTerminalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:7px;
+}
+#bootOverlay .bootTerminalHead span,
+#bootOverlay .bootTerminalHead b{
+  font:10px 'JetBrains Mono', monospace;
+  letter-spacing:2px;
+}
+#bootOverlay .bootTerminalHead span{color:#86a8ac}
+#bootOverlay .bootTerminalHead b{color:var(--amber)}
+#bootOverlay .bootTerminalBody{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+#bootOverlay .bootLogLine{
+  display:grid;
+  grid-template-columns:max-content 1fr max-content;
+  gap:12px;
+  align-items:start;
+  color:#cce8ea;
+  font:11px/1.35 'JetBrains Mono', monospace;
+  letter-spacing:.3px;
+}
+#bootOverlay .bootLogLine span{color:#86a8ac}
+#bootOverlay .bootLogLine i{
+  color:var(--mint);
+  font-style:normal;
+}
+#bootOverlay #bootFinalText{
+  font-size:clamp(24px,4.1vw,46px);
+  letter-spacing:7px;
+  text-shadow:0 0 28px rgba(0,229,255,.18);
+}
+#bootOverlay #bootStageLabel{
+  top:16%;
+  letter-spacing:3.5px;
+}
+#bootOverlay #bootSub{
+  max-width:760px;
+  padding:0 18px;
+}
+#bootOverlay .bootCoreShell{
+  filter:drop-shadow(0 0 38px rgba(0,229,255,.13));
+}
+#bootOverlay.boot-prime{
+  display:flex !important;
+  opacity:1 !important;
+}
+body.jarvis-booting #startGate{
+  opacity:0;
+  pointer-events:none;
+}
+
 </style>
 </head>
 <body>
@@ -8377,5 +8701,321 @@ body.jarvis-ready #newTabBtn{animation:hudRevealControls .65s .76s both}
 
 })();
 </script>
+
+<script>
+(function(){
+  function escapeHtmlLocal(text){
+    return String(text).replace(/[&<>"]/g,function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];
+    });
+  }
+
+  function upgradeStartupMarkup(){
+    var gate=document.getElementById('startGate');
+    if(gate && !gate.querySelector('.startGateVisual')){
+      var secWarning=document.getElementById('secWarning');
+      var initBtn=document.getElementById('initBtn');
+      gate.innerHTML='';
+      var visual=document.createElement('div');
+      visual.className='startGateVisual';
+      visual.innerHTML=
+        '<div class="startGateCoreRing"></div>'+
+        '<div class="startGateCoreRingB"></div>'+
+        '<div class="startGateCoreRingC"></div>'+
+        '<div class="startGateCrosshairH"></div>'+
+        '<div class="startGateCrosshairV"></div>'+
+        '<div class="startGateReactor"></div>';
+      gate.appendChild(visual);
+
+      var kicker=document.createElement('div');
+      kicker.className='startGateKicker';
+      kicker.textContent='STARK-CLASS NEURAL OPERATING SYSTEM';
+      gate.appendChild(kicker);
+
+      var logo=document.createElement('div');
+      logo.id='bootLogo';
+      logo.textContent='J.A.R.V.I.S';
+      gate.appendChild(logo);
+
+      var title=document.createElement('h1');
+      title.textContent='TACTICAL INTERFACE STANDBY';
+      gate.appendChild(title);
+
+      var desc=document.createElement('p');
+      desc.textContent='Grant access to camera, microphone, motion, and location sensors for the full HUD experience. Anything denied falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning, vision, and local bridge commands.';
+      gate.appendChild(desc);
+
+      if(secWarning){ gate.appendChild(secWarning); }
+      if(initBtn){ gate.appendChild(initBtn); }
+
+      var hint=document.createElement('div');
+      hint.className='startGateHint';
+      hint.textContent='AUTHORIZED OPERATOR INPUT REQUIRED';
+      gate.appendChild(hint);
+    }
+
+    var overlay=document.getElementById('bootOverlay');
+    if(overlay && !overlay.querySelector('.bootHudTop')){
+      var rain=document.createElement('div');
+      rain.className='bootDataRain';
+      var particles=document.createElement('div');
+      particles.className='bootParticles';
+      var top=document.createElement('div');
+      top.className='bootHudTop';
+      top.innerHTML=
+        '<div class="bootHudIdentity">'+
+          '<div class="bootHudMini">NEURAL BOOTSTRAP / MARK VIII</div>'+
+          '<div class="bootHudName">J.A.R.V.I.S</div>'+
+          '<div class="bootHudSub">TACTICAL INTERFACE INITIALIZATION SEQUENCE</div>'+
+        '</div>'+
+        '<div class="bootHudMetrics">'+
+          '<span>POWER<b id="bootPowerMetric">00%</b></span>'+
+          '<span>LATENCY<b id="bootLatencyMetric">-- ms</b></span>'+
+          '<span>CORE TEMP<b id="bootTempMetric">21.4°C</b></span>'+
+        '</div>';
+      overlay.insertBefore(rain, overlay.firstChild);
+      overlay.insertBefore(particles, overlay.firstChild);
+      overlay.insertBefore(top, overlay.firstChild);
+
+      var terminal=document.createElement('div');
+      terminal.className='bootTerminal';
+      terminal.innerHTML=
+        '<div class="bootTerminalHead">'+
+          '<span>INITIALIZATION LOG</span>'+
+          '<b id="bootTerminalStatus">WAITING</b>'+
+        '</div>'+
+        '<div class="bootTerminalBody" id="bootTerminalBody"></div>';
+      overlay.appendChild(terminal);
+    }
+  }
+
+  function buildBootRain(){
+    var rain=document.querySelector('#bootOverlay .bootDataRain');
+    if(!rain)return;
+    var chars='01JARVISCORELINKNEURAL';
+    var html='';
+    for(var i=0;i<20;i++){
+      var col='';
+      for(var j=0;j<36;j++){
+        col += chars[(i*5+j*3)%chars.length];
+        if(j<35) col += '<br>';
+      }
+      html += '<span style="left:'+(i*5)+'%;--rainDur:'+(7+(i%6)*0.7)+'s;--rainDelay:'+(-0.45*(i%8))+'s">'+col+'</span>';
+    }
+    rain.innerHTML=html;
+  }
+
+  function buildBootParticles(){
+    var wrap=document.querySelector('#bootOverlay .bootParticles');
+    if(!wrap)return;
+    var html='';
+    for(var i=0;i<42;i++){
+      html += '<i style="left:'+((i*13)%100)+'%;--psize:'+(1+(i%3))+'px;--pdur:'+(4.6+(i%7)*0.45)+'s;--pdelay:'+(-0.25*(i%9))+'s;--pdrift:'+(((i%2?1:-1)*(8+(i%6)*5)))+'px"></i>';
+    }
+    wrap.innerHTML=html;
+  }
+
+  function bootLog(text){
+    var body=document.getElementById('bootTerminalBody');
+    if(!body)return;
+    var line=document.createElement('div');
+    line.className='bootLogLine';
+    line.innerHTML=
+      '<span>SYS</span>'+
+      '<b>'+escapeHtmlLocal(text)+'</b>'+
+      '<i>OK</i>';
+    body.appendChild(line);
+    while(body.children.length>5){
+      body.removeChild(body.firstChild);
+    }
+  }
+
+  function updateBootMetrics(stage,total){
+    var power = Math.round(stage/total*100);
+    var latency = Math.max(4, 28 - stage*3);
+    var temp = (21.4 + stage*4.7).toFixed(1)+'°C';
+    var powerEl=document.getElementById('bootPowerMetric');
+    var latencyEl=document.getElementById('bootLatencyMetric');
+    var tempEl=document.getElementById('bootTempMetric');
+    var terminalStatus=document.getElementById('bootTerminalStatus');
+    if(powerEl) powerEl.textContent=String(power).padStart(2,'0')+'%';
+    if(latencyEl) latencyEl.textContent=latency+' ms';
+    if(tempEl) tempEl.textContent=temp;
+    if(terminalStatus){
+      terminalStatus.textContent = stage>=total ? 'ONLINE' : 'SYNCING';
+    }
+  }
+
+  function safeUpdateBootNodes(stage){
+    if(typeof updateBootNodes === 'function'){
+      updateBootNodes(stage);
+    }
+  }
+
+  function safeSwapBootStatus(text){
+    if(typeof swapBootStatus === 'function'){
+      swapBootStatus(text);
+    }else{
+      var sub=document.getElementById('bootSub');
+      if(sub) sub.textContent=text;
+    }
+  }
+
+  function safeChecksum(stage){
+    if(typeof bootChecksumForStage === 'function'){
+      return bootChecksumForStage(stage);
+    }
+    var left=(0xA17C+stage*0x317).toString(16).toUpperCase();
+    var right=(0x4B90+stage*0x4D1).toString(16).toUpperCase();
+    return ('0000'.slice(left.length)+left)+'-'+('0000'.slice(right.length)+right);
+  }
+
+  window.runBoot = function(cb){
+    upgradeStartupMarkup();
+    buildBootRain();
+    buildBootParticles();
+
+    var overlay=document.getElementById('bootOverlay');
+    var core=document.getElementById('coreWrap');
+    var fill=document.getElementById('bootProgressFill');
+    var percent=document.getElementById('bootPercent');
+    var stageLabel=document.getElementById('bootStageLabel');
+    var checksum=document.getElementById('bootChecksum');
+    var finalText=document.getElementById('bootFinalText');
+    var text=document.getElementById('bootText');
+    var sub=document.getElementById('bootSub');
+    var terminal=document.getElementById('bootTerminalBody');
+    var lines = Array.isArray(window.bootLines) ? window.bootLines : [
+      'Igniting arc-reactor power bus…',
+      'Loading adaptive neural matrix…',
+      'Authenticating operator profile…',
+      'Calibrating optical systems…',
+      'Opening encrypted voice link…',
+      'Establishing local browser bridge…',
+      'Aligning tactical interface…',
+      'Releasing command authority…'
+    ];
+    var total=lines.length;
+
+    document.body.classList.remove('jarvis-ready');
+    document.body.classList.add('jarvis-booting');
+
+    overlay.style.display='flex';
+    overlay.style.opacity='1';
+    overlay.classList.remove('departing','boot-complete');
+    overlay.classList.add('boot-prime');
+    if(core) core.className='bootCore bootCoreIdle';
+    if(fill) fill.style.width='0%';
+    if(percent) percent.textContent='0%';
+    if(stageLabel) stageLabel.textContent='STAGE 00 / '+String(total).padStart(2,'0');
+    if(checksum) checksum.textContent='CHECKSUM 0000-0000';
+    if(text) text.textContent='J.A.R.V.I.S // CINEMATIC BOOTSTRAP';
+    if(sub) sub.textContent='Staging reactor ignition and tactical system handshake…';
+    if(finalText) finalText.textContent='SYSTEM ONLINE';
+    if(terminal) terminal.innerHTML='';
+    updateBootMetrics(0,total);
+    safeUpdateBootNodes(0);
+    if(typeof playPowerUpTone === 'function'){ try{ playPowerUpTone(); }catch(e){} }
+
+    requestAnimationFrame(function(){
+      overlay.classList.add('boot-engaged');
+    });
+
+    var stageDelay=420;
+    lines.forEach(function(line,index){
+      var stage=index+1;
+      setTimeout(function(){
+        if(core) core.className='bootCore stage-'+Math.min(stage,8);
+        safeSwapBootStatus(line);
+        bootLog(line);
+        updateBootMetrics(stage,total);
+
+        var progress=Math.round(stage/total*100);
+        if(fill) fill.style.width=progress+'%';
+        if(percent) percent.textContent=progress+'%';
+        if(stageLabel){
+          stageLabel.textContent='STAGE '+String(stage).padStart(2,'0')+' / '+String(total).padStart(2,'0');
+        }
+        if(checksum){
+          checksum.textContent='CHECKSUM '+safeChecksum(stage);
+        }
+        safeUpdateBootNodes(stage);
+      }, stageDelay*stage);
+    });
+
+    setTimeout(function(){
+      safeUpdateBootNodes(total+1);
+      overlay.classList.add('boot-complete');
+      updateBootMetrics(total,total);
+      var terminalStatus=document.getElementById('bootTerminalStatus');
+      if(terminalStatus) terminalStatus.textContent='ONLINE';
+      bootLog('Command core online. J.A.R.V.I.S is ready.');
+      setTimeout(function(){
+        overlay.classList.add('departing');
+        setTimeout(function(){
+          overlay.style.display='none';
+          overlay.classList.remove('boot-prime','boot-engaged','boot-complete','departing');
+          document.body.classList.remove('jarvis-booting');
+          document.body.classList.add('jarvis-ready');
+          if(cb) cb();
+          if(typeof scheduleWakeLabelFade === 'function'){
+            scheduleWakeLabelFade();
+          }
+        }, 950);
+      }, 720);
+    }, stageDelay*total + 220);
+  };
+
+  window.__jarvisMainStart = function(){
+    upgradeStartupMarkup();
+
+    var gate=document.getElementById('startGate');
+    if(!gate || state.booted || gate.style.display==='none' || gate.classList.contains('launching')) return;
+
+    var overlay=document.getElementById('bootOverlay');
+    var button=document.getElementById('initBtn');
+
+    if(button){
+      button.disabled=true;
+      button.innerHTML='<span>POWERING REACTOR…</span><i></i>';
+    }
+
+    document.body.classList.add('jarvis-booting');
+    overlay.style.display='flex';
+    overlay.style.opacity='1';
+    overlay.classList.remove('departing','boot-complete');
+    overlay.classList.add('boot-prime');
+
+    requestAnimationFrame(function(){
+      gate.classList.add('launching');
+      overlay.classList.add('boot-engaged');
+    });
+
+    setTimeout(function(){
+      gate.style.display='none';
+      window.runBoot(function(){
+        if(typeof initGeo === 'function') initGeo();
+        if(typeof initOrientation === 'function') initOrientation();
+        if(typeof initBattery === 'function') initBattery();
+        if(typeof updateTelemetry === 'function') updateTelemetry();
+        if(typeof speak === 'function') speak('Good to see you. All systems nominal.');
+      });
+    }, 180);
+  };
+
+  upgradeStartupMarkup();
+
+  var initBtn=document.getElementById('initBtn');
+  if(initBtn){
+    var clone=initBtn.cloneNode(true);
+    initBtn.parentNode.replaceChild(clone, initBtn);
+    clone.addEventListener('click', function(event){
+      event.preventDefault();
+      window.__jarvisMainStart();
+    });
+  }
+})();
+</script>
+
 </body>
 </html>
