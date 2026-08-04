@@ -1381,35 +1381,127 @@
     });
   }
 
-  function researchBridgeBase(){
-    var host=(location.hostname||'').toLowerCase();
-    var pageIsLocal=(host==='127.0.0.1'||host==='localhost'||location.protocol==='file:');
-    if(pageIsLocal)return 'http://localhost:5005';
+  var LOCAL_RESEARCH_BASE='http://127.0.0.1:5005';
+  var LOCAL_RESEARCH_PROBE_TTL_MS=60000;
+  var selectedResearchBase=null;
+  var selectedResearchMode='unknown';
+  var localResearchProbePromise=null;
+  var localResearchLastProbe=0;
+
+  function isLocalResearchBase(base){
+    return /^http:\/\/(127\.0\.0\.1|localhost):5005$/i.test((base||'').replace(/\/$/,''));
+  }
+
+  function remoteResearchBase(){
     return (remoteServerUrl||DEFAULT_REMOTE_SERVER).replace(/\/$/,'');
   }
-  function researchFetch(path,options){
-    var base=researchBridgeBase();
-    var isRemote=base.indexOf('localhost:5005')===-1&&base.indexOf('127.0.0.1:5005')===-1;
-    options=options||{};
-    options.headers=Object.assign({},options.headers||{});
-    if(isRemote){
-      if(!remoteAccessCode){
-        return Promise.reject(new Error('Enter the Jarvis access code in Settings → Server before using research on this computer.'));
-      }
-      options.headers['X-Jarvis-Code']=remoteAccessCode;
-      // Prevent ngrok's free-domain interstitial from replacing JSON API
-      // responses with an HTML warning page.
-      options.headers['ngrok-skip-browser-warning']='true';
+
+  function researchBridgeBase(){
+    return selectedResearchBase||remoteResearchBase();
+  }
+
+  function probeLocalResearchBridge(force){
+    var now=Date.now();
+    if(!force&&selectedResearchBase&&now-localResearchLastProbe<LOCAL_RESEARCH_PROBE_TTL_MS){
+      return Promise.resolve(selectedResearchBase);
     }
-    return fetch(base+path,options).then(function(response){
-      if(response.ok)return response;
+    if(localResearchProbePromise)return localResearchProbePromise;
+
+    localResearchLastProbe=now;
+    localResearchProbePromise=new Promise(function(resolve){
+      var controller=new AbortController();
+      var timeout=setTimeout(function(){controller.abort();},2800);
+      var probeOptions={
+        method:'GET',
+        cache:'no-store',
+        headers:{'Accept':'application/json'},
+        signal:controller.signal
+      };
+      // Chromium-based browsers use this hint for the one-time local-network
+      // permission prompt. Browsers that do not support it simply ignore it.
+      probeOptions.targetAddressSpace='local';
+
+      fetch(LOCAL_RESEARCH_BASE+'/health?local_probe='+now,probeOptions)
+        .then(function(r){
+          if(!r.ok)throw new Error('Local bridge returned '+r.status);
+          return r.json();
+        })
+        .then(function(data){
+          if(!data||!data.search_engine)throw new Error('Not the Jarvis bridge');
+          selectedResearchBase=LOCAL_RESEARCH_BASE;
+          selectedResearchMode='local';
+          resolve(selectedResearchBase);
+        })
+        .catch(function(){
+          selectedResearchBase=remoteResearchBase();
+          selectedResearchMode='remote';
+          resolve(selectedResearchBase);
+        })
+        .finally(function(){
+          clearTimeout(timeout);
+          localResearchProbePromise=null;
+        });
+    });
+    return localResearchProbePromise;
+  }
+
+  function fetchResearchAtBase(base,path,options){
+    base=(base||'').replace(/\/$/,'');
+    var isLocal=isLocalResearchBase(base);
+    var requestOptions=Object.assign({},options||{});
+    requestOptions.headers=Object.assign({},(options&&options.headers)||{});
+
+    if(isLocal){
+      requestOptions.targetAddressSpace='local';
+    }else{
+      if(!remoteAccessCode){
+        return Promise.reject(new Error('This computer is not the Jarvis host. Enter the access code in Settings → Server to use the remote bridge.'));
+      }
+      requestOptions.headers['X-Jarvis-Code']=remoteAccessCode;
+      requestOptions.headers['ngrok-skip-browser-warning']='true';
+    }
+
+    return fetch(base+path,requestOptions).then(function(response){
+      if(response.ok){
+        response.jarvisBase=base;
+        response.jarvisMode=isLocal?'local':'remote';
+        return response;
+      }
       return response.text().then(function(raw){
         var message='Research server returned '+response.status+'.';
-        try{var data=raw?JSON.parse(raw):{};if(data.error)message=data.error;}catch(e){if(/^\s*</.test(raw||''))message='That server address returned a webpage instead of the Jarvis research API.';}
+        try{
+          var data=raw?JSON.parse(raw):{};
+          if(data.error)message=data.error;
+        }catch(e){
+          if(/^\s*</.test(raw||'')){
+            message='That server address returned a webpage instead of the Jarvis research API.';
+          }
+        }
         throw new Error(message);
       });
     });
   }
+
+  function researchFetch(path,options,preferredBase){
+    if(preferredBase){
+      return fetchResearchAtBase(preferredBase,path,options);
+    }
+
+    return probeLocalResearchBridge(false).then(function(base){
+      return fetchResearchAtBase(base,path,options).catch(function(err){
+        // If localhost disappeared after being detected, fall back to ngrok
+        // only when a remote access code is available.
+        if(isLocalResearchBase(base)&&remoteAccessCode){
+          selectedResearchBase=remoteResearchBase();
+          selectedResearchMode='remote';
+          return fetchResearchAtBase(selectedResearchBase,path,options);
+        }
+        throw err;
+      });
+    });
+  }
+
+  setTimeout(function(){probeLocalResearchBridge(true);},500);
 
   function updateTabFromStream(localId, data){
     var tab = browseTabs[localId];
@@ -1439,9 +1531,10 @@
 
     if(footer){
       var measured = Number(data.capture_fps || 0);
+      var routeLabel=isLocalResearchBase(tab.researchBase)?'LOCAL DIRECT':'NGROK REMOTE';
       footer.textContent = measured > 0 ?
-        ('JARVIS · LIVE STREAM · ' + measured.toFixed(1) + ' FPS') :
-        'JARVIS · LIVE STREAM';
+        ('JARVIS · '+routeLabel+' · ' + measured.toFixed(1) + ' FPS') :
+        ('JARVIS · '+routeLabel+' · LIVE STREAM');
     }
 
     if(data.status === 'ready' && data.answer && !tab.answerSpoken){
@@ -1463,7 +1556,8 @@
     try{
       var tokenResponse = await researchFetch(
         '/stream_token/' + encodeURIComponent(tab.backendTabId),
-        {method:'POST'}
+        {method:'POST'},
+        tab.researchBase
       );
       var tokenData = await tokenResponse.json();
       if(!tokenData.token) throw new Error(tokenData.error || 'Could not create stream token.');
@@ -1473,7 +1567,8 @@
 
       var controller = new AbortController();
       tab.streamAbortController = controller;
-      var base = researchBridgeBase();
+      var base = tokenResponse.jarvisBase||tab.researchBase||researchBridgeBase();
+      tab.researchBase=base;
       var streamUrl = base +
         '/frame_stream/' + encodeURIComponent(tab.backendTabId) +
         '?token=' + encodeURIComponent(tokenData.token) +
@@ -1484,12 +1579,14 @@
         headers['ngrok-skip-browser-warning'] = 'true';
       }
 
-      var response = await fetch(streamUrl, {
+      var streamOptions={
         method:'GET',
         headers:headers,
         cache:'no-store',
         signal:controller.signal
-      });
+      };
+      if(isLocalResearchBase(base))streamOptions.targetAddressSpace='local';
+      var response = await fetch(streamUrl,streamOptions);
       if(!response.ok || !response.body){
         throw new Error('Frame stream returned ' + response.status + '.');
       }
@@ -1594,6 +1691,7 @@
       framePaintScheduled: false,
       screenshotB64: null,
       backendTabId: null,
+      researchBase: null,
       lastFrameSeq: 0,
       answerSpoken: true,
       navigationToken: 0
@@ -1636,7 +1734,11 @@
       headers:{'Content-Type':'application/json'},
       body:'{}'
     })
-      .then(function(r){ return r.json().then(function(data){ return {ok:r.ok,data:data}; }); })
+      .then(function(r){
+        return r.json().then(function(data){
+          return {ok:r.ok,data:data,base:r.jarvisBase};
+        });
+      })
       .then(function(result){
         if(!result.ok || result.data.error){
           throw new Error(result.data.error || 'Could not open DuckDuckGo.');
@@ -1652,11 +1754,12 @@
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({tab_id:String(result.data.tab_id)})
-          }).catch(function(){});
+          },result.base).catch(function(){});
           return;
         }
 
         tab.backendTabId = String(result.data.tab_id);
+        tab.researchBase = result.base||researchBridgeBase();
         tab.lastFrameSeq = Number(result.data.frame_seq || 0);
         if(result.data.screenshot) setBrowseScreenshot(tab, result.data.screenshot);
         var input = tab.el.querySelector('.browseSearchInput');
@@ -1687,7 +1790,7 @@
       researchFetch('/close_tab', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({tab_id: tab.backendTabId})
-      }).catch(function(){});
+      },tab.researchBase).catch(function(){});
     }
     tab.el.classList.remove('on');
     setTimeout(function(){ tab.el.remove(); }, 400);
@@ -1854,7 +1957,7 @@
       researchFetch('/close_tab', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({tab_id: tab.backendTabId})
-      }).catch(function(){});
+      },tab.researchBase).catch(function(){});
     }
 
     tab.backendTabId = null;
@@ -1874,13 +1977,16 @@
     })
       .then(function(r){
         if(!r.ok) throw new Error('Browse request failed: ' + r.status);
-        return r.json();
+        var usedBase=r.jarvisBase;
+        return r.json().then(function(data){return {data:data,base:usedBase};});
       })
-      .then(function(data){
+      .then(function(packet){
+        var data=packet.data;
         if(data.error) throw new Error(data.error);
         var currentTab = browseTabs[localId];
         if(!currentTab) return;
         currentTab.backendTabId = String(data.tab_id);
+        currentTab.researchBase = packet.base||researchBridgeBase();
         setBrowseOverlay(currentTab, 'DuckDuckGo opened.\nSearching for:\n' + query, false);
         currentTab.lastFrameSeq = Number(data.frame_seq || 0);
         startTabLivePolling(localId);
@@ -1891,7 +1997,7 @@
           currentTab.el.querySelector('.browseDot').classList.remove('busy');
           setBrowseOverlay(currentTab, 'Could not start search.\n' + err.message, true);
         }
-        if(speakResult) speak('I could not start browsing. Make sure Python and ngrok are both running, then reconnect with the access code.');
+        if(speakResult) speak('I could not start browsing. On the host PC, keep Python running and allow local-network access if the browser asks. Other computers also need ngrok and the access code.');
       });
   }
 
