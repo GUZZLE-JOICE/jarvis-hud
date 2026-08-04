@@ -498,7 +498,7 @@
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path></svg>Voice Output</h3><p class="settingsHint">Choose the system voice Jarvis uses.</p><select class="settingsField" id="voiceSelect"></select></div>
 </div>
 <div class="settingsPage" data-page="hands">
-<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">The cursor follows wrist landmark 0. Pinch to scroll and use two pinches to resize browser panels.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">The cursor follows wrist landmark 0. Curl at least 3 fingers into your palm for a fist click. Pinch to scroll and use two pinches to resize browser panels.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
 <div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input id="manualPinchSlider" max="0.15" min="0.02" step="0.005" style="width:100%;margin-bottom:12px;" type="range"/><label class="settingsLabel">Skeleton X alignment</label><input id="alignOffsetX" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><label class="settingsLabel">Skeleton Y alignment</label><input id="alignOffsetY" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><div class="settingsActions"><button class="smallBtn" id="resetAlignBtn">Reset alignment</button></div></div>
 </div>
 <div class="settingsPage" data-page="mouse">
@@ -2668,6 +2668,11 @@
   var handCanvasCtx = null;
   var lastHandLandmarks = null;
   var pinchState = { isPinching:false, distance:null };
+  var primaryFistTracker = {
+    score:0,
+    active:false,
+    contactCount:0
+  };
   var pinchThreshold = null;
   var PINCH_THRESHOLD_STORAGE = 'jarvis_pinch_threshold_v1';
   try{
@@ -2988,6 +2993,10 @@
       lastHandLandmarks = null;
       handPinchStates[0].isPinching = false;
       handPinchStates[1].isPinching = false;
+      primaryFistTracker.score = 0;
+      primaryFistTracker.active = false;
+      primaryFistTracker.contactCount = 0;
+      wasFist = false;
       twoHandZoomActive = false;
       lastTwoHandDistance = null;
       setPinchActive(false);
@@ -3009,7 +3018,15 @@
       var thumbTip = landmarks[4];
       var indexTip = landmarks[8];
       var pinchDist = distance3D(thumbTip, indexTip);
-      var isPinching = pinchDist < threshold;
+
+      // A closed fist naturally brings the thumb and index landmarks close
+      // together. Detect the fist first, then suppress pinch detection so a
+      // fist cannot accidentally become a scroll gesture.
+      var fistGesture = hIdx === 0
+        ? updatePrimaryFistState(landmarks)
+        : countFingersTouchingPalm(landmarks) >= 3;
+      var isPinching = pinchDist < threshold && !fistGesture;
+
       handPinchStates[hIdx].isPinching = isPinching;
       handPinchStates[hIdx].point = { x:(thumbTip.x+indexTip.x)/2, y:(thumbTip.y+indexTip.y)/2 };
 
@@ -3023,8 +3040,8 @@
       ctx.stroke();
 
       if(hIdx === 0){
-        updateHandCursor(landmarks, mapping, handSign);
-        handleFistAndScrollGestures(landmarks);
+        updateHandCursor(landmarks, mapping, handSign, fistGesture);
+        handleFistAndScrollGestures(landmarks, fistGesture);
       }
     }
 
@@ -3131,12 +3148,20 @@
 
   var wasPinching = false;
   function setPinchActive(isPinching){
+    // Fist always wins over pinch. This keeps the UI and gesture state from
+    // calling a closed hand a pinch.
+    if(primaryFistTracker.active) isPinching = false;
     pinchState.isPinching = isPinching;
+
     var indicator = document.getElementById('pinchIndicator');
     if(indicator){
-      indicator.classList.toggle('active', isPinching);
-      indicator.textContent = isPinching ? 'PINCH' : '';
+      var showFist = primaryFistTracker.active;
+      indicator.classList.toggle('active', showFist || isPinching);
+      indicator.textContent = showFist
+        ? ('FIST · ' + primaryFistTracker.contactCount + '/4 FINGERS')
+        : (isPinching ? 'PINCH · SCROLL' : '');
     }
+
     if(isPinching && !wasPinching){
       onPinchStart();
     } else if(!isPinching && wasPinching){
@@ -3285,7 +3310,7 @@
     return { x:wrist.x, y:wrist.y, z:wrist.z || 0 };
   }
 
-  function updateHandCursor(landmarks, mapping, handSign){
+  function updateHandCursor(landmarks, mapping, handSign, fistNow){
     var indexTip = landmarks[8];
     var palmPoint = getStablePalmPoint(landmarks);
     handCursorX = palmPoint.x;
@@ -3295,9 +3320,10 @@
       var mapped = mapNormalizedPoint(palmPoint.x, palmPoint.y, mapping, handSign);
       var ctx = handCanvasCtx;
       var isPinch = handPinchStates[0].isPinching;
-      var r = isPinch ? 10 : 14;
+      var isPrecisionGesture = isPinch || !!fistNow;
+      var r = isPrecisionGesture ? 10 : 14;
       ctx.save();
-      ctx.strokeStyle = isPinch ? '#3affc4' : 'rgba(0,229,255,0.7)';
+      ctx.strokeStyle = isPrecisionGesture ? '#3affc4' : 'rgba(0,229,255,0.7)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(mapped.x, mapped.y, r, 0, Math.PI*2);
@@ -3312,7 +3338,7 @@
       ctx.moveTo(mapped.x, mapped.y + r - 2);
       ctx.lineTo(mapped.x, mapped.y + r + 6);
       ctx.stroke();
-      if(isPinch){
+      if(isPrecisionGesture){
         ctx.beginPath();
         ctx.fillStyle = 'rgba(58,255,196,0.35)';
         ctx.arc(mapped.x, mapped.y, r - 3, 0, Math.PI*2);
@@ -3336,7 +3362,7 @@
       var pagePoint = normalizedToViewport(palmPoint.x, palmPoint.y);
       var precisionGesture=!!(
         (handPinchStates[0]&&handPinchStates[0].isPinching)||
-        isFist(landmarks)
+        fistNow
       );
       var stablePoint=stabilizeHandCursor(pagePoint,precisionGesture);
       lastCursorPageX=stablePoint.x;
@@ -3350,16 +3376,92 @@
     }
   }
 
-  // --- Fist detection: all four fingers (not thumb) curled toward the palm ---
-  function isFingerCurled(landmarks, tipIdx, pipIdx){
-    var wrist = landmarks[0];
-    return distance3D(landmarks[tipIdx], wrist) < distance3D(landmarks[pipIdx], wrist);
+  // --- Fist detection: at least 3 fingertips folded into the palm ---
+  // Palm center uses the wrist plus all four knuckles, so the test scales with
+  // hand size and camera distance instead of depending on fixed pixels.
+  function getPalmCenter3D(landmarks){
+    var ids = [0,5,9,13,17];
+    var sum = {x:0,y:0,z:0};
+    for(var i=0;i<ids.length;i++){
+      var p = landmarks[ids[i]];
+      sum.x += p.x;
+      sum.y += p.y;
+      sum.z += p.z || 0;
+    }
+    return {
+      x:sum.x/ids.length,
+      y:sum.y/ids.length,
+      z:sum.z/ids.length
+    };
   }
-  function isFist(landmarks){
-    return isFingerCurled(landmarks, 8, 6) &&
-           isFingerCurled(landmarks, 12, 10) &&
-           isFingerCurled(landmarks, 16, 14) &&
-           isFingerCurled(landmarks, 20, 18);
+
+  function getPalmScale(landmarks){
+    var palmWidth = distance3D(landmarks[5], landmarks[17]);
+    var palmLength = distance3D(landmarks[0], landmarks[9]);
+    return Math.max(0.045, palmWidth, palmLength);
+  }
+
+  function fingerTouchesPalm(landmarks, tipIdx, dipIdx, pipIdx, mcpIdx){
+    var palmCenter = getPalmCenter3D(landmarks);
+    var palmScale = getPalmScale(landmarks);
+
+    var tipToPalm = distance3D(landmarks[tipIdx], palmCenter);
+    var dipToPalm = distance3D(landmarks[dipIdx], palmCenter);
+    var pipToPalm = distance3D(landmarks[pipIdx], palmCenter);
+    var tipToMcp = distance3D(landmarks[tipIdx], landmarks[mcpIdx]);
+
+    // Three checks work together:
+    // 1. fingertip is inside the palm-sized region,
+    // 2. fingertip is closer to the palm than the finger's outer joints,
+    // 3. fingertip has folded back toward its own knuckle.
+    var insidePalm = tipToPalm < palmScale * 0.78;
+    var foldedPastJoints =
+      tipToPalm < dipToPalm * 0.98 ||
+      tipToPalm < pipToPalm * 0.90;
+    var foldedToKnuckle = tipToMcp < palmScale * 0.72;
+
+    return insidePalm && foldedPastJoints && foldedToKnuckle;
+  }
+
+  function countFingersTouchingPalm(landmarks){
+    var fingers = [
+      [8,7,6,5],
+      [12,11,10,9],
+      [16,15,14,13],
+      [20,19,18,17]
+    ];
+    var count = 0;
+    for(var i=0;i<fingers.length;i++){
+      if(fingerTouchesPalm(
+        landmarks,
+        fingers[i][0],
+        fingers[i][1],
+        fingers[i][2],
+        fingers[i][3]
+      )) count++;
+    }
+    return count;
+  }
+
+  function updatePrimaryFistState(landmarks){
+    var contactCount = countFingersTouchingPalm(landmarks);
+    primaryFistTracker.contactCount = contactCount;
+
+    // Require a few consecutive frames to activate and several open frames to
+    // release. This stops one shaky landmark frame from double-clicking.
+    if(contactCount >= 3){
+      primaryFistTracker.score = Math.min(8, primaryFistTracker.score + 2);
+    }else{
+      primaryFistTracker.score = Math.max(0, primaryFistTracker.score - 1);
+    }
+
+    if(!primaryFistTracker.active && primaryFistTracker.score >= 4){
+      primaryFistTracker.active = true;
+    }else if(primaryFistTracker.active && primaryFistTracker.score <= 1){
+      primaryFistTracker.active = false;
+    }
+
+    return primaryFistTracker.active;
   }
 
   var lastCursorPageX = null, lastCursorPageY = null;
@@ -3405,8 +3507,7 @@
   var PINCH_SCROLL_INTERVAL_MS = 70;
   var PINCH_SCROLL_GAIN = 5.5;
 
-  function handleFistAndScrollGestures(landmarks){
-    var fistNow = isFist(landmarks);
+  function handleFistAndScrollGestures(landmarks, fistNow){
     var cursorEl = document.getElementById('globalHandCursor');
     var isPinchingNow = handPinchStates[0].isPinching;
 
