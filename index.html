@@ -3200,10 +3200,51 @@
       showCamera();
       return;
     }
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(function(stream){
+    var cameraConstraints={
+      audio:false,
+      video:{
+        facingMode:'user',
+        width:{ideal:1280},
+        height:{ideal:720},
+        frameRate:{ideal:60},
+        aspectRatio:{ideal:16/9}
+      }
+    };
+    navigator.mediaDevices.getUserMedia(cameraConstraints).then(function(stream){
       camStream = stream;
       var v = document.getElementById('camVideo');
       v.srcObject = stream;
+
+      // Ask supported webcams to keep focus, exposure, and white balance
+      // adjusting continuously. Unsupported controls are ignored safely.
+      try{
+        var videoTrack=stream.getVideoTracks()[0];
+        if(videoTrack&&videoTrack.getCapabilities&&videoTrack.applyConstraints){
+          var capabilities=videoTrack.getCapabilities();
+          var advanced={};
+          if(
+            Array.isArray(capabilities.focusMode)&&
+            capabilities.focusMode.indexOf('continuous')!==-1
+          ){
+            advanced.focusMode='continuous';
+          }
+          if(
+            Array.isArray(capabilities.exposureMode)&&
+            capabilities.exposureMode.indexOf('continuous')!==-1
+          ){
+            advanced.exposureMode='continuous';
+          }
+          if(
+            Array.isArray(capabilities.whiteBalanceMode)&&
+            capabilities.whiteBalanceMode.indexOf('continuous')!==-1
+          ){
+            advanced.whiteBalanceMode='continuous';
+          }
+          if(Object.keys(advanced).length){
+            videoTrack.applyConstraints({advanced:[advanced]}).catch(function(){});
+          }
+        }
+      }catch(e){}
       state.perms.cam = true;
       setBadge('badgeCam', true);
       document.getElementById('dotCam').classList.add('on');
@@ -3255,6 +3296,12 @@
     document.getElementById('dotCam').classList.remove('on');
     document.getElementById('statCam').textContent = 'OFF';
     lastHandLandmarks = null;
+    lastHandSeenAt = 0;
+    lastHandVideoTime = -1;
+    lastDetectedHands = [];
+    lastDetectedHandKeys = [];
+    smoothedHandsByKey = {left:null,right:null};
+    lastPrimaryHandKey = null;
     handPinchStates[0].isPinching = false;
     handPinchStates[1].isPinching = false;
     document.getElementById('globalHandCursor').classList.remove('visible','clicking','scrolling','dragging-tab');
@@ -3274,6 +3321,21 @@
   var handTrackingActive = false;
   var handCanvasCtx = null;
   var lastHandLandmarks = null;
+
+  // MediaPipe can miss one or two frames when fingers overlap, lighting
+  // changes, or a hand reaches the edge. Keep the visual track alive briefly
+  // instead of deleting the hand on the first missed frame.
+  var HAND_LOSS_GRACE_MS = 480;
+  var HAND_GESTURE_RELEASE_MS = 170;
+  var HAND_SMOOTH_RESET_MS = 280;
+  var lastHandSeenAt = 0;
+  var lastDetectedHands = [];
+  var lastDetectedHandKeys = [];
+  var smoothedHandsByKey = {left:null,right:null};
+  var lastPrimaryHandKey = null;
+  var lastHandVideoTime = -1;
+  var handTrackingGapActive = false;
+
   var pinchState = { isPinching:false, distance:null };
   var primaryFistTracker = {
     score:0,
@@ -3570,6 +3632,9 @@
     );
     lines.push(
       'Tab drag sensitivity: '+tabDragSensitivity.toFixed(2)+'×'
+    );
+    lines.push(
+      'Tracking recovery: '+HAND_LOSS_GRACE_MS+' ms'
     );
     if(handTrackingActive){
       lines.push('Two pinches resize the active tab. Index + middle up with ring + pinky curled drags the active tab.');
@@ -3889,6 +3954,111 @@
     // No web-view panel target wired up yet — zoom scale is tracked but has no visible effect until that's built.
   }
 
+  function copyHandLandmarks(landmarks){
+    return landmarks.map(function(point){
+      return {
+        x:Number(point.x)||0,
+        y:Number(point.y)||0,
+        z:Number(point.z)||0
+      };
+    });
+  }
+
+  function smoothHandLandmarks(handKey,landmarks,reset){
+    var previous=smoothedHandsByKey[handKey];
+    if(reset||!previous||previous.length!==landmarks.length){
+      var first=copyHandLandmarks(landmarks);
+      smoothedHandsByKey[handKey]=first;
+      return copyHandLandmarks(first);
+    }
+
+    var wristMovement=distance3D(previous[0],landmarks[0]);
+    var movementAlpha=clampNumber(
+      0.46+wristMovement*11,
+      0.46,
+      0.84
+    );
+    var smoothed=landmarks.map(function(point,index){
+      var old=previous[index]||point;
+      return {
+        x:old.x+(point.x-old.x)*movementAlpha,
+        y:old.y+(point.y-old.y)*movementAlpha,
+        z:(old.z||0)+((point.z||0)-(old.z||0))*movementAlpha
+      };
+    });
+    smoothedHandsByKey[handKey]=smoothed;
+    return copyHandLandmarks(smoothed);
+  }
+
+  function releaseGesturesForTrackingGap(){
+    handPinchStates[0].isPinching=false;
+    handPinchStates[1].isPinching=false;
+    handPinchStates[0].contactScore=0;
+    handPinchStates[1].contactScore=0;
+    primaryFistTracker.score=0;
+    primaryFistTracker.active=false;
+    primaryFistTracker.contactCount=0;
+    twoFingerDragTracker.score=0;
+    twoFingerDragTracker.active=false;
+    twoFingerDragTracker.rawPose=false;
+    finishTwoFingerTabDrag();
+    wasFist=false;
+
+    if(twoHandResizeSession&&browseTabs[twoHandResizeSession.tabId]){
+      browseTabs[twoHandResizeSession.tabId].el.style.transition='';
+    }
+    twoHandResizeSession=null;
+    twoHandZoomActive=false;
+    lastTwoHandDistance=null;
+    pinchHoldStart=null;
+    pinchHoldStartY=null;
+    pinchScrollTabId=null;
+    pinchLastScrollAt=0;
+    setPinchActive(false);
+    document.getElementById('globalHandCursor').classList.remove(
+      'clicking',
+      'scrolling',
+      'dragging-tab'
+    );
+  }
+
+  function clearLostHandTracking(){
+    releaseGesturesForTrackingGap();
+    lastHandLandmarks=null;
+    lastDetectedHands=[];
+    lastDetectedHandKeys=[];
+    smoothedHandsByKey={left:null,right:null};
+    lastPrimaryHandKey=null;
+    rawDragSamples=[];
+    lastHandRawPageX=null;
+    lastHandRawPageY=null;
+    handTrackingGapActive=false;
+    document.getElementById('globalHandCursor').classList.remove('visible');
+    clearHandHoverTarget();
+  }
+
+  function drawCachedHandsDuringGap(ctx,mapping,age){
+    if(!lastDetectedHands.length)return;
+    var fade=clampNumber(1-(age/HAND_LOSS_GRACE_MS)*0.42,0.48,1);
+    ctx.save();
+    ctx.globalAlpha=fade;
+    lastDetectedHands.forEach(function(landmarks,index){
+      drawHandSkeleton(
+        ctx,
+        landmarks,
+        mapping,
+        lastDetectedHandKeys[index]||'right'
+      );
+    });
+    ctx.restore();
+
+    var indicator=document.getElementById('pinchIndicator');
+    if(indicator){
+      indicator.classList.add('active');
+      indicator.textContent='TRACKING · REACQUIRING';
+    }
+  }
+
   function getHandKey(results,hIdx){
     try{
       if(
@@ -3945,39 +4115,75 @@
       }
     }
 
+    var trackingNow=performance.now();
     if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
-      lastHandLandmarks = null;
-      handPinchStates[0].isPinching = false;
-      handPinchStates[1].isPinching = false;
-      handPinchStates[0].contactScore = 0;
-      handPinchStates[1].contactScore = 0;
-      primaryFistTracker.score = 0;
-      primaryFistTracker.active = false;
-      primaryFistTracker.contactCount = 0;
-      twoFingerDragTracker.score = 0;
-      twoFingerDragTracker.active = false;
-      twoFingerDragTracker.rawPose = false;
-      finishTwoFingerTabDrag();
-      rawDragSamples = [];
-      lastHandRawPageX = null;
-      lastHandRawPageY = null;
-      wasFist = false;
-      twoHandZoomActive = false;
-      lastTwoHandDistance = null;
-      setPinchActive(false);
-      document.getElementById('globalHandCursor').classList.remove('visible');
-      clearHandHoverTarget();
+      var lostFor=trackingNow-lastHandSeenAt;
+      if(lastDetectedHands.length&&lostFor<=HAND_LOSS_GRACE_MS){
+        handTrackingGapActive=true;
+        drawCachedHandsDuringGap(ctx,mapping,lostFor);
+
+        // Keep the cursor visible through tiny dropouts, but stop active
+        // clicking/scrolling/dragging if the miss lasts more than a moment.
+        if(lostFor>HAND_GESTURE_RELEASE_MS){
+          releaseGesturesForTrackingGap();
+        }
+        return;
+      }
+
+      clearLostHandTracking();
       return;
     }
 
-    var hands = results.multiHandLandmarks;
-    lastHandLandmarks = hands[0];
+    var rawHands=results.multiHandLandmarks.slice(0,2);
+    var handPackets=rawHands.map(function(landmarks,index){
+      return {
+        landmarks:landmarks,
+        key:getHandKey(results,index),
+        sourceIndex:index
+      };
+    });
+
+    if(
+      lastPrimaryHandKey&&
+      handPackets.some(function(packet){
+        return packet.key===lastPrimaryHandKey;
+      })
+    ){
+      handPackets.sort(function(a,b){
+        if(a.key===lastPrimaryHandKey)return -1;
+        if(b.key===lastPrimaryHandKey)return 1;
+        return a.sourceIndex-b.sourceIndex;
+      });
+    }else if(handPackets.length){
+      lastPrimaryHandKey=handPackets[0].key;
+    }
+
+    var resetSmoothing=
+      !lastHandSeenAt||
+      trackingNow-lastHandSeenAt>HAND_SMOOTH_RESET_MS;
+    lastHandSeenAt=trackingNow;
+    handTrackingGapActive=false;
+
+    var handKeys=handPackets.map(function(packet){
+      return packet.key;
+    });
+    var hands=handPackets.map(function(packet){
+      return smoothHandLandmarks(
+        packet.key,
+        packet.landmarks,
+        resetSmoothing
+      );
+    });
+
+    lastDetectedHands=hands.map(copyHandLandmarks);
+    lastDetectedHandKeys=handKeys.slice();
+    lastHandLandmarks=hands[0];
 
     var threshold = pinchThreshold || 0.055;
 
     for(var hIdx = 0; hIdx < Math.min(hands.length, 2); hIdx++){
       var landmarks = hands[hIdx];
-      var handKey = getHandKey(results, hIdx);
+      var handKey = handKeys[hIdx];
       drawHandSkeleton(ctx, landmarks, mapping, handKey);
       if(alignmentCalibration){
         collectAlignmentCalibration(
@@ -4059,8 +4265,18 @@
       var absDx = Math.abs(p2Page.x - p1Page.x);
       var absDy = Math.abs(p2Page.y - p1Page.y);
 
-      var p1Canvas = mapNormalizedPoint(wrist0.x, wrist0.y, mapping, getHandKey(results, 0));
-      var p2Canvas = mapNormalizedPoint(wrist1.x, wrist1.y, mapping, getHandKey(results, 1));
+      var p1Canvas = mapNormalizedPoint(
+        wrist0.x,
+        wrist0.y,
+        mapping,
+        handKeys[0]||'right'
+      );
+      var p2Canvas = mapNormalizedPoint(
+        wrist1.x,
+        wrist1.y,
+        mapping,
+        handKeys[1]||'left'
+      );
       ctx.strokeStyle = 'rgba(58,255,196,0.9)';
       ctx.lineWidth = 3;
       ctx.setLineDash([7,5]);
@@ -4211,8 +4427,9 @@
         },
         runningMode: 'VIDEO',
         numHands: 2,
-        minHandDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.4
+        minHandDetectionConfidence: 0.45,
+        minHandPresenceConfidence: 0.35,
+        minTrackingConfidence: 0.25
       });
     }).then(function(landmarker){
       handsInstance = landmarker;
@@ -4233,12 +4450,25 @@
     var video = document.getElementById('camVideo');
     if(handsInstance && handLandmarkerReady && video.readyState >= 2){
       try{
-        var result = handsInstance.detectForVideo(video, performance.now());
-        var handednessData = result.handednesses || result.handedness || null;
-        onHandResults({
-          multiHandLandmarks: result.landmarks && result.landmarks.length > 0 ? result.landmarks : null,
-          handednesses: handednessData
-        });
+        var videoTime=video.currentTime;
+        if(videoTime!==lastHandVideoTime){
+          lastHandVideoTime=videoTime;
+          var result=handsInstance.detectForVideo(
+            video,
+            performance.now()
+          );
+          var handednessData=
+            result.handednesses||
+            result.handedness||
+            null;
+          onHandResults({
+            multiHandLandmarks:
+              result.landmarks&&result.landmarks.length>0
+                ?result.landmarks
+                :null,
+            handednesses:handednessData
+          });
+        }
       }catch(e){}
     }
     requestAnimationFrame(handFrameLoop);
@@ -4270,6 +4500,13 @@
     twoFingerDragTracker.score=0;
     twoFingerDragTracker.active=false;
     finishTwoFingerTabDrag();
+    lastHandSeenAt=0;
+    lastHandVideoTime=-1;
+    lastDetectedHands=[];
+    lastDetectedHandKeys=[];
+    smoothedHandsByKey={left:null,right:null};
+    lastPrimaryHandKey=null;
+    handTrackingGapActive=false;
     document.getElementById('globalHandCursor').classList.remove(
       'visible',
       'dragging-tab'
@@ -5633,7 +5870,13 @@
   var profileToken = '';
   var profileAuthMode = 'login';
   var profileSyncTimer = null;
-  try{ profileServerUrl=DEFAULT_REMOTE_SERVER; profileUsername=localStorage.getItem(PROFILE_USER_KEY)||''; profileToken=sessionStorage.getItem(PROFILE_TOKEN_KEY)||''; }catch(e){ profileServerUrl=DEFAULT_REMOTE_SERVER; }
+  try{
+    profileServerUrl=localStorage.getItem(PROFILE_SERVER_KEY)||'';
+    profileUsername=localStorage.getItem(PROFILE_USER_KEY)||'';
+    profileToken=sessionStorage.getItem(PROFILE_TOKEN_KEY)||'';
+  }catch(e){
+    profileServerUrl='';
+  }
   try{ manualChats = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || '[]'); if(!Array.isArray(manualChats)) manualChats=[]; }catch(e){ manualChats=[]; }
 
   function saveManualChats(){ try{ localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(manualChats)); }catch(e){} scheduleProfileSync(); }
@@ -5902,37 +6145,233 @@
   try{var savedEffort=localStorage.getItem(CHAT_EFFORT_KEY);if(savedEffort)document.getElementById('chatEffort').value=savedEffort;}catch(e){}
   document.getElementById('chatEffort').addEventListener('change',function(){try{localStorage.setItem(CHAT_EFFORT_KEY,this.value);}catch(e){}});
 
-  function normalizeServerUrl(url){ return (url||'').trim().replace(/\/$/,''); }
-  function profileHeaders(){ return {'Content-Type':'application/json','Authorization':'Bearer '+profileToken}; }
+  function normalizeServerUrl(url){
+    return (url||'').trim().replace(/\/$/,'');
+  }
+
+  function localProfileBaseFromPage(){
+    var hostname=String(location.hostname||'').toLowerCase();
+    if(
+      (hostname==='127.0.0.1'||hostname==='localhost')&&
+      location.port==='5005'
+    ){
+      return normalizeServerUrl(location.origin);
+    }
+    return '';
+  }
+
+  function resolveProfileBase(force){
+    var pageLocal=localProfileBaseFromPage();
+    if(pageLocal)return Promise.resolve(pageLocal);
+
+    return probeLocalResearchBridge(!!force).then(function(base){
+      return normalizeServerUrl(
+        base||
+        profileServerUrl||
+        remoteResearchBase()
+      );
+    });
+  }
+
+  function profileFetchAtBase(base,path,options){
+    base=normalizeServerUrl(base);
+    var isLocal=isLocalResearchBase(base);
+    var requestOptions=Object.assign({},options||{});
+    requestOptions.headers=Object.assign(
+      {},
+      (options&&options.headers)||{}
+    );
+
+    if(isLocal){
+      requestOptions.targetAddressSpace='loopback';
+    }else{
+      requestOptions.headers['ngrok-skip-browser-warning']='true';
+    }
+
+    return fetch(base+path,requestOptions)
+      .then(function(response){
+        response.jarvisProfileBase=base;
+        return response;
+      })
+      .catch(function(){
+        throw new Error(
+          isLocal
+            ?'Could not reach the local profile server. Keep jarvis_browser.py running and open Jarvis from http://127.0.0.1:5005.'
+            :'Could not reach the remote profile server. Start ngrok only when logging in from another computer.'
+        );
+      });
+  }
+
+  function profileFetch(path,options){
+    return resolveProfileBase(false).then(function(base){
+      return profileFetchAtBase(base,path,options).catch(function(error){
+        var remote=normalizeServerUrl(remoteResearchBase());
+        if(isLocalResearchBase(base)&&remote&&remote!==base){
+          return profileFetchAtBase(remote,path,options);
+        }
+        throw error;
+      });
+    });
+  }
+
+  function profileJson(response){
+    return response.text().then(function(raw){
+      var data={};
+      try{
+        data=raw?JSON.parse(raw):{};
+      }catch(e){
+        throw new Error(
+          /^\s*</.test(raw||'')
+            ?'The profile address returned an ngrok webpage instead of the Jarvis API.'
+            :'The profile server returned an unreadable response.'
+        );
+      }
+      return {
+        ok:response.ok,
+        d:data,
+        base:response.jarvisProfileBase
+      };
+    });
+  }
+
+  function profileHeaders(){
+    return {
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+profileToken
+    };
+  }
   function setProfileStatus(text,ok,logged){ var el=document.getElementById(logged?'profileLoggedStatus':'profileStatus'); if(!el)return; el.textContent=text; el.style.color=ok===true?'var(--mint)':ok===false?'var(--amber)':'var(--text-dim)'; }
   function updateProfileUI(){
     var signed=!!(profileServerUrl&&profileUsername&&profileToken);
     document.getElementById('profileAuthForm').classList.toggle('hidden',signed);
     document.getElementById('profileLoggedIn').classList.toggle('on',signed);
     document.getElementById('profileStateDot').classList.toggle('online',signed);
-    document.getElementById('profileServerUrl').value=profileServerUrl||remoteServerUrl||publicTunnelUrl||'http://127.0.0.1:5005';
+    var shownProfileServer=
+      profileServerUrl||
+      localProfileBaseFromPage()||
+      remoteServerUrl||
+      publicTunnelUrl||
+      'http://127.0.0.1:5005';
+    document.getElementById('profileServerUrl').value=shownProfileServer;
     document.getElementById('profileUsername').value=profileUsername||'';
-    if(signed){ document.getElementById('profileDisplayName').textContent=profileUsername.toUpperCase(); document.getElementById('profileSyncInfo').textContent='SYNC SERVER: '+profileServerUrl+'\nChats and Jarvis memory are saved to your account.'; }
+    if(signed){
+      var routeLabel=isLocalResearchBase(profileServerUrl)
+        ?'LOCAL DIRECT'
+        :'REMOTE SYNC';
+      document.getElementById('profileDisplayName').textContent=
+        profileUsername.toUpperCase();
+      document.getElementById('profileSyncInfo').textContent=
+        routeLabel+' · '+profileServerUrl+
+        '\nChats and Jarvis memory are saved to your account.';
+    }
   }
   function openProfileModal(){ document.getElementById('memPanel').classList.remove('settings-open'); document.getElementById('profileModal').classList.add('open'); document.getElementById('profileModal').setAttribute('aria-hidden','false'); updateProfileUI(); }
   function closeProfileModal(){ document.getElementById('profileModal').classList.remove('open'); document.getElementById('profileModal').setAttribute('aria-hidden','true'); }
   function setProfileMode(mode){ profileAuthMode=mode; document.getElementById('profileLoginTab').classList.toggle('active',mode==='login'); document.getElementById('profileRegisterTab').classList.toggle('active',mode==='register'); document.getElementById('profileSubmitBtn').textContent=mode==='login'?'LOG IN':'CREATE ACCOUNT'; document.getElementById('profilePassword').autocomplete=mode==='login'?'current-password':'new-password'; }
   function profileAuthSubmit(){
-    var server=DEFAULT_REMOTE_SERVER;
     var username=document.getElementById('profileUsername').value.trim();
     var password=document.getElementById('profilePassword').value;
-    if(!/^https?:\/\//i.test(server)){setProfileStatus('Enter a full http:// or https:// server address.',false,false);return;}
-    if(username.length<3||password.length<8){setProfileStatus('Username needs 3+ characters and password needs 8+ characters.',false,false);return;}
-    setProfileStatus(profileAuthMode==='login'?'Logging in…':'Creating account…',null,false);
-    fetch(server+'/profile/'+profileAuthMode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,password:password})})
-      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
-      .then(function(x){if(!x.ok)throw new Error(x.d.error||'Account request failed.'); profileServerUrl=server;profileUsername=x.d.username||username;profileToken=x.d.token||'';try{localStorage.setItem(PROFILE_SERVER_KEY,profileServerUrl);localStorage.setItem(PROFILE_USER_KEY,profileUsername);sessionStorage.setItem(PROFILE_TOKEN_KEY,profileToken);}catch(e){}document.getElementById('profilePassword').value='';updateProfileUI();setProfileStatus('Logged in. Loading your synced data…',true,true);return loadProfileData();})
-      .catch(function(e){setProfileStatus(e.message||'Could not reach profile server.',false,false);});
+    if(username.length<3||password.length<8){
+      setProfileStatus(
+        'Username needs 3+ characters and password needs 8+ characters.',
+        false,
+        false
+      );
+      return;
+    }
+
+    setProfileStatus(
+      profileAuthMode==='login'?'Logging in…':'Creating account…',
+      null,
+      false
+    );
+
+    profileFetch('/profile/'+profileAuthMode,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        username:username,
+        password:password
+      })
+    })
+      .then(profileJson)
+      .then(function(x){
+        if(!x.ok){
+          throw new Error(x.d.error||'Account request failed.');
+        }
+        profileServerUrl=x.base;
+        profileUsername=x.d.username||username;
+        profileToken=x.d.token||'';
+        try{
+          localStorage.setItem(PROFILE_SERVER_KEY,profileServerUrl);
+          localStorage.setItem(PROFILE_USER_KEY,profileUsername);
+          sessionStorage.setItem(PROFILE_TOKEN_KEY,profileToken);
+        }catch(e){}
+        document.getElementById('profilePassword').value='';
+        updateProfileUI();
+        setProfileStatus(
+          'Logged in. Loading your synced data…',
+          true,
+          true
+        );
+        return loadProfileData();
+      })
+      .catch(function(e){
+        setProfileStatus(
+          e.message||'Could not reach profile server.',
+          false,
+          false
+        );
+      });
   }
   function collectProfileData(){ return {version:2,chats:manualChats,memory:state.memory,theme:selectedThemeName,font:selectedFontName,effort:document.getElementById('chatEffort').value,updated_at:Date.now()}; }
   function applyProfileData(data){ if(!data||typeof data!=='object')return; if(Array.isArray(data.chats))manualChats=data.chats; if(Array.isArray(data.memory))state.memory=data.memory;if(data.theme){selectedThemeName=data.theme;applyTheme(JARVIS_THEMES.find(function(t){return t.name===selectedThemeName;})||JARVIS_THEMES[0],true);}if(data.font){selectedFontName=data.font;applyFont(selectedFontName,true);}if(data.effort&&['low','medium','high'].includes(data.effort)){document.getElementById('chatEffort').value=data.effort;try{localStorage.setItem(CHAT_EFFORT_KEY,data.effort);}catch(e){}} if(!activeManualChatId||!manualChats.some(function(c){return c.id===activeManualChatId;}))activeManualChatId=manualChats.length?manualChats[0].id:null; try{localStorage.setItem(CHAT_STORE_KEY,JSON.stringify(manualChats));localStorage.setItem(MEM_KEY,JSON.stringify(state.memory));}catch(e){}renderMemory();renderChatHistory();renderManualChat(); }
-  function loadProfileData(){ if(!profileToken)return Promise.resolve(); return fetch(profileServerUrl+'/profile/data',{headers:{'Authorization':'Bearer '+profileToken}}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){if(!x.ok)throw new Error(x.d.error||'Could not load profile.'); if(x.d.data&&Object.keys(x.d.data).length)applyProfileData(x.d.data);else return pushProfileData(); setProfileStatus('Profile synced from server.',true,true);}).catch(function(e){setProfileStatus(e.message,false,true);}); }
-  function pushProfileData(){ if(!profileToken)return Promise.resolve(); return fetch(profileServerUrl+'/profile/data',{method:'POST',headers:profileHeaders(),body:JSON.stringify({data:collectProfileData()})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){if(!x.ok)throw new Error(x.d.error||'Sync failed.');setProfileStatus('Synced just now.',true,true);}).catch(function(e){setProfileStatus(e.message,false,true);}); }
+  function loadProfileData(){
+    if(!profileToken)return Promise.resolve();
+    return profileFetch('/profile/data',{
+      headers:{'Authorization':'Bearer '+profileToken}
+    })
+      .then(profileJson)
+      .then(function(x){
+        if(!x.ok)throw new Error(x.d.error||'Could not load profile.');
+        profileServerUrl=x.base||profileServerUrl;
+        try{
+          localStorage.setItem(PROFILE_SERVER_KEY,profileServerUrl);
+        }catch(e){}
+        updateProfileUI();
+        if(x.d.data&&Object.keys(x.d.data).length){
+          applyProfileData(x.d.data);
+        }else{
+          return pushProfileData();
+        }
+        setProfileStatus('Profile synced from server.',true,true);
+      })
+      .catch(function(e){
+        setProfileStatus(e.message||'Profile sync failed.',false,true);
+      });
+  }
+
+  function pushProfileData(){
+    if(!profileToken)return Promise.resolve();
+    return profileFetch('/profile/data',{
+      method:'POST',
+      headers:profileHeaders(),
+      body:JSON.stringify({data:collectProfileData()})
+    })
+      .then(profileJson)
+      .then(function(x){
+        if(!x.ok)throw new Error(x.d.error||'Sync failed.');
+        profileServerUrl=x.base||profileServerUrl;
+        try{
+          localStorage.setItem(PROFILE_SERVER_KEY,profileServerUrl);
+        }catch(e){}
+        updateProfileUI();
+        setProfileStatus('Synced just now.',true,true);
+      })
+      .catch(function(e){
+        setProfileStatus(e.message||'Sync failed.',false,true);
+      });
+  }
   function scheduleProfileSync(){ if(!profileToken)return; clearTimeout(profileSyncTimer);profileSyncTimer=setTimeout(pushProfileData,900); }
   function logoutProfile(){ profileToken='';try{sessionStorage.removeItem(PROFILE_TOKEN_KEY);}catch(e){}updateProfileUI();setProfileStatus('Logged out. Local chats remain on this PC.',null,false); }
   document.getElementById('profileBtn').addEventListener('click',openProfileModal);
