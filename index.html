@@ -504,6 +504,10 @@
 <div class="settingsPage" data-page="hands">
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">Curl at least 3 fingers into your palm for a fist click. A pinch requires your thumb and index fingertips to touch while still obeying your saved sensitivity.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
 <div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input id="manualPinchSlider" max="0.15" min="0.02" step="0.005" style="width:100%;margin-bottom:12px;" type="range"/>
+<label class="settingsLabel">Two-hand resize sensitivity</label>
+<input id="resizeSensitivitySlider" max="5" min="0.1" step="0.05" style="width:100%;" type="range" value="1"/>
+<div class="statusLine" id="resizeSensitivityValue" style="margin-top:7px;margin-bottom:10px">1.00× · Normal</div>
+<div class="settingsActions" style="margin-bottom:12px"><button class="smallBtn" id="resetResizeSensitivityBtn" type="button">Reset resize speed</button></div>
 <label class="settingsLabel">Alignment controls</label>
 <select class="settingsField" id="alignmentHandSelect"><option value="both">Edit both hands together</option><option value="left">Edit left hand only</option><option value="right">Edit right hand only</option></select>
 <label class="settingsLabel">Skeleton X alignment</label><input id="alignOffsetX" max="80" min="-80" step="1" style="width:100%;" type="range" value="0"/>
@@ -2737,6 +2741,17 @@
     if(savedThreshold) pinchThreshold = parseFloat(savedThreshold);
   }catch(e){}
 
+  var RESIZE_SENSITIVITY_STORAGE = 'jarvis_resize_sensitivity_v1';
+  var resizeSensitivity = 1;
+  try{
+    var savedResizeSensitivity = parseFloat(
+      localStorage.getItem(RESIZE_SENSITIVITY_STORAGE)
+    );
+    if(Number.isFinite(savedResizeSensitivity)){
+      resizeSensitivity = clampNumber(savedResizeSensitivity, 0.1, 5);
+    }
+  }catch(e){}
+
   var HAND_ALIGNMENT_STORAGE = 'jarvis_hand_alignment_v2';
   var LEGACY_ALIGN_STORAGE = 'jarvis_align_offset_v1';
   var handAlignment = {
@@ -2840,6 +2855,50 @@
       updateHandStatus();
     });
 
+    var resizeSlider=document.getElementById('resizeSensitivitySlider');
+    var resizeValue=document.getElementById('resizeSensitivityValue');
+    var resetResize=document.getElementById('resetResizeSensitivityBtn');
+
+    function renderResizeSensitivity(){
+      resizeSlider.value=String(resizeSensitivity);
+      var description='Normal';
+      if(resizeSensitivity<0.35)description='Very precise';
+      else if(resizeSensitivity<0.75)description='Slow';
+      else if(resizeSensitivity<1.35)description='Normal';
+      else if(resizeSensitivity<2.5)description='Fast';
+      else if(resizeSensitivity<4)description='Very fast';
+      else description='Extreme';
+      resizeValue.textContent=
+        resizeSensitivity.toFixed(2)+'× · '+description;
+    }
+
+    resizeSlider.addEventListener('input',function(){
+      resizeSensitivity=clampNumber(
+        parseFloat(resizeSlider.value)||1,
+        0.1,
+        5
+      );
+      try{
+        localStorage.setItem(
+          RESIZE_SENSITIVITY_STORAGE,
+          resizeSensitivity.toString()
+        );
+      }catch(e){}
+      renderResizeSensitivity();
+      updateHandStatus();
+    });
+
+    resetResize.addEventListener('click',function(){
+      resizeSensitivity=1;
+      try{
+        localStorage.setItem(RESIZE_SENSITIVITY_STORAGE,'1');
+      }catch(e){}
+      renderResizeSensitivity();
+      updateHandStatus();
+    });
+
+    renderResizeSensitivity();
+
     var select=document.getElementById('alignmentHandSelect');
     var ox=document.getElementById('alignOffsetX');
     var oy=document.getElementById('alignOffsetY');
@@ -2903,6 +2962,9 @@
     lines.push(
       'Right alignment: X '+Math.round(handAlignment.right.x)+
       ' · Y '+Math.round(handAlignment.right.y)
+    );
+    lines.push(
+      'Resize sensitivity: '+resizeSensitivity.toFixed(2)+'×'
     );
     if(handTrackingActive){
       lines.push('Two pinches resize the newest tab: horizontal spread changes width, vertical spread changes height.');
@@ -3400,14 +3462,20 @@
 
       if(twoHandResizeSession && browseTabs[twoHandResizeSession.tabId]){
         var targetEl = browseTabs[twoHandResizeSession.tabId].el;
-        // Slow gain plus smoothing makes the resize controlled instead of jumpy.
-        var widthChange = (absDx - twoHandResizeSession.startDx) * 0.55;
-        var heightChange = (absDy - twoHandResizeSession.startDy) * 0.55;
+        // Keep a fixed physical dead zone so increasing sensitivity does not
+        // bring camera jitter back. The slider only changes how strongly real
+        // wrist movement changes the panel size.
+        var rawWidthMovement =
+          absDx - twoHandResizeSession.startDx;
+        var rawHeightMovement =
+          absDy - twoHandResizeSession.startDy;
 
-        // A small dead zone prevents camera jitter, while still responding
-        // clearly once the wrists actually move apart or together.
-        if(Math.abs(widthChange) < 9) widthChange = 0;
-        if(Math.abs(heightChange) < 9) heightChange = 0;
+        if(Math.abs(rawWidthMovement) < 16) rawWidthMovement = 0;
+        if(Math.abs(rawHeightMovement) < 16) rawHeightMovement = 0;
+
+        var resizeGain = 0.55 * resizeSensitivity;
+        var widthChange = rawWidthMovement * resizeGain;
+        var heightChange = rawHeightMovement * resizeGain;
 
         var maxW = Math.max(220, window.innerWidth - 12);
         var maxH = Math.max(160, window.innerHeight - 12);
@@ -3421,8 +3489,10 @@
         var resizeIndicator = document.getElementById('pinchIndicator');
         if(resizeIndicator){
           resizeIndicator.classList.add('active');
-          resizeIndicator.textContent = '2 PINCHES · RESIZE ' +
-            Math.round(targetEl.getBoundingClientRect().width) + '×' +
+          resizeIndicator.textContent =
+            '2 PINCHES · RESIZE '+
+            resizeSensitivity.toFixed(2)+'× · '+
+            Math.round(targetEl.getBoundingClientRect().width)+'×'+
             Math.round(targetEl.getBoundingClientRect().height);
         }
       }
