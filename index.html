@@ -472,15 +472,15 @@
             <div id="claudeKeySection" style="margin-top:10px"><input class="settingsField" type="password" id="apiKeyInputClaude" placeholder="sk-ant-..."></div>
             <div id="geminiKeySection" style="display:none;margin-top:10px"><input class="settingsField" type="password" id="apiKeyInputGemini" placeholder="AIza..."></div>
             <div id="localKeySection" style="display:none;margin-top:10px"><input class="settingsField" type="text" id="localModelInput" placeholder="llava:7b"></div>
-            <div id="remoteKeySection" style="display:none;margin-top:10px"><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="remoteServerUrl" placeholder="https://your-current-link.trycloudflare.com"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="remoteAccessCode" type="password" placeholder="Shared code"></div></div></div>
+            <div id="remoteKeySection" style="display:none;margin-top:10px"><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="remoteServerUrl" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly aria-readonly="true"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="remoteAccessCode" type="password" placeholder="Enter the code the owner gives you"></div></div><div class="statusLine" style="margin-top:5px">The ngrok server address is built into Jarvis and cannot be changed.</div></div>
             <div class="settingsActions"><button class="smallBtn" id="saveKeyBtn">Save</button><button class="smallBtn" id="clearKeyBtn">Remove</button><button class="smallBtn" id="testRemoteBtn" style="display:none">Test connection</button></div><div id="keyStatus" class="statusLine"></div>
           </div>
         </div>
         <div class="settingsPage" data-page="server">
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div id="ownerCodeStatus" class="statusLine"></div></div>
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to This Jarvis Server</h3><p class="settingsHint">The server address is already filled in. Enter the access code that the owner gives you, then connect. The access code is not included in this public GitHub file.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="Loading current Cloudflare address…"><div class="statusLine" style="margin-top:5px">This address updates automatically from <code>server.json</code>. The access code is still entered manually.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to This Jarvis Server</h3><p class="settingsHint">The permanent ngrok server address is built into Jarvis. Enter only the access code the owner gives you.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly aria-readonly="true"><div class="statusLine" style="margin-top:5px">This address is locked and cannot be changed by users.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
           <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 17l5 3 5-3V7l-5-3-5 3v10z"/><path d="M7 7l5 3 5-3"/><path d="M12 10v10"/></svg>Cloudflare Quick Tunnel</h3><p class="settingsHint">For internet sharing without giving anyone your IP, run the two commands below in separate terminals. Paste the <code>.trycloudflare.com</code> address here so you can copy it again anytime from settings.</p><div class="settingsGrid"><div><label class="settingsLabel">Start Jarvis server</label><input class="settingsField" id="cloudflareCmdServer" readonly value='python "C:\\Users\\Oguz\\OneDrive\\Desktop\\Games\\jarvis_browser.py"'></div><div><label class="settingsLabel">Start Cloudflare tunnel</label><input class="settingsField" id="cloudflareCmdTunnel" readonly value='cloudflared tunnel --url http://127.0.0.1:5005'></div></div><div class="settingsActions"><button class="smallBtn" id="copyServerRunCmdBtn">Copy server cmd</button><button class="smallBtn" id="copyTunnelCmdBtn">Copy tunnel cmd</button></div><label class="settingsLabel" style="margin-top:10px">Current public tunnel URL</label><div class="codeDisplay"><input class="settingsField" id="cloudflarePublicUrl" placeholder="https://your-name.trycloudflare.com"><button class="smallBtn" id="saveCloudflareUrlBtn">Save</button><button class="smallBtn" id="copyCloudflareUrlBtn">Copy</button><button class="smallBtn" id="clearCloudflareUrlBtn">Clear</button></div><div id="cloudflareStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 17l5 3 5-3V7l-5-3-5 3v10z"/><path d="M7 7l5 3 5-3"/><path d="M12 10v10"/></svg>ngrok Permanent Tunnel</h3><p class="settingsHint">Start the Python bridge, then run <code>ngrok http 5005</code>. Jarvis always connects to the permanent address below.</p><label class="settingsLabel">Permanent server address</label><input class="settingsField" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly aria-readonly="true"><div class="statusLine" style="margin-top:8px">Keep both the Python bridge and ngrok windows open while remote Jarvis is in use.</div><div style="display:none"><input id="cloudflareCmdServer"><input id="cloudflareCmdTunnel"><input id="cloudflarePublicUrl"><button id="copyServerRunCmdBtn"></button><button id="copyTunnelCmdBtn"></button><button id="saveCloudflareUrlBtn"></button><button id="copyCloudflareUrlBtn"></button><button id="clearCloudflareUrlBtn"></button><div id="cloudflareStatus"></div></div></div></div>
         </div>
         <div class="settingsPage" data-page="appearance">
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"/></svg>Color Combinations</h3><p class="settingsHint">Choose a complete Jarvis color system. These dark-interface palettes are curated around cyber, sci-fi, terminal, and accessible high-contrast combinations.</p><div class="appearancePreview"><div class="appearancePreviewTitle">JARVIS INTERFACE PREVIEW</div><div class="appearancePreviewText">Neural core online · systems nominal · theme changes apply instantly.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="themeSearchInput" placeholder="Search 60+ themes"><button class="smallBtn" id="resetThemeBtn" type="button">Reset</button></div><div class="themeGrid" id="themeGrid"></div><div class="statusLine" id="themeStatus"></div></div>
@@ -760,7 +760,7 @@
   var REMOTE_URL_STORAGE = 'jarvis_remote_url_v1';
   var REMOTE_CODE_STORAGE = 'jarvis_remote_code_v1';
   var PUBLIC_TUNNEL_URL_STORAGE = 'jarvis_public_tunnel_url_v1';
-  var DEFAULT_REMOTE_SERVER = '';
+  var DEFAULT_REMOTE_SERVER = 'https://certify-calamity-prodigal.ngrok-free.dev';
   var claudeKey = null, geminiKey = null, localModel = null, remoteServerUrl = null, remoteAccessCode = null, publicTunnelUrl = null;
   var activeProvider = 'claude';
   try{
@@ -768,7 +768,7 @@
     geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || null;
     localModel = localStorage.getItem(LOCAL_MODEL_STORAGE) || null;
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
-    remoteServerUrl = localStorage.getItem(REMOTE_URL_STORAGE) || DEFAULT_REMOTE_SERVER;
+    remoteServerUrl = DEFAULT_REMOTE_SERVER; localStorage.setItem(REMOTE_URL_STORAGE, DEFAULT_REMOTE_SERVER);
     remoteAccessCode = localStorage.getItem(REMOTE_CODE_STORAGE) || null;
     publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || '';
   }catch(e){}
@@ -832,9 +832,9 @@
   }
   document.getElementById('saveKeyBtn').addEventListener('click', function(){
     if(activeProvider === 'remote'){
-      remoteServerUrl = document.getElementById('remoteServerUrl').value.trim().replace(/\/$/, '');
+      remoteServerUrl = DEFAULT_REMOTE_SERVER;
       remoteAccessCode = document.getElementById('remoteAccessCode').value.trim();
-      if(!/^https?:\/\//i.test(remoteServerUrl) || remoteAccessCode.length < 8){ document.getElementById('keyStatus').textContent='Enter a full http:// or https:// address and an access code with at least 8 characters.'; document.getElementById('keyStatus').style.color='var(--amber)'; return; }
+      if(remoteAccessCode.length < 8){ document.getElementById('keyStatus').textContent='Enter an access code with at least 8 characters.'; document.getElementById('keyStatus').style.color='var(--amber)'; return; }
       try{ localStorage.setItem(REMOTE_URL_STORAGE, remoteServerUrl); localStorage.setItem(REMOTE_CODE_STORAGE, remoteAccessCode);  }catch(e){}
       refreshKeyStatus(); return;
     }
@@ -1710,7 +1710,7 @@
       return;
     }
     if(!/^https?:\/\//i.test(url)){
-      statusEl.textContent='Server address must start with https:// or http://. For another network, use the current https://....trycloudflare.com address.';
+      statusEl.textContent='The built-in ngrok server address is unavailable or invalid.';
       statusEl.style.color='var(--amber)';
       return;
     }
@@ -1750,7 +1750,7 @@
     });
   }
   function saveRemoteConnection(url,code){
-    remoteServerUrl=(url||DEFAULT_REMOTE_SERVER).trim().replace(/\/$/,'');
+    remoteServerUrl=DEFAULT_REMOTE_SERVER;
     remoteAccessCode=(code||'').trim();
     try{
       localStorage.setItem(REMOTE_URL_STORAGE,remoteServerUrl);
@@ -1776,44 +1776,24 @@
   function copyTextValue(v,statusEl,msg){ if(!v) return; navigator.clipboard.writeText(v).then(function(){ if(statusEl){statusEl.textContent=msg||'Copied.'; statusEl.style.color='var(--mint)'; }}).catch(function(){ if(statusEl){statusEl.textContent='Copy failed.'; statusEl.style.color='var(--amber)'; }}); }
 
   function loadPublishedTunnelUrl(){
+    DEFAULT_REMOTE_SERVER='https://certify-calamity-prodigal.ngrok-free.dev';
+    remoteServerUrl=DEFAULT_REMOTE_SERVER;
+    publicTunnelUrl=DEFAULT_REMOTE_SERVER;
+    try{
+      localStorage.setItem(REMOTE_URL_STORAGE,DEFAULT_REMOTE_SERVER);
+      localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,DEFAULT_REMOTE_SERVER);
+    }catch(e){}
+    ['serverConnectUrl','remoteServerUrl','cloudflarePublicUrl','profileServerUrl'].forEach(function(id){
+      var input=document.getElementById(id); if(input){input.value=DEFAULT_REMOTE_SERVER; input.readOnly=true;}
+    });
     var status=document.getElementById('serverConnectStatus');
-    return fetch('./server.json?ts='+Date.now(),{cache:'no-store'})
-      .then(function(r){
-        if(!r.ok) throw new Error('server.json returned '+r.status);
-        return r.json();
-      })
-      .then(function(data){
-        var url=((data&&data.server)||'').trim().replace(/\/$/,'');
-        if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(url)){
-          throw new Error('server.json does not contain a valid Quick Tunnel address');
-        }
-        DEFAULT_REMOTE_SERVER=url;
-        remoteServerUrl=url;
-        publicTunnelUrl=url;
-        try{
-          localStorage.setItem(REMOTE_URL_STORAGE,url);
-          localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,url);
-        }catch(e){}
-        var ids=['serverConnectUrl','remoteServerUrl','cloudflarePublicUrl','profileServerUrl'];
-        ids.forEach(function(id){var input=document.getElementById(id);if(input)input.value=url;});
-        if(status){
-          status.textContent='Latest Cloudflare address loaded automatically. Enter the access code the owner gives you.';
-          status.style.color='var(--mint)';
-        }
-        updateBridgeBadge();
-        return url;
-      })
-      .catch(function(err){
-        if(status){
-          status.textContent='Could not load the latest server address automatically: '+err.message;
-          status.style.color='var(--amber)';
-        }
-        return '';
-      });
+    if(status){status.textContent='Permanent ngrok server loaded. Enter the access code to connect.';status.style.color='var(--mint)';}
+    updateBridgeBadge();
+    return Promise.resolve(DEFAULT_REMOTE_SERVER);
   }
-  document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(document.getElementById('remoteServerUrl').value,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
+  document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(DEFAULT_REMOTE_SERVER,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
   document.getElementById('connectRemoteBtn').addEventListener('click',function(){
-    var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');
+    var u=DEFAULT_REMOTE_SERVER;
     var c=document.getElementById('serverConnectCode').value.trim();
     testRemoteConnection(u,c,document.getElementById('serverConnectStatus'),function(validUrl,validCode){
       saveRemoteConnection(validUrl,validCode);
@@ -1825,14 +1805,14 @@
   document.addEventListener('mousedown', function(e){ var p=document.getElementById('memPanel'); var btn=document.getElementById('settingsBtn'); if(p.classList.contains('settings-open') && !p.contains(e.target) && !btn.contains(e.target)){ p.classList.remove('settings-open'); } });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ document.getElementById('memPanel').classList.remove('settings-open'); } });
   var cfInput=document.getElementById('cloudflarePublicUrl'); if(cfInput && publicTunnelUrl) cfInput.value=publicTunnelUrl;
-  if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Paste your current .trycloudflare.com link here if you want quick access later.';
-  var presetRemoteUrl=remoteServerUrl||DEFAULT_REMOTE_SERVER;
-  if(document.getElementById('serverConnectUrl')&&presetRemoteUrl)document.getElementById('serverConnectUrl').value=presetRemoteUrl;
-  if(document.getElementById('remoteServerUrl')&&presetRemoteUrl)document.getElementById('remoteServerUrl').value=presetRemoteUrl;
+  if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Permanent ngrok address is built in.';
+  var presetRemoteUrl=DEFAULT_REMOTE_SERVER;
+  if(document.getElementById('serverConnectUrl')){document.getElementById('serverConnectUrl').value=DEFAULT_REMOTE_SERVER;document.getElementById('serverConnectUrl').readOnly=true;}
+  if(document.getElementById('remoteServerUrl')){document.getElementById('remoteServerUrl').value=DEFAULT_REMOTE_SERVER;document.getElementById('remoteServerUrl').readOnly=true;}
   if(document.getElementById('serverConnectCode'))document.getElementById('serverConnectCode').value='';
   loadPublishedTunnelUrl();
-  document.getElementById('saveCloudflareUrlBtn').addEventListener('click', savePublicTunnelUrl);
-  document.getElementById('clearCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=''; savePublicTunnelUrl(); });
+  document.getElementById('saveCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=DEFAULT_REMOTE_SERVER; });
+  document.getElementById('clearCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=DEFAULT_REMOTE_SERVER; });
   document.getElementById('copyCloudflareUrlBtn').addEventListener('click', function(){ copyTextValue((document.getElementById('cloudflarePublicUrl').value||'').trim(), document.getElementById('cloudflareStatus'), 'Public tunnel URL copied.'); });
   document.getElementById('copyServerRunCmdBtn').addEventListener('click', function(){ copyTextValue(document.getElementById('cloudflareCmdServer').value, document.getElementById('cloudflareStatus'), 'Server command copied.'); });
   document.getElementById('copyTunnelCmdBtn').addEventListener('click', function(){ copyTextValue(document.getElementById('cloudflareCmdTunnel').value, document.getElementById('cloudflareStatus'), 'Tunnel command copied.'); });
@@ -3484,7 +3464,7 @@
     document.getElementById('profileAuthForm').classList.toggle('hidden',signed);
     document.getElementById('profileLoggedIn').classList.toggle('on',signed);
     document.getElementById('profileStateDot').classList.toggle('online',signed);
-    document.getElementById('profileServerUrl').value=profileServerUrl||remoteServerUrl||publicTunnelUrl||'http://127.0.0.1:5005';
+    document.getElementById('profileServerUrl').value=DEFAULT_REMOTE_SERVER;
     document.getElementById('profileUsername').value=profileUsername||'';
     if(signed){ document.getElementById('profileDisplayName').textContent=profileUsername.toUpperCase(); document.getElementById('profileSyncInfo').textContent='SYNC SERVER: '+profileServerUrl+'\nChats and Jarvis memory are saved to your account.'; }
   }
