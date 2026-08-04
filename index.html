@@ -4,7 +4,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>J.A.R.V.I.S.</title>
+<title>J.A.R.V.I.S. V2.2</title>
+<meta name="jarvis-build" content="jarvis-v2.5-neural-voice-20260804"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <script type="module">
@@ -1733,331 +1734,845 @@ body.jarvis-ready #newTabBtn{animation:hudRevealControls .65s .76s both}
 
 
 /* =========================================================
-   ULTIMATE STARTUP UPGRADE + NO FLASH + PERFECT TOP CENTER
+   J.A.R.V.I.S STARTUP V2 — CLEAN, CONCENTRIC, NO-FLASH
    ========================================================= */
 #modeSwitch{
-  left:50% !important;
-  right:auto !important;
-  transform:translate3d(-50%,0,0) !important;
-  margin-left:0 !important;
+  left:50%!important;
+  right:auto!important;
+  margin:0!important;
+  transform:translate3d(-50%,0,0)!important;
   width:max-content;
-}
-@media (max-width:720px){
-  #modeSwitch{
-    left:50% !important;
-    transform:translate3d(-50%,0,0) scale(.98) !important;
-  }
 }
 
 #startGate{
+  overflow:hidden;
+  padding:24px;
+  box-sizing:border-box;
   background:
-    radial-gradient(circle at 50% 41%, rgba(0,229,255,.11), transparent 16%),
-    radial-gradient(circle at 50% 50%, rgba(0,229,255,.06), transparent 28%),
-    radial-gradient(circle at 50% 58%, rgba(255,120,0,.05), transparent 46%),
-    linear-gradient(180deg, rgba(5,15,18,.96), rgba(1,5,7,.985));
+    radial-gradient(circle at 50% 42%,rgba(0,229,255,.12),transparent 18%),
+    radial-gradient(circle at 50% 54%,rgba(255,132,0,.045),transparent 42%),
+    linear-gradient(145deg,#010405,#02090b 54%,#041316);
+  transition:opacity .42s ease,filter .42s ease,transform .55s cubic-bezier(.16,1,.3,1);
 }
-#startGate::before{
-  opacity:.26 !important;
+#startGate.launching{
+  opacity:0;
+  filter:blur(12px) brightness(1.25);
+  transform:scale(1.035);
+  pointer-events:none;
 }
-#startGate::after{
-  opacity:.88;
-}
-#startGate .startGateVisual{
-  position:relative;
-  width:min(520px,72vw);
-  height:min(520px,72vw);
-  max-width:520px;
-  max-height:520px;
-  margin-bottom:2px;
-  display:grid;
-  place-items:center;
-}
-#startGate .startGateCoreRing,
-#startGate .startGateCoreRingB,
-#startGate .startGateCoreRingC{
+.startV2Backdrop{
   position:absolute;
-  border:1px solid rgba(0,229,255,.20);
-  border-radius:50%;
+  inset:-20%;
+  opacity:.24;
+  background-image:
+    linear-gradient(rgba(0,229,255,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.07) 1px,transparent 1px);
+  background-size:46px 46px;
+  transform:perspective(900px) rotateX(63deg) translateY(17%);
+  transform-origin:center bottom;
+  animation:startV2Grid 9s linear infinite;
 }
-#startGate .startGateCoreRing{
-  inset:8%;
-  box-shadow:0 0 55px rgba(0,229,255,.08), inset 0 0 40px rgba(0,229,255,.04);
-  animation:startCoreRotate 14s linear infinite;
-}
-#startGate .startGateCoreRingB{
-  inset:18%;
-  border-style:dashed;
-  animation:startCoreRotateReverse 11s linear infinite;
-}
-#startGate .startGateCoreRingC{
-  inset:30%;
-  opacity:.7;
-  animation:startCorePulse 2.8s ease-in-out infinite;
-}
-#startGate .startGateCrosshairH,
-#startGate .startGateCrosshairV{
+@keyframes startV2Grid{to{background-position:46px 46px}}
+.startV2Scan{
   position:absolute;
-  background:linear-gradient(90deg, transparent, rgba(0,229,255,.44), transparent);
-  opacity:.55;
+  left:0;
+  right:0;
+  top:-15%;
+  height:17%;
+  opacity:.48;
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.12),rgba(58,255,196,.025),transparent);
+  animation:startV2Scan 2.7s linear infinite;
 }
-#startGate .startGateCrosshairH{
-  width:100%;
-  height:1px;
-}
-#startGate .startGateCrosshairV{
-  width:1px;
-  height:100%;
-  background:linear-gradient(180deg, transparent, rgba(0,229,255,.44), transparent);
-}
-#startGate .startGateReactor{
-  position:relative;
-  width:132px;
-  height:132px;
-  border-radius:50%;
-  border:1px solid rgba(0,229,255,.40);
-  box-shadow:
-    0 0 0 14px rgba(0,229,255,.03),
-    0 0 0 34px rgba(0,229,255,.02),
-    0 0 65px rgba(0,229,255,.18),
-    inset 0 0 34px rgba(0,229,255,.07);
-  background:
-    radial-gradient(circle, rgba(255,255,255,.95) 0 4px, transparent 5px),
-    radial-gradient(circle, rgba(255,120,0,.82) 0 10px, transparent 11px),
-    radial-gradient(circle, rgba(0,229,255,.22), rgba(0,0,0,0) 66%);
-  animation:startCorePulse 2.4s ease-in-out infinite;
-}
-#startGate .startGateReactor::before,
-#startGate .startGateReactor::after{
-  content:'';
+@keyframes startV2Scan{to{top:110%}}
+.startV2Noise{
   position:absolute;
-  inset:18px;
-  border-radius:50%;
-  border:2px solid rgba(255,120,0,.78);
-  border-top-color:transparent;
-  border-left-color:transparent;
-}
-#startGate .startGateReactor::before{
-  animation:startCoreRotate 3.5s linear infinite;
-}
-#startGate .startGateReactor::after{
-  inset:34px;
-  border-color:rgba(0,229,255,.88);
-  border-right-color:transparent;
-  border-bottom-color:transparent;
-  animation:startCoreRotateReverse 4.2s linear infinite;
-}
-#startGate .startGateKicker{
-  font:10px 'JetBrains Mono', monospace;
-  letter-spacing:3px;
-  color:var(--amber);
-  opacity:.88;
-  margin-top:-6px;
-}
-#startGate .startGateHint{
-  font:10px 'JetBrains Mono', monospace;
-  letter-spacing:2.7px;
-  color:#87a8ad;
-  margin-top:-6px;
-}
-#startGate #bootLogo{
-  margin-top:-4px;
-}
-#startGate h1{
-  font-size:13px;
-  letter-spacing:5.5px;
-  margin-top:-8px;
-}
-#startGate p{
-  max-width:640px;
-}
-#startGate .startBtn{
-  margin-top:4px;
-}
-
-@keyframes startCoreRotate{to{transform:rotate(360deg)}}
-@keyframes startCoreRotateReverse{to{transform:rotate(-360deg)}}
-@keyframes startCorePulse{
-  0%,100%{transform:scale(1);filter:brightness(1)}
-  50%{transform:scale(1.038);filter:brightness(1.18)}
-}
-
-#bootOverlay{
-  background:
-    radial-gradient(circle at 50% 48%, rgba(0,229,255,.10), transparent 18%),
-    radial-gradient(circle at 50% 50%, rgba(255,120,0,.05), transparent 34%),
-    linear-gradient(180deg, rgba(4,13,16,.98), rgba(1,5,7,.99));
-}
-#bootOverlay .bootDataRain,
-#bootOverlay .bootParticles,
-#bootOverlay .bootHudTop,
-#bootOverlay .bootTerminal{
-  position:absolute;
-}
-#bootOverlay .bootDataRain{
   inset:0;
+  opacity:.04;
   pointer-events:none;
-  overflow:hidden;
-  opacity:.18;
-  z-index:-2;
+  background-image:repeating-radial-gradient(circle at 35% 45%,#fff 0 1px,transparent 1px 4px);
+  mix-blend-mode:screen;
 }
-#bootOverlay .bootDataRain span{
+.startV2Corner{
   position:absolute;
-  top:-120%;
-  color:rgba(0,229,255,.32);
-  font:10px/1 'JetBrains Mono', monospace;
-  letter-spacing:1px;
-  white-space:nowrap;
-  animation:bootRainFall var(--rainDur,8s) linear infinite;
-  animation-delay:var(--rainDelay,0s);
+  width:34px;
+  height:34px;
+  border-color:rgba(0,229,255,.38);
 }
-@keyframes bootRainFall{
-  to{transform:translateY(240vh)}
-}
-#bootOverlay .bootParticles{
-  inset:0;
-  pointer-events:none;
-  overflow:hidden;
-  z-index:-1;
-}
-#bootOverlay .bootParticles i{
+.startV2CornerTL{top:18px;left:18px;border-top:1px solid;border-left:1px solid}
+.startV2CornerTR{top:18px;right:18px;border-top:1px solid;border-right:1px solid}
+.startV2CornerBL{bottom:18px;left:18px;border-bottom:1px solid;border-left:1px solid}
+.startV2CornerBR{bottom:18px;right:18px;border-bottom:1px solid;border-right:1px solid}
+.startV2Topline{
   position:absolute;
-  bottom:-8%;
-  width:var(--psize,2px);
-  height:var(--psize,2px);
-  border-radius:50%;
-  background:rgba(0,229,255,.75);
-  box-shadow:0 0 10px rgba(0,229,255,.55);
-  animation:bootParticleRise var(--pdur,4.8s) linear infinite;
-  animation-delay:var(--pdelay,0s);
-}
-@keyframes bootParticleRise{
-  0%{transform:translate3d(0,0,0) scale(.8);opacity:0}
-  10%{opacity:.9}
-  100%{transform:translate3d(var(--pdrift,0px),-115vh,0) scale(1.4);opacity:0}
-}
-#bootOverlay .bootHudTop{
-  top:4.5%;
-  left:5.5%;
-  right:5.5%;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:24px;
-  z-index:3;
-  pointer-events:none;
-}
-#bootOverlay .bootHudIdentity{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-#bootOverlay .bootHudMini{
-  color:#8caeb2;
-  font:10px 'JetBrains Mono', monospace;
-  letter-spacing:2.3px;
-}
-#bootOverlay .bootHudName{
-  color:#efffff;
-  font:700 clamp(26px,4vw,44px) 'Orbitron', sans-serif;
-  letter-spacing:10px;
-  text-shadow:0 0 22px rgba(0,229,255,.18);
-}
-#bootOverlay .bootHudSub{
-  color:var(--amber);
-  font:11px 'JetBrains Mono', monospace;
-  letter-spacing:2.7px;
-}
-#bootOverlay .bootHudMetrics{
-  display:grid;
-  grid-template-columns:repeat(3,max-content);
-  gap:10px 18px;
-  justify-items:end;
-}
-#bootOverlay .bootHudMetrics span{
-  color:#8caeb2;
-  font:10px 'JetBrains Mono', monospace;
-  letter-spacing:1.7px;
-}
-#bootOverlay .bootHudMetrics b{
-  color:#efffff;
-  margin-left:6px;
-  font-weight:700;
-}
-#bootOverlay .bootTerminal{
-  left:5.8%;
-  right:5.8%;
-  bottom:8.5%;
-  min-height:74px;
-  max-height:108px;
-  border:1px solid rgba(0,229,255,.18);
-  background:linear-gradient(180deg, rgba(4,14,17,.72), rgba(2,8,10,.92));
-  box-shadow:0 0 32px rgba(0,0,0,.26), inset 0 0 0 1px rgba(255,255,255,.015);
-  padding:10px 14px 12px;
-  overflow:hidden;
-  backdrop-filter:blur(8px);
-  z-index:3;
-}
-#bootOverlay .bootTerminalHead{
+  top:24px;
+  left:32px;
+  right:32px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  margin-bottom:7px;
-}
-#bootOverlay .bootTerminalHead span,
-#bootOverlay .bootTerminalHead b{
-  font:10px 'JetBrains Mono', monospace;
+  color:#769da1;
+  font:8px 'JetBrains Mono',monospace;
   letter-spacing:2px;
 }
-#bootOverlay .bootTerminalHead span{color:#86a8ac}
-#bootOverlay .bootTerminalHead b{color:var(--amber)}
-#bootOverlay .bootTerminalBody{
+.startV2Topline span{display:flex;align-items:center;gap:8px}
+.startV2Topline i{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--mint);box-shadow:0 0 10px var(--mint);
+}
+.startV2Visual{
+  position:relative;
+  flex:0 0 auto;
+  width:min(46vh,440px);
+  height:min(46vh,440px);
+  min-width:280px;
+  min-height:280px;
+  display:block;
+  margin-top:-8px;
+}
+.startV2Ring,
+.startV2Crosshair,
+.startV2Orbit,
+.startV2Reactor{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform-origin:center center;
+}
+.startV2Ring{
+  width:var(--ring-size);
+  height:var(--ring-size);
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:1px solid rgba(0,229,255,var(--ring-alpha,.19));
+}
+.startV2Ring1{--ring-size:100%;--ring-alpha:.20}
+.startV2Ring2{--ring-size:76%;--ring-alpha:.16;border-style:dashed;animation:startV2Spin 18s linear infinite}
+.startV2Ring3{--ring-size:52%;--ring-alpha:.24;box-shadow:0 0 32px rgba(0,229,255,.05),inset 0 0 25px rgba(0,229,255,.03)}
+.startV2Ring4{--ring-size:33%;--ring-alpha:.34;border-color:rgba(255,132,0,.45)}
+@keyframes startV2Spin{
+  from{transform:translate(-50%,-50%) rotate(0)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+.startV2CrosshairH{
+  width:112%;height:1px;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.38),transparent);
+}
+.startV2CrosshairV{
+  width:1px;height:112%;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.38),transparent);
+}
+.startV2Orbit{
+  width:88%;height:88%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  animation:startV2Orbit 10s linear infinite;
+}
+.startV2Orbit2{width:64%;height:64%;animation-duration:7s;animation-direction:reverse}
+@keyframes startV2Orbit{
+  from{transform:translate(-50%,-50%) rotate(0)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+.startV2Orbit i{
+  position:absolute;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 12px var(--cyan);
+}
+.startV2Orbit1 i:nth-child(1){left:9%;top:22%}
+.startV2Orbit1 i:nth-child(2){right:7%;bottom:28%}
+.startV2Orbit1 i:nth-child(3){left:50%;top:-3px}
+.startV2Orbit2 i:nth-child(1){right:3%;top:36%}
+.startV2Orbit2 i:nth-child(2){left:11%;bottom:19%}
+.startV2Reactor{
+  width:126px;height:126px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:1px solid rgba(0,229,255,.48);
+  background:radial-gradient(circle,rgba(0,229,255,.12),rgba(0,0,0,0) 66%);
+  box-shadow:
+    0 0 0 12px rgba(0,229,255,.025),
+    0 0 0 28px rgba(0,229,255,.013),
+    0 0 52px rgba(0,229,255,.18),
+    inset 0 0 30px rgba(0,229,255,.07);
+  animation:startV2Pulse 2.4s ease-in-out infinite;
+}
+@keyframes startV2Pulse{50%{filter:brightness(1.28);box-shadow:0 0 0 14px rgba(0,229,255,.035),0 0 0 30px rgba(0,229,255,.018),0 0 75px rgba(0,229,255,.28),inset 0 0 34px rgba(0,229,255,.11)}}
+.startV2ReactorArc{
+  position:absolute;
+  left:50%;top:50%;
+  border-radius:50%;
+  border:2px solid var(--cyan);
+  transform-origin:center;
+}
+.startV2ReactorArc1{width:86px;height:86px;transform:translate(-50%,-50%);border-left-color:transparent;animation:startV2Spin 3.2s linear infinite}
+.startV2ReactorArc2{width:61px;height:61px;transform:translate(-50%,-50%);border-top-color:transparent;border-color:var(--amber);animation:startV2SpinReverse 4s linear infinite}
+.startV2ReactorArc3{width:36px;height:36px;transform:translate(-50%,-50%);border-right-color:transparent;animation:startV2Spin 2.3s linear infinite}
+@keyframes startV2SpinReverse{
+  from{transform:translate(-50%,-50%) rotate(360deg)}
+  to{transform:translate(-50%,-50%) rotate(0)}
+}
+.startV2ReactorCenter{
+  position:absolute;left:50%;top:50%;width:13px;height:13px;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:#efffff;box-shadow:0 0 8px #fff,0 0 20px var(--cyan),0 0 40px rgba(0,229,255,.5);
+}
+.startV2Identity{
+  position:relative;
+  z-index:3;
   display:flex;
   flex-direction:column;
-  gap:3px;
+  align-items:center;
+  max-width:780px;
+  text-align:center;
+  margin-top:-16px;
 }
-#bootOverlay .bootLogLine{
-  display:grid;
-  grid-template-columns:max-content 1fr max-content;
+.startV2Eyebrow{
+  color:var(--amber);
+  font:9px 'JetBrains Mono',monospace;
+  letter-spacing:4px;
+}
+#startGate #bootLogo{
+  margin-top:10px;
+  color:#efffff;
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(34px,6vw,66px);
+  font-weight:700;
+  letter-spacing:clamp(9px,1.7vw,20px);
+  text-shadow:0 0 10px rgba(0,229,255,.75),0 0 44px rgba(0,229,255,.3);
+}
+#startGate h1{
+  margin:7px 0 0;
+  color:var(--amber);
+  font:700 12px 'Orbitron',sans-serif;
+  letter-spacing:5px;
+}
+#startGate p{
+  margin:13px 0 0;
+  max-width:650px;
+  color:#8db7bc;
+  font:14px/1.5 'Rajdhani',sans-serif;
+}
+#startGate #secWarning{
+  margin-top:10px;
+  max-width:650px;
+  color:var(--amber);
+  font:10px/1.5 'JetBrains Mono',monospace;
+}
+.startBtn{
+  position:relative;
+  overflow:hidden;
+  min-width:270px;
+  margin-top:18px;
+  padding:15px 30px;
+  border:1px solid rgba(0,229,255,.56);
+  background:linear-gradient(145deg,rgba(0,229,255,.10),rgba(58,255,196,.035));
+  color:#dffeff;
+  box-shadow:0 18px 50px rgba(0,0,0,.32),inset 0 0 26px rgba(0,229,255,.03);
+}
+.startBtn span{position:relative;z-index:2}
+.startBtn i{
+  position:absolute;
+  top:0;bottom:0;left:-42%;width:32%;
+  background:linear-gradient(90deg,transparent,rgba(235,255,255,.42),transparent);
+  transform:skewX(-18deg);
+  animation:startV2ButtonSweep 2.6s ease-in-out infinite;
+}
+@keyframes startV2ButtonSweep{
+  0%,42%{left:-42%;opacity:0}
+  64%{opacity:1}
+  100%{left:122%;opacity:0}
+}
+.startV2Hint{
+  margin-top:10px;
+  color:#5e858a;
+  font:7px 'JetBrains Mono',monospace;
+  letter-spacing:2.5px;
+}
+
+/* BOOT OVERLAY */
+#bootOverlay{
+  overflow:hidden;
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 50% 48%,rgba(0,229,255,.105),transparent 17%),
+    radial-gradient(circle at 50% 50%,rgba(255,132,0,.04),transparent 37%),
+    linear-gradient(145deg,#010405,#02090b 48%,#041316);
+  transition:opacity .85s ease,filter .85s ease,transform .95s cubic-bezier(.16,1,.3,1);
+}
+#bootOverlay.boot-v2-prime{display:flex!important;opacity:1!important}
+#bootOverlay.boot-v2-departing{
+  opacity:0!important;
+  filter:blur(9px) brightness(1.5);
+  transform:scale(1.035);
+}
+.bootV2Backdrop{
+  position:absolute;inset:-20%;z-index:-5;opacity:.22;
+  background-image:
+    linear-gradient(rgba(0,229,255,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.07) 1px,transparent 1px);
+  background-size:48px 48px;
+  transform:perspective(860px) rotateX(62deg) translateY(17%);
+  transform-origin:center bottom;
+  animation:bootV2Grid 7.5s linear infinite;
+}
+@keyframes bootV2Grid{to{background-position:48px 48px}}
+.bootV2Grid{
+  position:absolute;inset:0;z-index:-4;opacity:.08;
+  background:
+    linear-gradient(90deg,transparent 49.9%,rgba(0,229,255,.18) 50%,transparent 50.1%),
+    linear-gradient(transparent 49.9%,rgba(0,229,255,.18) 50%,transparent 50.1%);
+}
+.bootV2DataRain{
+  position:absolute;inset:0;z-index:-3;overflow:hidden;opacity:.13;pointer-events:none;
+}
+.bootV2DataRain span{
+  position:absolute;top:-120%;white-space:nowrap;
+  color:rgba(0,229,255,.34);
+  font:9px/1 'JetBrains Mono',monospace;
+  animation:bootV2Rain var(--rain-duration,8s) linear infinite;
+  animation-delay:var(--rain-delay,0s);
+}
+@keyframes bootV2Rain{to{transform:translateY(240vh)}}
+.bootV2Particles{
+  position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;
+}
+.bootV2Particles i{
+  position:absolute;bottom:-6%;
+  width:var(--particle-size,2px);height:var(--particle-size,2px);
+  border-radius:50%;background:rgba(0,229,255,.8);
+  box-shadow:0 0 10px rgba(0,229,255,.55);
+  animation:bootV2Particle var(--particle-duration,5s) linear infinite;
+  animation-delay:var(--particle-delay,0s);
+}
+@keyframes bootV2Particle{
+  0%{transform:translate3d(0,0,0);opacity:0}
+  12%{opacity:.9}
+  100%{transform:translate3d(var(--particle-drift,0px),-112vh,0);opacity:0}
+}
+.bootV2Scan{
+  position:absolute;left:0;right:0;top:-14%;height:17%;z-index:10;pointer-events:none;
+  opacity:.38;background:linear-gradient(180deg,transparent,rgba(0,229,255,.12),rgba(58,255,196,.03),transparent);
+  animation:bootV2Scan 2.05s linear infinite;
+}
+@keyframes bootV2Scan{to{top:109%}}
+.bootV2Vignette{
+  position:absolute;inset:0;z-index:20;pointer-events:none;
+  box-shadow:inset 0 0 165px rgba(0,0,0,.82),inset 0 0 34px rgba(0,229,255,.045);
+}
+.bootV2Flash{
+  position:absolute;inset:0;z-index:18;opacity:0;pointer-events:none;
+  background:#dffeff;
+}
+#bootOverlay.boot-v2-complete .bootV2Flash{animation:bootV2Flash .65s ease-out}
+@keyframes bootV2Flash{0%{opacity:0}22%{opacity:.38}100%{opacity:0}}
+.bootV2Header{
+  position:absolute;top:4.5%;left:5%;right:5%;z-index:4;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+}
+.bootV2HeaderIdentity{display:flex;flex-direction:column;gap:5px}
+.bootV2HeaderIdentity span{color:#779da1;font:8px 'JetBrains Mono',monospace;letter-spacing:2.2px}
+.bootV2HeaderIdentity b{color:#efffff;font:700 clamp(18px,2.8vw,31px) 'Orbitron',sans-serif;letter-spacing:5px}
+.bootV2Metrics{display:grid;grid-template-columns:repeat(3,max-content);gap:9px 18px}
+.bootV2Metrics span{color:#769ca0;font:8px 'JetBrains Mono',monospace;letter-spacing:1.5px}
+.bootV2Metrics b{color:#efffff;margin-left:5px}
+.bootV2Side{
+  position:absolute;top:50%;z-index:4;
+  width:min(250px,21vw);
+  display:flex;flex-direction:column;gap:7px;
+  opacity:0;transition:opacity .45s ease,transform .65s cubic-bezier(.16,1,.3,1);
+}
+.bootV2SideLeft{left:5%;transform:translate(-32px,-50%)}
+.bootV2SideRight{right:5%;transform:translate(32px,-50%)}
+#bootOverlay.boot-v2-engaged .bootV2Side{opacity:1;transform:translate(0,-50%)}
+.bootV2SideTitle{margin-bottom:6px;color:var(--cyan);font:8px 'JetBrains Mono',monospace;letter-spacing:2.5px}
+.bootNode{
+  min-height:37px;display:grid;grid-template-columns:7px 1fr auto;align-items:center;gap:8px;
+  padding:0 9px;border:1px solid rgba(0,229,255,.12);
+  background:linear-gradient(145deg,rgba(0,229,255,.033),rgba(255,255,255,.008));
+  color:#6e9397;font:7px 'JetBrains Mono',monospace;letter-spacing:1px;
+  transition:.28s;
+}
+.bootNode i{width:6px;height:6px;border-radius:50%;background:#294246;transition:.28s}
+.bootNode b{color:#55777b;font-weight:500}
+.bootNode.active{
+  transform:translateX(4px);border-color:rgba(0,229,255,.58);
+  background:rgba(0,229,255,.09);color:#e2feff;
+  box-shadow:0 0 22px rgba(0,229,255,.08);
+}
+.bootV2SideRight .bootNode.active{transform:translateX(-4px)}
+.bootNode.active i{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.bootNode.active b{color:var(--cyan)}
+.bootNode.complete{border-color:rgba(58,255,196,.20);color:#a9ddd6}
+.bootNode.complete i{background:var(--mint);box-shadow:0 0 9px rgba(58,255,196,.55)}
+.bootNode.complete b{color:var(--mint)}
+#bootStageLabel{
+  position:absolute;top:13%;left:50%;z-index:5;transform:translateX(-50%);
+  padding:6px 13px;border:1px solid rgba(0,229,255,.18);
+  background:rgba(3,12,15,.68);color:#80b9be;
+  font:7px 'JetBrains Mono',monospace;letter-spacing:3px;
+}
+.bootV2CoreScene{
+  position:relative;
+  width:min(47vh,440px);height:min(47vh,440px);
+  min-width:300px;min-height:300px;
+  opacity:0;transform:scale(.76);
+  transition:opacity .5s ease,transform .8s cubic-bezier(.16,1,.3,1);
+}
+#bootOverlay.boot-v2-engaged .bootV2CoreScene{opacity:1;transform:scale(1)}
+.bootV2Ring,
+.bootV2Crosshair,
+.bootV2Orbit,
+.bootV2Shockwave,
+.bootV2Bloom,
+#coreWrap{
+  position:absolute;left:50%;top:50%;transform-origin:center center;
+}
+.bootV2Ring{
+  width:var(--boot-ring-size);height:var(--boot-ring-size);
+  transform:translate(-50%,-50%);border-radius:50%;
+  border:1px solid rgba(0,229,255,var(--boot-ring-alpha,.16));
+}
+.bootV2Ring1{--boot-ring-size:100%;--boot-ring-alpha:.18}
+.bootV2Ring2{--boot-ring-size:82%;--boot-ring-alpha:.13;border-style:dashed;animation:bootV2Spin 17s linear infinite}
+.bootV2Ring3{--boot-ring-size:66%;--boot-ring-alpha:.18;animation:bootV2SpinReverse 12s linear infinite}
+.bootV2Ring4{--boot-ring-size:50%;--boot-ring-alpha:.26;border-color:rgba(255,132,0,.38)}
+.bootV2Ring5{--boot-ring-size:35%;--boot-ring-alpha:.34}
+@keyframes bootV2Spin{
+  from{transform:translate(-50%,-50%) rotate(0)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@keyframes bootV2SpinReverse{
+  from{transform:translate(-50%,-50%) rotate(360deg)}
+  to{transform:translate(-50%,-50%) rotate(0)}
+}
+.bootV2CrosshairH{
+  width:116%;height:1px;transform:translate(-50%,-50%);
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.34),transparent);
+}
+.bootV2CrosshairV{
+  width:1px;height:116%;transform:translate(-50%,-50%);
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.34),transparent);
+}
+.bootV2Orbit{
+  width:90%;height:90%;transform:translate(-50%,-50%);
+  border-radius:50%;animation:bootV2Spin 9s linear infinite;
+}
+.bootV2Orbit2{width:71%;height:71%;animation:bootV2SpinReverse 6.8s linear infinite}
+.bootV2Orbit i{
+  position:absolute;width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 12px var(--cyan);
+}
+.bootV2Orbit1 i:nth-child(1){left:8%;top:24%}
+.bootV2Orbit1 i:nth-child(2){right:7%;bottom:26%}
+.bootV2Orbit1 i:nth-child(3){left:50%;top:-3px}
+.bootV2Orbit2 i:nth-child(1){right:2%;top:38%}
+.bootV2Orbit2 i:nth-child(2){left:10%;bottom:20%}
+.bootV2Shockwave{
+  width:35%;height:35%;transform:translate(-50%,-50%);
+  border:1px solid rgba(0,229,255,.35);border-radius:50%;opacity:0;
+}
+#bootOverlay[data-boot-stage="6"] .bootV2Shockwave,
+#bootOverlay[data-boot-stage="12"] .bootV2Shockwave{animation:bootV2Shock 1s ease-out}
+@keyframes bootV2Shock{
+  0%{opacity:.8;transform:translate(-50%,-50%) scale(.7)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(3.1)}
+}
+.bootV2Bloom{
+  width:34%;height:34%;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(circle,var(--cyan),rgba(0,229,255,.13) 38%,transparent 72%);
+  filter:blur(18px);opacity:.24;animation:bootV2Bloom 1.8s ease-in-out infinite;
+}
+@keyframes bootV2Bloom{50%{transform:translate(-50%,-50%) scale(1.28);opacity:.44}}
+#coreWrap{
+  width:250px;height:250px;transform:translate(-50%,-50%);
+  z-index:5;transition:filter .35s ease,transform .35s ease;
+}
+#coreSvg{filter:drop-shadow(0 0 14px rgba(0,229,255,.12))}
+#coreTriangleOuter,#coreTriangleInner{opacity:.18}
+.bootV2Monogram{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:#efffff;font:700 18px 'Orbitron',sans-serif;
+  text-shadow:0 0 12px var(--cyan);
+}
+#coreWrap.boot-energy-1{filter:brightness(.72)}
+#coreWrap.boot-energy-2{filter:brightness(.82)}
+#coreWrap.boot-energy-3{filter:brightness(.92)}
+#coreWrap.boot-energy-4{filter:brightness(1)}
+#coreWrap.boot-energy-5{filter:brightness(1.08)}
+#coreWrap.boot-energy-6{filter:brightness(1.15) drop-shadow(0 0 12px var(--cyan-glow))}
+#coreWrap.boot-energy-7{filter:brightness(1.22) drop-shadow(0 0 16px var(--cyan-glow))}
+#coreWrap.boot-energy-8{filter:brightness(1.28) drop-shadow(0 0 20px var(--cyan-glow))}
+#coreWrap.boot-energy-9{filter:brightness(1.34) drop-shadow(0 0 24px var(--cyan-glow))}
+#coreWrap.boot-energy-10{filter:brightness(1.4) drop-shadow(0 0 28px var(--cyan-glow))}
+#coreWrap.boot-energy-11{filter:brightness(1.46) drop-shadow(0 0 32px var(--cyan-glow))}
+#coreWrap.boot-energy-12{filter:brightness(1.58) drop-shadow(0 0 40px var(--cyan-glow));transform:translate(-50%,-50%) scale(1.07)}
+#coreWrap.boot-active #coreOuterRing{animation:coreSpin 1.8s linear infinite;transform-origin:150px 150px}
+#coreWrap.boot-active #coreRing1{animation:coreSpinRev 1.35s linear infinite;transform-origin:150px 150px}
+#coreWrap.boot-active #coreRing2{animation:coreSpin 2.15s linear infinite;transform-origin:150px 150px}
+#coreWrap.boot-active #coreOuterRing,
+#coreWrap.boot-active #coreRing1,
+#coreWrap.boot-active #coreRing2,
+#coreWrap.boot-active #coreInner,
+#coreWrap.boot-active #coreSpokes line,
+#coreWrap.boot-active #coreTriangleOuter,
+#coreWrap.boot-active #coreTriangleInner{stroke:var(--cyan)}
+#coreWrap.boot-energy-12 #coreCenter{fill:#efffff;animation:centerPulse .55s ease-in-out infinite}
+
+#bootText{
+  margin-top:5px;color:#efffff;
+  font:700 12px 'Orbitron',sans-serif;letter-spacing:4px;
+  text-shadow:0 0 14px rgba(0,229,255,.32);
+}
+#bootSub{
+  width:min(680px,80vw);min-height:18px;margin-top:9px;
+  text-align:center;color:#91c6cb;
+  font:9px 'JetBrains Mono',monospace;letter-spacing:1.5px;
+  transition:opacity .12s,transform .12s;
+}
+.bootTextSwap{opacity:0!important;transform:translateY(5px)!important}
+#bootProgress{
+  width:min(470px,70vw);height:5px;margin-top:20px;
+  overflow:hidden;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.025);
+}
+#bootProgressFill{
+  width:0;height:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--mint));
+  box-shadow:0 0 16px var(--cyan);
+  transition:width .3s cubic-bezier(.2,.8,.3,1);
+}
+#bootProgressMeta{
+  width:min(470px,70vw);display:flex;justify-content:space-between;margin-top:7px;
+  color:#567b80;font:7px 'JetBrains Mono',monospace;letter-spacing:1.3px;
+}
+.bootV2Terminal{
+  position:absolute;left:5%;right:5%;bottom:5.5%;z-index:4;
+  min-height:68px;max-height:102px;padding:9px 13px;
+  overflow:hidden;border:1px solid rgba(0,229,255,.17);
+  background:linear-gradient(180deg,rgba(4,14,17,.7),rgba(2,8,10,.92));
+  box-shadow:0 0 28px rgba(0,0,0,.24);backdrop-filter:blur(8px);
+}
+.bootV2TerminalHead{display:flex;justify-content:space-between;margin-bottom:6px}
+.bootV2TerminalHead span,.bootV2TerminalHead b{font:7px 'JetBrains Mono',monospace;letter-spacing:2px}
+.bootV2TerminalHead span{color:#789da1}.bootV2TerminalHead b{color:var(--amber)}
+.bootV2TerminalBody{display:flex;flex-direction:column;gap:2px}
+.bootV2LogLine{
+  display:grid;grid-template-columns:max-content 1fr max-content;gap:10px;
+  color:#cde9eb;font:8px/1.3 'JetBrains Mono',monospace;
+}
+.bootV2LogLine span{color:#6f9397}.bootV2LogLine i{color:var(--mint);font-style:normal}
+#bootFinalText{
+  position:absolute;left:50%;top:50%;z-index:18;
+  transform:translate(-50%,-50%) scale(.72);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  opacity:0;white-space:nowrap;
+}
+#bootFinalText span{color:#efffff;font:700 clamp(24px,5vw,54px) 'Orbitron',sans-serif;letter-spacing:clamp(7px,1.6vw,18px);text-shadow:0 0 14px var(--cyan),0 0 46px var(--cyan-glow)}
+#bootFinalText b{color:var(--mint);font:700 13px 'Orbitron',sans-serif;letter-spacing:6px}
+#bootFinalText small{color:#80aeb2;font:7px 'JetBrains Mono',monospace;letter-spacing:3px}
+#bootOverlay.boot-v2-complete .bootV2CoreScene,
+#bootOverlay.boot-v2-complete #bootText,
+#bootOverlay.boot-v2-complete #bootSub,
+#bootOverlay.boot-v2-complete #bootProgress,
+#bootOverlay.boot-v2-complete #bootProgressMeta,
+#bootOverlay.boot-v2-complete .bootV2Side,
+#bootOverlay.boot-v2-complete .bootV2Terminal{opacity:.12;filter:blur(3px)}
+#bootOverlay.boot-v2-complete #bootFinalText{animation:bootV2Final .75s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes bootV2Final{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.7);filter:blur(14px)}
+  60%{opacity:1;transform:translate(-50%,-50%) scale(1.06);filter:blur(0)}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+
+/* Prevent the actual HUD from flashing before the startup overlay. */
+body.jarvis-booting #topBar,
+body.jarvis-booting #leftPanel,
+body.jarvis-booting #rightPanel,
+body.jarvis-booting #reticleWrap,
+body.jarvis-booting #bottomBar,
+body.jarvis-booting #hudStatusRail,
+body.jarvis-booting #modeSwitch,
+body.jarvis-booting #settingsBtn,
+body.jarvis-booting #permBadges,
+body.jarvis-booting #micBtn,
+body.jarvis-booting #camBtn,
+body.jarvis-booting #screenBtn,
+body.jarvis-booting #newTabBtn{opacity:0!important}
+
+body.jarvis-ready #topBar{animation:hudRevealTop .72s .05s both}
+body.jarvis-ready #leftPanel{animation:hudRevealLeft .72s .17s both}
+body.jarvis-ready #rightPanel{animation:hudRevealRight .72s .24s both}
+body.jarvis-ready #reticleWrap{animation:hudRevealCore .9s .19s both}
+body.jarvis-ready #bottomBar{animation:hudRevealBottom .72s .34s both}
+body.jarvis-ready #hudStatusRail{animation:hudRevealTop .62s .43s both}
+body.jarvis-ready #modeSwitch{animation:hudRevealTopCentered .62s .47s both}
+body.jarvis-ready #settingsBtn,
+body.jarvis-ready #permBadges{animation:hudRevealTop .62s .51s both}
+body.jarvis-ready #micBtn,
+body.jarvis-ready #camBtn,
+body.jarvis-ready #screenBtn,
+body.jarvis-ready #newTabBtn{animation:hudRevealControls .58s .58s both}
+@keyframes hudRevealTopCentered{
+  from{opacity:0;transform:translate3d(-50%,-22px,0);filter:blur(8px)}
+  to{opacity:1;transform:translate3d(-50%,0,0);filter:blur(0)}
+}
+
+@media(max-width:900px){
+  .bootV2Side{display:none}
+  .bootV2Metrics{grid-template-columns:1fr;gap:4px}
+  .bootV2CoreScene{width:min(44vh,390px);height:min(44vh,390px)}
+}
+@media(max-width:650px){
+  .startV2Topline,.bootV2Header{display:none}
+  .startV2Visual{width:300px;height:300px;min-width:300px;min-height:300px}
+  .startV2Identity{margin-top:-8px}
+  #startGate #bootLogo{font-size:36px;letter-spacing:10px}
+  .bootV2CoreScene{width:300px;height:300px;min-width:300px;min-height:300px}
+  #coreWrap{width:215px;height:215px}
+  .bootV2Terminal{left:3%;right:3%;bottom:3%}
+}
+
+
+#jarvisBuildBadge{
+  position:fixed;
+  left:14px;
+  bottom:12px;
+  z-index:100000;
+  padding:4px 7px;
+  border:1px solid rgba(0,229,255,.18);
+  background:rgba(1,7,9,.76);
+  color:rgba(120,183,189,.82);
+  font:7px 'JetBrains Mono',monospace;
+  letter-spacing:1.2px;
+  pointer-events:none;
+}
+
+
+/* V2.1 startup layout reinforcement */
+#startGate{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:0!important;
+}
+#startGate .startV2Visual{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  flex:none!important;
+  position:relative!important;
+  z-index:2!important;
+}
+#startGate .startV2Identity{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  flex:none!important;
+  z-index:3!important;
+}
+
+/* ===== V2.3 STARTUP CENTERING PATCH ===== */
+#startGate{
+  overflow:hidden;
+  padding-top:34px;
   gap:12px;
-  align-items:start;
-  color:#cce8ea;
-  font:11px/1.35 'JetBrains Mono', monospace;
-  letter-spacing:.3px;
 }
-#bootOverlay .bootLogLine span{color:#86a8ac}
-#bootOverlay .bootLogLine i{
-  color:var(--mint);
-  font-style:normal;
+.startV2Topline{
+  left:50%;
+  right:auto;
+  width:min(620px,calc(100% - 64px));
+  transform:translateX(-50%);
+  justify-content:space-between;
+  top:22px;
 }
-#bootOverlay #bootFinalText{
-  font-size:clamp(24px,4.1vw,46px);
-  letter-spacing:7px;
-  text-shadow:0 0 28px rgba(0,229,255,.18);
+.startV2Visual{
+  width:min(50vh,490px)!important;
+  height:min(50vh,490px)!important;
+  min-width:320px!important;
+  min-height:320px!important;
+  margin:-92px auto -2px!important;
+  display:block!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 0 22px rgba(0,229,255,.10));
 }
-#bootOverlay #bootStageLabel{
-  top:16%;
-  letter-spacing:3.5px;
+.startV2Ring,
+.startV2Crosshair,
+.startV2Orbit,
+.startV2Reactor,
+.startV2ReactorArc,
+.startV2ReactorCenter{
+  left:50%!important;
+  top:50%!important;
+  transform-origin:center center!important;
+  backface-visibility:hidden;
 }
-#bootOverlay #bootSub{
-  max-width:760px;
-  padding:0 18px;
+.startV2Ring{transform:translate(-50%,-50%)!important}
+.startV2CrosshairH{
+  width:100%!important;
+  transform:translate(-50%,-50%)!important;
 }
-#bootOverlay .bootCoreShell{
-  filter:drop-shadow(0 0 38px rgba(0,229,255,.13));
+.startV2CrosshairV{
+  height:100%!important;
+  transform:translate(-50%,-50%)!important;
 }
-#bootOverlay.boot-prime{
-  display:flex !important;
-  opacity:1 !important;
+.startV2Orbit{
+  width:86%!important;
+  height:86%!important;
+  transform:translate(-50%,-50%)!important;
 }
-body.jarvis-booting #startGate{
+.startV2Orbit2{
+  width:62%!important;
+  height:62%!important;
+}
+.startV2Reactor{
+  width:134px!important;
+  height:134px!important;
+  transform:translate(-50%,-50%)!important;
+}
+.startV2ReactorArc1{transform:translate(-50%,-50%) rotate(0deg)!important}
+.startV2ReactorArc2{transform:translate(-50%,-50%) rotate(0deg)!important}
+.startV2ReactorArc3{transform:translate(-50%,-50%) rotate(0deg)!important}
+.startV2Identity{
+  margin-top:-6px!important;
+}
+#startGate #bootLogo{
+  margin-top:6px!important;
+}
+#startGate p{
+  max-width:700px!important;
+}
+#bootOverlay{
+  display:none;
+  visibility:hidden;
   opacity:0;
   pointer-events:none;
 }
+#bootOverlay.boot-v2-prime{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+/* ===== END V2.3 PATCH ===== */
+
+/* ===== V2.4 STARTUP VISUAL CORRECTIONS ===== */
+
+/* Remove the legacy pseudo-ring that created the bracket/artifact above
+   the actual reactor and competed with the new centered ring system. */
+#startGate::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* The older #startGate > * rule forced every direct child to position:relative.
+   Restore the intended positioning for each V2 startup layer. */
+#startGate>.startV2Backdrop,
+#startGate>.startV2Scan,
+#startGate>.startV2Noise,
+#startGate>.startV2Corner{
+  position:absolute!important;
+}
+
+#startGate>.startV2Topline{
+  position:absolute!important;
+  top:24px!important;
+  left:auto!important;
+  right:30px!important;
+  width:auto!important;
+  transform:none!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+  gap:22px!important;
+  white-space:nowrap!important;
+  z-index:5!important;
+}
+#startGate>.startV2Topline span{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+
+/* Move only the reactor assembly upward. Text and button keep their current
+   readable position, creating proper separation instead of shifting the
+   entire page. */
+#startGate>.startV2Visual{
+  position:relative!important;
+  margin:-92px auto -2px!important;
+  transform:translate3d(0,-78px,0)!important;
+  transform-origin:center center!important;
+  z-index:2!important;
+}
+
+/* Every startup circle, orbit, crosshair, and reactor shares one exact center. */
+#startGate .startV2Ring,
+#startGate .startV2Crosshair,
+#startGate .startV2Orbit,
+#startGate .startV2Reactor{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  transform-origin:50% 50%!important;
+}
+
+/* Preserve the original translate-aware rotation animations. Removing the
+   old !important transform overrides lets the circles rotate without
+   jumping away from center. */
+#startGate .startV2Ring1,
+#startGate .startV2Ring3,
+#startGate .startV2Ring4{
+  transform:translate(-50%,-50%)!important;
+}
+#startGate .startV2Ring2{
+  transform:translate(-50%,-50%);
+}
+#startGate .startV2CrosshairH,
+#startGate .startV2CrosshairV{
+  transform:translate(-50%,-50%)!important;
+}
+#startGate .startV2Orbit1,
+#startGate .startV2Orbit2{
+  transform:translate(-50%,-50%);
+}
+#startGate .startV2Reactor{
+  transform:translate(-50%,-50%)!important;
+}
+#startGate .startV2ReactorArc1,
+#startGate .startV2ReactorArc2,
+#startGate .startV2ReactorArc3{
+  left:50%!important;
+  top:50%!important;
+  transform-origin:50% 50%!important;
+}
+#startGate .startV2ReactorCenter{
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+}
+
+/* Keep the identity block clean and centered after moving the reactor. */
+#startGate>.startV2Identity{
+  position:relative!important;
+  margin-top:-10px!important;
+  z-index:3!important;
+}
+
+@media(max-width:720px){
+  #startGate>.startV2Topline{
+    display:none!important;
+  }
+  #startGate>.startV2Visual{
+    transform:translate3d(0,-42px,0)!important;
+    margin:-48px auto 0!important;
+  }
+}
+/* ===== END V2.4 STARTUP VISUAL CORRECTIONS ===== */
 
 </style>
 </head>
 <body>
+<div id="jarvisBuildBadge">jarvis-v2.5-neural-voice-20260804 · PORT 5015</div>
 <div id="app">
 <div id="camLayer">
 <video autoplay="" id="camVideo" muted="" playsinline=""></video>
@@ -2070,63 +2585,133 @@ body.jarvis-booting #startGate{
 <div id="hexbg"></div>
 <div id="scanline"></div>
 <div id="startGate">
-<div id="bootLogo">J.A.R.V.I.S.</div>
-<h1>Interface Standby</h1>
-<p>Grant access to camera, microphone, motion and location sensors for the full HUD experience. Anything denied just falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning and vision commands like "Jarvis, what am I looking at."</p>
-<p id="secWarning" style="display:none;color:var(--amber);font-family:'JetBrains Mono';font-size:11px;max-width:380px;"></p>
-<button class="startBtn" id="initBtn" onclick="window.__jarvisStartClick &amp;&amp; window.__jarvisStartClick()" type="button">Initialize System</button>
+<div class="startV2Backdrop"></div>
+<div class="startV2Scan"></div>
+<div class="startV2Noise"></div>
+<div class="startV2Corner startV2CornerTL"></div>
+<div class="startV2Corner startV2CornerTR"></div>
+<div class="startV2Corner startV2CornerBL"></div>
+<div class="startV2Corner startV2CornerBR"></div>
+
+<div class="startV2Topline">
+<span><i></i>REACTOR STANDBY</span>
+<span>MARK VIII // LOCAL CORE</span>
 </div>
+
+<div class="startV2Visual" id="startV2Visual">
+<div class="startV2Ring startV2Ring1"></div>
+<div class="startV2Ring startV2Ring2"></div>
+<div class="startV2Ring startV2Ring3"></div>
+<div class="startV2Ring startV2Ring4"></div>
+<div class="startV2Crosshair startV2CrosshairH"></div>
+<div class="startV2Crosshair startV2CrosshairV"></div>
+<div class="startV2Orbit startV2Orbit1"><i></i><i></i><i></i></div>
+<div class="startV2Orbit startV2Orbit2"><i></i><i></i></div>
+<div class="startV2Reactor">
+<div class="startV2ReactorArc startV2ReactorArc1"></div>
+<div class="startV2ReactorArc startV2ReactorArc2"></div>
+<div class="startV2ReactorArc startV2ReactorArc3"></div>
+<div class="startV2ReactorCenter"></div>
+</div>
+</div>
+
+<div class="startV2Identity">
+<div class="startV2Eyebrow">STARK-CLASS NEURAL OPERATING SYSTEM</div>
+<div id="bootLogo">J.A.R.V.I.S</div>
+<h1>TACTICAL INTERFACE STANDBY</h1>
+<p>Initialize the reactor core, neural matrix, optical systems, voice link, browser bridge, gesture engine, memory, and command interface.</p>
+<p id="secWarning" style="display:none;"></p>
+<button class="startBtn" id="initBtn" onclick="window.__jarvisStartClick &amp;&amp; window.__jarvisStartClick()" type="button"><span>INITIALIZE SYSTEM</span><i></i></button>
+<div class="startV2Hint">AUTHORIZED OPERATOR INPUT REQUIRED</div>
+</div>
+</div>
+
 <div id="bootOverlay" style="display:none;">
-<div class="bootGrid"></div>
-<div class="bootSweep"></div>
-<div class="bootVignette"></div>
-<div class="bootFrame bootFrameTop"></div>
-<div class="bootFrame bootFrameBottom"></div>
+<div class="bootV2Backdrop"></div>
+<div class="bootV2Grid"></div>
+<div class="bootV2DataRain" id="bootV2DataRain"></div>
+<div class="bootV2Particles" id="bootV2Particles"></div>
+<div class="bootV2Scan"></div>
+<div class="bootV2Vignette"></div>
+<div class="bootV2Flash"></div>
 
-<div class="bootTelemetry bootTelemetryLeft">
-<div class="bootTelemetryTitle">NEURAL SUBSYSTEMS</div>
-<div class="bootNode" data-stage="1"><i></i><span>POWER BUS</span><b>STANDBY</b></div>
-<div class="bootNode" data-stage="2"><i></i><span>NEURAL MATRIX</span><b>STANDBY</b></div>
-<div class="bootNode" data-stage="4"><i></i><span>OPTIC ARRAY</span><b>STANDBY</b></div>
-<div class="bootNode" data-stage="5"><i></i><span>VOICE LINK</span><b>STANDBY</b></div>
+<div class="bootV2Header">
+<div class="bootV2HeaderIdentity">
+<span>J.A.R.V.I.S // MARK VIII</span>
+<b>NEURAL INITIALIZATION SEQUENCE</b>
+</div>
+<div class="bootV2Metrics">
+<span>POWER <b id="bootPowerMetric">00%</b></span>
+<span>LATENCY <b id="bootLatencyMetric">-- ms</b></span>
+<span>CORE TEMP <b id="bootTempMetric">21.4°C</b></span>
+</div>
 </div>
 
-<div class="bootTelemetry bootTelemetryRight">
-<div class="bootTelemetryTitle">TACTICAL SERVICES</div>
-<div class="bootNode" data-stage="3"><i></i><span>OPERATOR AUTH</span><b>STANDBY</b></div>
-<div class="bootNode" data-stage="6"><i></i><span>LOCAL BRIDGE</span><b>STANDBY</b></div>
-<div class="bootNode" data-stage="7"><i></i><span>HUD ALIGNMENT</span><b>STANDBY</b></div>
-<div class="bootNode" data-stage="8"><i></i><span>COMMAND CORE</span><b>STANDBY</b></div>
+<div class="bootV2Side bootV2SideLeft">
+<div class="bootV2SideTitle">CORE SUBSYSTEMS</div>
+<div class="bootNode" data-stage="1"><i></i><span>REACTOR BUS</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="2"><i></i><span>POWER REGULATOR</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="3"><i></i><span>NEURAL MATRIX</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="4"><i></i><span>MEMORY INDEX</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="5"><i></i><span>OPTIC ARRAY</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="6"><i></i><span>GESTURE ENGINE</span><b>STANDBY</b></div>
 </div>
 
-<div id="bootStageLabel">STAGE 00 / 08</div>
+<div class="bootV2Side bootV2SideRight">
+<div class="bootV2SideTitle">TACTICAL SERVICES</div>
+<div class="bootNode" data-stage="7"><i></i><span>VOICE CHANNEL</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="8"><i></i><span>OPERATOR AUTH</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="9"><i></i><span>LOCAL BRIDGE</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="10"><i></i><span>BROWSER CORE</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="11"><i></i><span>HUD ALIGNMENT</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="12"><i></i><span>COMMAND CORE</span><b>STANDBY</b></div>
+</div>
 
-<div class="bootCoreShell">
-<div class="bootOrbit bootOrbitOne"><span></span><span></span><span></span></div>
-<div class="bootOrbit bootOrbitTwo"><span></span><span></span></div>
-<div class="bootOrbit bootOrbitThree"></div>
-<div class="bootCoreBloom"></div>
-<div class="bootCrosshair bootCrosshairH"></div>
-<div class="bootCrosshair bootCrosshairV"></div>
-<div class="bootCoreLabel bootCoreLabelTop">ARC REACTOR // MK.VIII</div>
-<div class="bootCoreLabel bootCoreLabelBottom">ENERGY SIGNATURE LOCKED</div>
+<div id="bootStageLabel">PHASE 00 / 12</div>
+
+<div class="bootV2CoreScene" id="bootV2CoreScene">
+<div class="bootV2Ring bootV2Ring1"></div>
+<div class="bootV2Ring bootV2Ring2"></div>
+<div class="bootV2Ring bootV2Ring3"></div>
+<div class="bootV2Ring bootV2Ring4"></div>
+<div class="bootV2Ring bootV2Ring5"></div>
+<div class="bootV2Crosshair bootV2CrosshairH"></div>
+<div class="bootV2Crosshair bootV2CrosshairV"></div>
+<div class="bootV2Orbit bootV2Orbit1"><i></i><i></i><i></i></div>
+<div class="bootV2Orbit bootV2Orbit2"><i></i><i></i></div>
+<div class="bootV2Shockwave"></div>
+<div class="bootV2Bloom"></div>
+
 <div class="bootCore bootCoreIdle" id="coreWrap">
 <svg id="coreSvg" viewbox="0 0 300 300">
 <circle cx="150" cy="150" fill="none" id="coreOuterRing" r="140" stroke="var(--cyan-dim)" stroke-dasharray="3 7" stroke-width="1"></circle>
 <circle cx="150" cy="150" fill="none" id="coreRing1" r="115" stroke="var(--cyan-dim)" stroke-dasharray="18 7" stroke-width="1.5"></circle>
 <circle cx="150" cy="150" fill="none" id="coreRing2" r="90" stroke="var(--cyan-dim)" stroke-dasharray="42 11" stroke-width="2"></circle>
 <g id="coreSpokes"></g>
+<polygon fill="none" id="coreTriangleOuter" points="150,73 217,189 83,189" stroke="var(--cyan-dim)" stroke-width="1"></polygon>
+<polygon fill="none" id="coreTriangleInner" points="150,98 195,176 105,176" stroke="var(--cyan-dim)" stroke-width="1"></polygon>
 <circle cx="150" cy="150" fill="none" id="coreInner" r="55" stroke="var(--cyan-dim)" stroke-width="2"></circle>
 <circle cx="150" cy="150" fill="var(--cyan-dim)" id="coreCenter" r="8"></circle>
 </svg>
+<div class="bootV2Monogram">J</div>
 </div>
 </div>
 
-<div id="bootText">J.A.R.V.I.S // SYSTEM BOOT</div>
-<div id="bootSub">Awaiting reactor ignition…</div>
+<div id="bootText">J.A.R.V.I.S // COLD START</div>
+<div id="bootSub">Awaiting arc-reactor ignition…</div>
 <div id="bootProgress"><div id="bootProgressFill"></div></div>
 <div id="bootProgressMeta"><span id="bootPercent">0%</span><span id="bootChecksum">CHECKSUM 0000-0000</span></div>
-<div id="bootFinalText">SYSTEM ONLINE</div>
+
+<div class="bootV2Terminal">
+<div class="bootV2TerminalHead"><span>INITIALIZATION LOG</span><b id="bootTerminalStatus">WAITING</b></div>
+<div class="bootV2TerminalBody" id="bootTerminalBody"></div>
+</div>
+
+<div id="bootFinalText">
+<span>J.A.R.V.I.S</span>
+<b>SYSTEM ONLINE</b>
+<small>ALL SYSTEMS NOMINAL</small>
+</div>
 </div>
 <!-- TOP -->
 <div class="hud-panel neuralHudPanel" data-hud-panel="COMMAND DECK" id="topBar">
@@ -2514,14 +3099,14 @@ body.jarvis-booting #startGate{
       var warning = document.getElementById('secWarning');
       if(warning){
         warning.style.display = 'block';
-        warning.textContent = 'Jarvis startup code did not finish loading. Run jarvis_browser.py and open http://127.0.0.1:5005 instead of double-clicking this HTML file.';
+        warning.textContent = 'Jarvis startup code did not finish loading. Run jarvis_browser.py and open http://127.0.0.1:5015 instead of double-clicking this HTML file.';
       }
     };
     window.addEventListener('error', function(event){
       var warning = document.getElementById('secWarning');
       if(!warning) return;
       warning.style.display = 'block';
-      warning.textContent = 'Startup error: ' + (event.message || 'unknown JavaScript error') + '. Open Jarvis from http://127.0.0.1:5005.';
+      warning.textContent = 'Startup error: ' + (event.message || 'unknown JavaScript error') + '. Open Jarvis from http://127.0.0.1:5015.';
     });
   })();
 </script>
@@ -2730,7 +3315,7 @@ body.jarvis-booting #startGate{
       body: JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:effortConfig(activeChatEffort).maxTokens,
-        system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, no emojis, plain spoken text only.',
+        system:'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer directly in one short spoken sentence, usually under 25 words. Use a second sentence only when necessary. Never introduce yourself, never begin with Jarvis, and do not add background information unless asked. No markdown, lists, or emojis.',
         messages: buildClaudeMessages(userText)
       })
     }).then(function(r){ return r.json(); }).then(function(data){
@@ -2755,7 +3340,7 @@ body.jarvis-booting #startGate{
       body: JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:300,
-        system:"You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer in 1-3 short spoken sentences. No markdown, no emojis, plain spoken text only.",
+        system:"You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer directly in one short spoken sentence, usually under 25 words. Use a second sentence only when necessary. Never introduce yourself, never begin with Jarvis, and do not add background information unless asked. No markdown or emojis.",
         messages:[{
           role:'user',
           content:[
@@ -2780,7 +3365,7 @@ body.jarvis-booting #startGate{
       return { role: h.role === 'assistant' ? 'model' : 'user', parts:[{text: h.text}] };
     });
     var systemPrefix = contents.length === 0
-      ? 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer in 1-3 short spoken sentences. No markdown, no lists, no emojis, plain spoken text only.\n\nUser: '
+      ? 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. Answer directly in one short spoken sentence, usually under 25 words. Use a second sentence only when necessary. Never introduce yourself, never begin with Jarvis, and do not add background information unless asked. No markdown, lists, or emojis.\n\nUser: '
       : '';
     contents.push({role:'user', parts:[{text: systemPrefix + userText}]});
     return contents;
@@ -2812,7 +3397,7 @@ body.jarvis-booting #startGate{
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         contents:[{parts:[
-          {text: "You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer in 1-3 short spoken sentences. No markdown, no emojis, plain spoken text only.\n\nUser question: " + (userText || 'What am I looking at?')},
+          {text: "You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. You have been shown one still frame from the user's camera. Answer directly in one short spoken sentence, usually under 25 words. Use a second sentence only when necessary. Never introduce yourself, never begin with Jarvis, and do not add background information unless asked. No markdown or emojis.\n\nUser question: " + (userText || 'What am I looking at?')},
           {inline_data:{mime_type:'image/jpeg', data: base64Jpeg}}
         ]}]
       })
@@ -2830,7 +3415,8 @@ body.jarvis-booting #startGate{
     var history = conversationHistory.slice(0, -1);
     if(history.length === 0) return '';
     return history.map(function(h){
-      return (h.role === 'assistant' ? 'Jarvis: ' : 'User: ') + h.text;
+      return (h.role === 'assistant' ? 'Assistant: ' : 'User: ') +
+        (h.role === 'assistant' ? cleanHudAssistantReply(h.text) : h.text);
     }).join('\n') + '\n';
   }
 
@@ -2842,7 +3428,7 @@ body.jarvis-booting #startGate{
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         model: model,
-        prompt: 'You are JARVIS, a calm, concise voice assistant embedded in a HUD interface. '+effortInstruction(activeChatEffort)+'\n\n' + transcript + 'User: ' + userText,
+        prompt: 'You are JARVIS, a direct voice assistant embedded in a HUD. Answer the current question in one short sentence, usually under 25 words. Use two sentences only when necessary. Never start with Jarvis or J.A.R.V.I.S. Do not explain obvious background unless asked. '+effortInstruction(activeChatEffort)+'\n\n' + transcript + 'User: ' + userText,
         stream: false,
         options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}
       })
@@ -2864,7 +3450,7 @@ body.jarvis-booting #startGate{
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         model: model,
-        prompt: userText || 'What am I looking at? Describe it in 1-3 short spoken sentences, no markdown.',
+        prompt: userText || 'What am I looking at? Answer the exact question in one short spoken sentence, usually under 25 words. Do not describe unrelated parts of the image and do not begin with Jarvis.',
         images: [base64Jpeg],
         stream: false
       })
@@ -2881,7 +3467,7 @@ body.jarvis-booting #startGate{
 
   function callRemoteText(userText, cb){
     if(!remoteServerUrl || !remoteAccessCode){ cb(null, 'no_key'); return; }
-    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode,'ngrok-skip-browser-warning':'true'},body:JSON.stringify({prompt:'You are JARVIS, a calm text assistant. '+effortInstruction(activeChatEffort)+'\n\n'+buildOllamaTranscript()+'User: '+userText,effort:activeChatEffort,options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}})})
+    fetch(remoteServerUrl + '/remote/generate', {method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode,'ngrok-skip-browser-warning':'true'},body:JSON.stringify({prompt:'You are JARVIS, a direct voice assistant. Answer in one short sentence, usually under 25 words. Never prefix the answer with Jarvis or J.A.R.V.I.S. Do not add explanations unless asked. '+effortInstruction(activeChatEffort)+'\n\n'+buildOllamaTranscript()+'User: '+userText,effort:activeChatEffort,options:{num_predict:effortConfig(activeChatEffort).numPredict,temperature:effortConfig(activeChatEffort).temperature}})})
       .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(x){if(x.ok&&x.data.response)cb(x.data.response.trim(),null);else cb(null,x.data.error||'remote_error');}).catch(function(e){cb(null,e.message||'remote_network_error');});
   }
   function callRemoteVision(userText, base64Jpeg, cb){
@@ -3224,7 +3810,7 @@ body.jarvis-booting #startGate{
     });
   }
 
-  var LOCAL_RESEARCH_BASE='http://127.0.0.1:5005';
+  var LOCAL_RESEARCH_BASE='http://127.0.0.1:5015';
   var LOCAL_RESEARCH_PROBE_TTL_MS=60000;
   var selectedResearchBase=null;
   var selectedResearchMode='unknown';
@@ -3232,7 +3818,9 @@ body.jarvis-booting #startGate{
   var localResearchLastProbe=0;
 
   function isLocalResearchBase(base){
-    return /^http:\/\/(127\.0\.0\.1|localhost):5005$/i.test((base||'').replace(/\/$/,''));
+    return /^http:\/\/(127\.0\.0\.1|localhost):5015$/i.test(
+      (base||'').replace(/\/$/,'')
+    );
   }
 
   function remoteResearchBase(){
@@ -3276,8 +3864,13 @@ body.jarvis-booting #startGate{
           resolve(selectedResearchBase);
         })
         .catch(function(){
-          selectedResearchBase=remoteResearchBase();
-          selectedResearchMode='remote';
+          if(remoteAccessCode){
+            selectedResearchBase=remoteResearchBase();
+            selectedResearchMode='remote';
+          }else{
+            selectedResearchBase=LOCAL_RESEARCH_BASE;
+            selectedResearchMode='local-offline';
+          }
           resolve(selectedResearchBase);
         })
         .finally(function(){
@@ -3298,7 +3891,9 @@ body.jarvis-booting #startGate{
       requestOptions.targetAddressSpace='loopback';
     }else{
       if(!remoteAccessCode){
-        return Promise.reject(new Error('This computer is not the Jarvis host. Enter the access code in Settings → Server to use the remote bridge.'));
+        return Promise.reject(new Error(
+          'The local Jarvis bridge is not responding at http://127.0.0.1:5015. Keep jarvis_browser.py running.'
+        ));
       }
       requestOptions.headers['X-Jarvis-Code']=remoteAccessCode;
       requestOptions.headers['ngrok-skip-browser-warning']='true';
@@ -3418,7 +4013,7 @@ body.jarvis-booting #startGate{
         '&after=' + encodeURIComponent(Number(tab.lastFrameSeq || 0));
 
       var headers = {};
-      if(base.indexOf('localhost:5005') === -1 && base.indexOf('127.0.0.1:5005') === -1){
+      if(base.indexOf('localhost:5015') === -1 && base.indexOf('127.0.0.1:5015') === -1){
         headers['ngrok-skip-browser-warning'] = 'true';
       }
 
@@ -3647,7 +4242,7 @@ body.jarvis-booting #startGate{
         setBrowseOverlay(
           tab,
           'Could not open DuckDuckGo.\n' + err.message +
-          '\n\nMake sure Python and ngrok are running, then reconnect using the access code.',
+          '\n\nKeep the local Python bridge running. Ngrok is only needed when another computer is connecting.',
           true
         );
       });
@@ -4048,7 +4643,7 @@ body.jarvis-booting #startGate{
           currentTab.el.querySelector('.browseDot').classList.remove('busy');
           setBrowseOverlay(currentTab, 'Could not start search.\n' + err.message, true);
         }
-        if(speakResult) speak('I could not start browsing. On this PC, open Jarvis from http://127.0.0.1:5005 and keep Python running. Other computers need ngrok and the access code.');
+        if(speakResult) speak('I could not start browsing. On this PC, open Jarvis from http://127.0.0.1:5015 and keep Python running. Other computers need ngrok and the access code.');
       });
   }
 
@@ -4106,7 +4701,7 @@ body.jarvis-booting #startGate{
   document.getElementById('resetThemeBtn').addEventListener('click',function(){applyTheme(JARVIS_THEMES[0],true);document.getElementById('themeSearchInput').value='';});
   document.getElementById('resetFontBtn').addEventListener('click',function(){applyFont('Rajdhani',true);document.getElementById('fontSearchInput').value='';});
   document.getElementById('settingsCloseBtn').addEventListener('click',function(){document.getElementById('memPanel').classList.remove('settings-open');});
-  function bridgeBase(){ return 'http://localhost:5005'; }
+  function bridgeBase(){ return 'http://localhost:5015'; }
   function updateBridgeBadge(){var b=document.getElementById('bridgeStatusBadge');fetch(bridgeBase()+'/health').then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='LOCAL BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){if(!remoteAccessCode){b.textContent='CODE REQUIRED';b.className='serverBadge bad';return;}fetch((remoteServerUrl||DEFAULT_REMOTE_SERVER)+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode,'ngrok-skip-browser-warning':'true'}}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='REMOTE BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';});}); }
   function loadOwnerCode(){ fetch(bridgeBase()+'/owner/access-code').then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';var shareUrl=(publicTunnelUrl||'').trim();document.getElementById('ownerCodeStatus').textContent='Server listens on port '+(d.port||5005)+'. Share '+(shareUrl?shareUrl:'your reachable server address')+' plus this code.';}).catch(function(){document.getElementById('ownerCodeStatus').textContent='Start jarvis_browser.py to manage the server code.';}); }
   document.getElementById('saveOwnerCodeBtn').addEventListener('click',function(){var c=document.getElementById('ownerAccessCode').value.trim();fetch(bridgeBase()+'/owner/access-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){document.getElementById('ownerCodeStatus').textContent=x.ok?'Custom code saved. The old code no longer works.':(x.d.error||'Could not save code.');});});
@@ -4322,19 +4917,38 @@ body.jarvis-booting #startGate{
   // ---------- Boot sequence ----------
   var bootLines = [
     'Igniting arc-reactor power bus…',
-    'Loading adaptive neural matrix…',
-    'Authenticating operator command profile…',
-    'Calibrating optic and gesture arrays…',
-    'Synchronizing voice-recognition channel…',
-    'Establishing local browser bridge…',
+    'Stabilizing power regulator and energy flow…',
+    'Loading adaptive neural inference matrix…',
+    'Indexing operator memory and conversation history…',
+    'Calibrating optical sensor and camera pipeline…',
+    'Synchronizing hand tracking and gesture engine…',
+    'Opening encrypted voice-recognition channel…',
+    'Authenticating authorized operator profile…',
+    'Establishing local browser and profile bridge…',
+    'Loading autonomous browser-control core…',
     'Aligning tactical holographic interface…',
-    'All systems nominal. Welcome back.'
+    'Releasing J.A.R.V.I.S command authority…'
+  ];
+
+  var bootStageDetails = [
+    'Reactor containment field detected. Energy flow nominal.',
+    'Voltage rails synchronized across all primary systems.',
+    'Reasoning pathways mapped and inference core mounted.',
+    'Memory index verified. Conversation history available.',
+    'Optical pipeline aligned to the active display geometry.',
+    'Gesture landmarks stabilized and input routing armed.',
+    'Speech recognition and synthesis channels connected.',
+    'Operator credentials verified. Access level accepted.',
+    'Localhost transport secured. Profile sync available.',
+    'Browser tabs, keyboard, pointer, and navigation registered.',
+    'Diagnostics, compass, telemetry, and panels synchronized.',
+    'Command core released. J.A.R.V.I.S is ready.'
   ];
 
   function buildCoreSpokes(){
     var g = document.getElementById('coreSpokes');
     var html = '';
-    var count = 24;
+    var count = 36;
     for(var i=0;i<count;i++){
       var ang = (i/count)*360;
       html += '<line x1="150" y1="105" x2="150" y2="120" stroke-width="1.5" transform="rotate('+ang+' 150 150)"/>';
@@ -4343,43 +4957,160 @@ body.jarvis-booting #startGate{
   }
   buildCoreSpokes();
 
-  function playPowerUpTone(){
+  var jarvisBootSoundscape=null;
+
+  function stopBootSoundscape(fadeSeconds){
+    var soundscape=jarvisBootSoundscape;
+    jarvisBootSoundscape=null;
+    if(!soundscape)return;
+
     try{
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      var now = ctx.currentTime;
-      var duration = 2.2;
+      var context=soundscape.context;
+      var now=context.currentTime;
+      var fade=Math.max(.08,Number(fadeSeconds)||.35);
+      soundscape.master.gain.cancelScheduledValues(now);
+      soundscape.master.gain.setValueAtTime(
+        Math.max(.0001,soundscape.master.gain.value||.0001),
+        now
+      );
+      soundscape.master.gain.exponentialRampToValueAtTime(
+        .0001,
+        now+fade
+      );
+      soundscape.nodes.forEach(function(node){
+        try{node.stop(now+fade+.05);}catch(e){}
+      });
+    }catch(e){}
+  }
 
-      var osc1 = ctx.createOscillator();
-      var osc2 = ctx.createOscillator();
-      var gain = ctx.createGain();
-      var filter = ctx.createBiquadFilter();
+  function playPowerUpTone(totalDuration){
+    try{
+      stopBootSoundscape(.08);
 
-      osc1.type = 'sawtooth';
-      osc2.type = 'sine';
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(300, now);
-      filter.frequency.exponentialRampToValueAtTime(3200, now + duration);
-      filter.Q.value = 6;
+      var context=bootAudioContext();
+      var now=context.currentTime;
+      var duration=Math.max(5.5,Number(totalDuration)||6.2);
 
-      osc1.frequency.setValueAtTime(60, now);
-      osc1.frequency.exponentialRampToValueAtTime(340, now + duration);
-      osc2.frequency.setValueAtTime(120, now);
-      osc2.frequency.exponentialRampToValueAtTime(680, now + duration);
+      var master=context.createGain();
+      var lowFilter=context.createBiquadFilter();
+      var highFilter=context.createBiquadFilter();
+      var bass=context.createOscillator();
+      var body=context.createOscillator();
+      var shimmer=context.createOscillator();
+      var pulse=context.createOscillator();
+      var pulseGain=context.createGain();
+      var nodes=[bass,body,shimmer,pulse];
 
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.22, now + duration * 0.75);
-      gain.gain.exponentialRampToValueAtTime(0.35, now + duration * 0.95);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.4);
+      bass.type='sawtooth';
+      body.type='triangle';
+      shimmer.type='sine';
+      pulse.type='sine';
 
-      osc1.connect(filter);
-      osc2.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
+      bass.frequency.setValueAtTime(38,now);
+      bass.frequency.exponentialRampToValueAtTime(112,now+duration*.88);
 
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + duration + 0.5);
-      osc2.stop(now + duration + 0.5);
+      body.frequency.setValueAtTime(76,now);
+      body.frequency.exponentialRampToValueAtTime(286,now+duration*.92);
+
+      shimmer.frequency.setValueAtTime(228,now);
+      shimmer.frequency.exponentialRampToValueAtTime(
+        960,
+        now+duration*.96
+      );
+
+      pulse.frequency.setValueAtTime(2.1,now);
+      pulse.frequency.linearRampToValueAtTime(5.4,now+duration);
+
+      lowFilter.type='lowpass';
+      lowFilter.frequency.setValueAtTime(180,now);
+      lowFilter.frequency.exponentialRampToValueAtTime(
+        4200,
+        now+duration*.88
+      );
+      lowFilter.Q.setValueAtTime(7.5,now);
+
+      highFilter.type='highpass';
+      highFilter.frequency.setValueAtTime(45,now);
+      highFilter.frequency.exponentialRampToValueAtTime(
+        125,
+        now+duration
+      );
+
+      pulseGain.gain.setValueAtTime(.018,now);
+      pulse.connect(pulseGain);
+      pulseGain.connect(master.gain);
+
+      master.gain.setValueAtTime(.0001,now);
+      master.gain.exponentialRampToValueAtTime(.075,now+.45);
+      master.gain.linearRampToValueAtTime(.105,now+duration*.62);
+      master.gain.linearRampToValueAtTime(.15,now+duration*.88);
+      master.gain.exponentialRampToValueAtTime(
+        .0001,
+        now+duration
+      );
+
+      bass.connect(lowFilter);
+      body.connect(lowFilter);
+      shimmer.connect(lowFilter);
+      lowFilter.connect(highFilter);
+      highFilter.connect(master);
+      master.connect(context.destination);
+
+      bass.start(now);
+      body.start(now);
+      shimmer.start(now);
+      pulse.start(now);
+
+      nodes.forEach(function(node){
+        node.stop(now+duration+.08);
+      });
+
+      jarvisBootSoundscape={
+        context:context,
+        master:master,
+        nodes:nodes
+      };
+    }catch(e){}
+  }
+
+  var jarvisBootAudioContext=null;
+
+  function bootAudioContext(){
+    if(!jarvisBootAudioContext){
+      jarvisBootAudioContext=
+        new (window.AudioContext||window.webkitAudioContext)();
+    }
+    if(jarvisBootAudioContext.state==='suspended'){
+      jarvisBootAudioContext.resume().catch(function(){});
+    }
+    return jarvisBootAudioContext;
+  }
+
+  function playBootStageTone(stage){
+    try{
+      var scale=[
+        110,138.59,164.81,196,220,261.63,
+        293.66,329.63,392,440,523.25,659.25
+      ];
+      var context=bootAudioContext();
+      var now=context.currentTime;
+      var oscillator=context.createOscillator();
+      var gain=context.createGain();
+      var frequency=scale[(stage-1)%scale.length];
+
+      oscillator.type=stage%3===0?'triangle':'sine';
+      oscillator.frequency.setValueAtTime(frequency,now);
+      oscillator.frequency.exponentialRampToValueAtTime(
+        frequency*1.18,
+        now+.18
+      );
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(.045,now+.02);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+.2);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now+.23);
     }catch(e){}
   }
 
@@ -4391,6 +5122,41 @@ body.jarvis-booting #startGate{
       '-'+
       '0000'.slice(right.length)+right
     );
+  }
+
+  function buildBootV2Data(){
+    var rain=document.getElementById('bootV2DataRain');
+    var particles=document.getElementById('bootV2Particles');
+    if(rain&&!rain.children.length){
+      var characters='01JARVISCORELINKNEURALMKVIII';
+      var rainHtml='';
+      for(var column=0;column<20;column++){
+        var text='';
+        for(var row=0;row<36;row++){
+          text+=characters[(column*7+row*5)%characters.length]+'<br>';
+        }
+        rainHtml+=
+          '<span style="left:'+(column*5)+
+          '%;--rain-delay:'+((column%9)*-.43)+
+          's;--rain-duration:'+(6.8+(column%6)*.55)+'s">'+
+          text+'</span>';
+      }
+      rain.innerHTML=rainHtml;
+    }
+
+    if(particles&&!particles.children.length){
+      var particleHtml='';
+      for(var index=0;index<44;index++){
+        particleHtml+=
+          '<i style="left:'+((index*37)%100)+
+          '%;--particle-delay:'+((index%11)*-.28)+
+          's;--particle-duration:'+(4.1+(index%7)*.38)+
+          's;--particle-size:'+(1+(index%3))+
+          'px;--particle-drift:'+((index%2?1:-1)*(8+(index%6)*5))+
+          'px"></i>';
+      }
+      particles.innerHTML=particleHtml;
+    }
   }
 
   function updateBootNodes(stage){
@@ -4408,76 +5174,148 @@ body.jarvis-booting #startGate{
     });
   }
 
+  function appendBootLog(stage){
+    var body=document.getElementById('bootTerminalBody');
+    if(!body)return;
+    var line=document.createElement('div');
+    line.className='bootV2LogLine';
+
+    var prefix=document.createElement('span');
+    prefix.textContent='['+String(stage).padStart(2,'0')+':SYS]';
+    var text=document.createElement('b');
+    text.textContent=bootStageDetails[stage-1]||bootLines[stage-1];
+    var result=document.createElement('i');
+    result.textContent='OK';
+
+    line.appendChild(prefix);
+    line.appendChild(text);
+    line.appendChild(result);
+    body.appendChild(line);
+    while(body.children.length>5){
+      body.removeChild(body.firstChild);
+    }
+  }
+
   function swapBootStatus(text){
     var sub=document.getElementById('bootSub');
     sub.classList.add('bootTextSwap');
     setTimeout(function(){
       sub.textContent=text;
       sub.classList.remove('bootTextSwap');
-    },120);
+    },95);
+  }
+
+  function updateBootMetrics(stage){
+    var progress=stage/12;
+    document.getElementById('bootPowerMetric').textContent=
+      String(Math.round(progress*100)).padStart(2,'0')+'%';
+    document.getElementById('bootLatencyMetric').textContent=
+      Math.max(4,Math.round(31-progress*26))+' ms';
+    document.getElementById('bootTempMetric').textContent=
+      (21.4+progress*42.8).toFixed(1)+'°C';
+  }
+
+  function primeBootOverlay(){
+    var overlay=document.getElementById('bootOverlay');
+    document.body.classList.remove('jarvis-ready');
+    document.body.classList.add('jarvis-booting');
+
+    overlay.style.display='flex';
+    overlay.style.opacity='1';
+    overlay.classList.remove(
+      'boot-v2-departing',
+      'boot-v2-complete'
+    );
+    overlay.classList.add('boot-v2-prime');
+    return overlay;
   }
 
   function runBoot(cb){
-    var overlay=document.getElementById('bootOverlay');
+    var overlay=primeBootOverlay();
     var core=document.getElementById('coreWrap');
     var fill=document.getElementById('bootProgressFill');
     var percent=document.getElementById('bootPercent');
     var stageLabel=document.getElementById('bootStageLabel');
     var checksum=document.getElementById('bootChecksum');
+    var terminal=document.getElementById('bootTerminalBody');
+    var terminalStatus=document.getElementById('bootTerminalStatus');
 
-    document.body.classList.remove('jarvis-ready');
-    document.body.classList.add('jarvis-booting');
-    overlay.style.display='flex';
-    overlay.style.opacity='1';
-    overlay.className='';
+    buildBootV2Data();
     core.className='bootCore bootCoreIdle';
+    overlay.dataset.bootStage='0';
     fill.style.width='0%';
     percent.textContent='0%';
-    stageLabel.textContent='STAGE 00 / 08';
+    stageLabel.textContent='PHASE 00 / 12';
     checksum.textContent='CHECKSUM 0000-0000';
+    terminal.innerHTML='';
+    terminalStatus.textContent='INITIALIZING';
+    updateBootMetrics(0);
     updateBootNodes(0);
-    playPowerUpTone();
+
+    var stageDelay=335;
+    var bootSoundDuration=(
+      stageDelay*12+
+      210+
+      760+
+      900
+    )/1000;
+    playPowerUpTone(bootSoundDuration);
 
     requestAnimationFrame(function(){
-      overlay.classList.add('boot-engaged');
+      overlay.classList.add('boot-v2-engaged');
     });
 
-    var stageDelay=430;
-    for(var stage=1;stage<=8;stage++){
+    for(var stage=1;stage<=12;stage++){
       (function(currentStage){
         setTimeout(function(){
-          core.className='bootCore stage-'+currentStage;
+          overlay.dataset.bootStage=String(currentStage);
+          core.className=
+            'bootCore boot-active boot-energy-'+currentStage;
           swapBootStatus(bootLines[currentStage-1]);
-          var progress=Math.round(currentStage/8*100);
+          appendBootLog(currentStage);
+          updateBootMetrics(currentStage);
+          updateBootNodes(currentStage);
+          playBootStageTone(currentStage);
+
+          var progress=Math.round(currentStage/12*100);
           fill.style.width=progress+'%';
           percent.textContent=progress+'%';
           stageLabel.textContent=
-            'STAGE '+
+            'PHASE '+
             String(currentStage).padStart(2,'0')+
-            ' / 08';
+            ' / 12';
           checksum.textContent=
             'CHECKSUM '+bootChecksumForStage(currentStage);
-          updateBootNodes(currentStage);
         },stageDelay*currentStage);
       })(stage);
     }
 
     setTimeout(function(){
-      updateBootNodes(9);
-      overlay.classList.add('boot-complete');
+      updateBootNodes(13);
+      terminalStatus.textContent='ONLINE';
+      appendBootLog(12);
+      overlay.classList.add('boot-v2-complete');
+
       setTimeout(function(){
+        stopBootSoundscape(.72);
+        overlay.classList.add('boot-v2-departing');
         document.body.classList.remove('jarvis-booting');
         document.body.classList.add('jarvis-ready');
-        overlay.classList.add('departing');
+        state.booted=true;
 
         setTimeout(function(){
           overlay.style.display='none';
-          overlay.className='';
+          overlay.classList.remove(
+            'boot-v2-prime',
+            'boot-v2-engaged',
+            'boot-v2-complete',
+            'boot-v2-departing'
+          );
           cb&&cb();
           scheduleWakeLabelFade();
-        },950);
-      },720);
-    },stageDelay*8+170);
+        },900);
+      },760);
+    },stageDelay*12+210);
   }
 
   function scheduleWakeLabelFade(){
@@ -7823,6 +8661,27 @@ body.jarvis-booting #startGate{
     return text.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '').replace(/\s{2,}/g, ' ').trim();
   }
 
+  function cleanHudAssistantReply(text){
+    var clean=stripEmojis(String(text||''))
+      .replace(/^\s*(?:J\.?\s*A\.?\s*R\.?\s*V\.?\s*I\.?\s*S\.?|Jarvis)\s*[:\-–—]\s*/i,'')
+      .replace(/^\s*(?:Assistant|AI)\s*[:\-–—]\s*/i,'')
+      .replace(/\s+/g,' ')
+      .trim();
+
+    var sentenceMatches=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+    if(sentenceMatches.length>2){
+      clean=sentenceMatches.slice(0,2).map(function(sentence){
+        return sentence.trim();
+      }).join(' ');
+    }
+
+    var words=clean.split(/\s+/).filter(Boolean);
+    if(words.length>48){
+      clean=words.slice(0,48).join(' ').replace(/[,;:]$/,'')+'.';
+    }
+    return clean;
+  }
+
   var awakeConversationStart = null;
   var MAX_INITIAL_CAPTURE_MS = 6000;
 
@@ -7874,39 +8733,121 @@ body.jarvis-booting #startGate{
   var ignoreRecognitionUntil = 0;
 
   var speakingBlockRecognition = false;
+  var neuralVoiceAudio = null;
+  var neuralVoiceRequestId = 0;
+  var NEURAL_VOICE_URL = 'http://127.0.0.1:5015/tts';
+  var NEURAL_VOICE_NAME = 'en-GB-RyanNeural';
 
-  function speak(text){
-    var clean = stripEmojis(text);
-    lastSpokenText = clean;
-    pushHistory('assistant', clean);
-    setCaption(clean);
-    remember(clean);
-    if(!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
+  function setVoiceSpeakingState(active){
+    document.getElementById('dotVoice').classList.toggle('on',active);
+    document.getElementById('statVoice').textContent=active?'SPEAKING':'IDLE';
+  }
 
-    speakingBlockRecognition = true;
-    if(recognition && state.listening){
-      try{ recognition.stop(); }catch(e){}
+  function pauseRecognitionForSpeech(){
+    speakingBlockRecognition=true;
+    if(recognition&&state.listening){
+      try{recognition.stop();}catch(e){}
+    }
+  }
+
+  function resumeRecognitionAfterSpeech(){
+    setVoiceSpeakingState(false);
+    lastSpokenText='';
+    speakingBlockRecognition=false;
+    ignoreRecognitionUntil=Date.now()+350;
+    if(state.listening&&recognition){
+      setTimeout(function(){
+        try{recognition.start();}catch(e){}
+      },350);
+    }
+  }
+
+  function stopCurrentVoice(){
+    neuralVoiceRequestId++;
+    if(neuralVoiceAudio){
+      try{
+        neuralVoiceAudio.pause();
+        neuralVoiceAudio.src='';
+      }catch(e){}
+      neuralVoiceAudio=null;
+    }
+    if('speechSynthesis' in window){
+      try{stopCurrentVoice();}catch(e){}
+    }
+    setVoiceSpeakingState(false);
+  }
+
+  function speakWithSystemFallback(clean){
+    if(!('speechSynthesis' in window)){
+      resumeRecognitionAfterSpeech();
+      return;
     }
 
-    var u = new SpeechSynthesisUtterance(clean);
-    if(ttsVoice) u.voice = ttsVoice;
-    u.rate = 1.0; u.pitch = 0.82; u.volume = 1;
-    document.getElementById('dotVoice').classList.add('on');
-    document.getElementById('statVoice').textContent = 'SPEAKING';
-    u.onend = function(){
-      document.getElementById('dotVoice').classList.remove('on');
-      document.getElementById('statVoice').textContent = 'IDLE';
-      lastSpokenText = '';
-      speakingBlockRecognition = false;
-      ignoreRecognitionUntil = Date.now() + 350;
-      if(state.listening && recognition){
-        setTimeout(function(){
-          try{ recognition.start(); }catch(e){}
-        }, 350);
+    speechSynthesis.cancel();
+    var utterance=new SpeechSynthesisUtterance(clean);
+    if(ttsVoice)utterance.voice=ttsVoice;
+    utterance.rate=.96;
+    utterance.pitch=.78;
+    utterance.volume=1;
+    utterance.onend=resumeRecognitionAfterSpeech;
+    utterance.onerror=resumeRecognitionAfterSpeech;
+    speechSynthesis.speak(utterance);
+  }
+
+  function speak(text){
+    var clean=cleanHudAssistantReply(text);
+    if(!clean)return;
+
+    stopCurrentVoice();
+    lastSpokenText=clean;
+    pushHistory('assistant',clean);
+    setCaption(clean);
+    remember(clean);
+    pauseRecognitionForSpeech();
+    setVoiceSpeakingState(true);
+
+    var requestId=++neuralVoiceRequestId;
+
+    fetch(NEURAL_VOICE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        text:clean,
+        voice:NEURAL_VOICE_NAME,
+        rate:'-4%',
+        pitch:'-6Hz'
+      })
+    })
+    .then(function(response){
+      if(!response.ok){
+        return response.text().then(function(message){
+          throw new Error(message||('TTS HTTP '+response.status));
+        });
       }
-    };
-    speechSynthesis.speak(u);
+      return response.blob();
+    })
+    .then(function(blob){
+      if(requestId!==neuralVoiceRequestId)return;
+
+      var audio=new Audio(URL.createObjectURL(blob));
+      neuralVoiceAudio=audio;
+      audio.volume=1;
+      audio.onended=function(){
+        URL.revokeObjectURL(audio.src);
+        neuralVoiceAudio=null;
+        resumeRecognitionAfterSpeech();
+      };
+      audio.onerror=function(){
+        URL.revokeObjectURL(audio.src);
+        neuralVoiceAudio=null;
+        speakWithSystemFallback(clean);
+      };
+      return audio.play();
+    })
+    .catch(function(){
+      if(requestId!==neuralVoiceRequestId)return;
+      speakWithSystemFallback(clean);
+    });
   }
 
   var captionTimer;
@@ -8099,7 +9040,7 @@ body.jarvis-booting #startGate{
     var w = document.getElementById('secWarning');
     if(isInIframe()){
       w.style.display = 'block';
-      w.textContent = 'This is running inside an embedded preview (an iframe), which browsers block from using the camera or microphone regardless of site permissions. Run jarvis_browser.py and open http://127.0.0.1:5005 in a normal browser tab to enable the full interface.';
+      w.textContent = 'This is running inside an embedded preview (an iframe), which browsers block from using the camera or microphone regardless of site permissions. Run jarvis_browser.py and open http://127.0.0.1:5015 in a normal browser tab to enable the full interface.';
     } else if(window.isSecureContext !== true){
       w.style.display = 'block';
       w.textContent = 'Warning: this page is not running on https or localhost (currently ' + window.location.protocol + '). Chrome and most browsers will block camera and microphone access entirely on insecure origins — no permission prompt will appear. Host this file over https, or run it via a local server at http://localhost, to enable those features.';
@@ -8115,29 +9056,35 @@ body.jarvis-booting #startGate{
     )return;
 
     var button=document.getElementById('initBtn');
-    gate.classList.add('launching');
     if(button){
       button.disabled=true;
-      button.textContent='POWERING REACTOR…';
+      button.innerHTML='<span>POWERING REACTOR…</span><i></i>';
     }
 
+    // Prime the opaque boot overlay synchronously before fading the gate.
+    // This prevents even a single frame of the finished HUD from flashing.
+    primeBootOverlay();
+    runBoot(function(){
+      initGeo();
+      initOrientation();
+      initBattery();
+      updateTelemetry();
+      speak('Good to see you. All systems nominal.');
+    });
+
+    requestAnimationFrame(function(){
+      gate.classList.add('launching');
+    });
     setTimeout(function(){
       gate.style.display='none';
-      runBoot(function(){
-        initGeo();
-        initOrientation();
-        initBattery();
-        updateTelemetry();
-        speak('Good to see you. All systems nominal.');
-      });
-    },520);
+    },180);
   };
-  document.getElementById('initBtn').addEventListener('click', function(event){
+
+  document.getElementById('initBtn').addEventListener('click',function(event){
     event.preventDefault();
-    if(!window.__jarvisStartHandled){
-      window.__jarvisStartHandled = true;
-      window.__jarvisMainStart();
-    }
+    if(window.__jarvisStartHandled)return;
+    window.__jarvisStartHandled=true;
+    window.__jarvisMainStart();
   });
 
 
@@ -8469,41 +9416,15 @@ body.jarvis-booting #startGate{
     return '';
   }
 
-  function isHostedJarvisPage(){
-    var hostname=String(location.hostname||'').toLowerCase();
-    return (
-      hostname.endsWith('.github.io')||
-      (
-        hostname!=='127.0.0.1'&&
-        hostname!=='localhost'&&
-        location.protocol!=='file:'
-      )
-    );
-  }
-
   function resolveProfileBase(force){
     var pageLocal=localProfileBaseFromPage();
     if(pageLocal)return Promise.resolve(pageLocal);
-
-    // GitHub Pages must use the public tunnel for account login and sync.
-    // Do not probe localhost first, because browsers can block loopback
-    // requests from a public HTTPS page and produce a misleading fetch error.
-    if(isHostedJarvisPage()){
-      return Promise.resolve(
-        normalizeServerUrl(
-          profileServerUrl||
-          remoteResearchBase()||
-          DEFAULT_REMOTE_SERVER
-        )
-      );
-    }
 
     return probeLocalResearchBridge(!!force).then(function(base){
       return normalizeServerUrl(
         base||
         profileServerUrl||
-        remoteResearchBase()||
-        DEFAULT_REMOTE_SERVER
+        remoteResearchBase()
       );
     });
   }
@@ -8531,8 +9452,8 @@ body.jarvis-booting #startGate{
       .catch(function(){
         throw new Error(
           isLocal
-            ?'Could not reach the local Jarvis bridge. Keep jarvis_browser.py running.'
-            :'Could not reach the public Jarvis profile server. Keep jarvis_browser.py and ngrok running, then retry from the same GitHub Pages link.'
+            ?'Could not reach the local profile server. Keep jarvis_browser.py running and open Jarvis from http://127.0.0.1:5015.'
+            :'Could not reach the remote profile server. Start ngrok only when logging in from another computer.'
         );
       });
   }
@@ -8540,21 +9461,7 @@ body.jarvis-booting #startGate{
   function profileFetch(path,options){
     return resolveProfileBase(false).then(function(base){
       return profileFetchAtBase(base,path,options).catch(function(error){
-        var remote=normalizeServerUrl(
-          profileServerUrl||
-          remoteResearchBase()||
-          DEFAULT_REMOTE_SERVER
-        );
-
-        // On GitHub Pages, stay on the public tunnel and never tell the user
-        // to reopen Jarvis from localhost.
-        if(isHostedJarvisPage()){
-          if(remote&&remote!==base){
-            return profileFetchAtBase(remote,path,options);
-          }
-          throw error;
-        }
-
+        var remote=normalizeServerUrl(remoteResearchBase());
         if(isLocalResearchBase(base)&&remote&&remote!==base){
           return profileFetchAtBase(remote,path,options);
         }
@@ -8600,7 +9507,7 @@ body.jarvis-booting #startGate{
       localProfileBaseFromPage()||
       remoteServerUrl||
       publicTunnelUrl||
-      'http://127.0.0.1:5005';
+      'http://127.0.0.1:5015';
     document.getElementById('profileServerUrl').value=shownProfileServer;
     document.getElementById('profileUsername').value=profileUsername||'';
     if(signed){
@@ -8612,13 +9519,6 @@ body.jarvis-booting #startGate{
       document.getElementById('profileSyncInfo').textContent=
         routeLabel+' · '+profileServerUrl+
         '\nChats and Jarvis memory are saved to your account.';
-    }else{
-      document.getElementById('profileDisplayName').textContent=
-        'NOT SIGNED IN';
-      document.getElementById('profileSyncInfo').textContent=
-        isHostedJarvisPage()
-          ?'GitHub Pages mode: account login and sync use the public ngrok bridge.'
-          :'Sign in or create an account to sync chat history and Jarvis memory.';
     }
   }
   function openProfileModal(){ document.getElementById('memPanel').classList.remove('settings-open'); document.getElementById('profileModal').classList.add('open'); document.getElementById('profileModal').setAttribute('aria-hidden','false'); updateProfileUI(); }
@@ -8748,321 +9648,5 @@ body.jarvis-booting #startGate{
 
 })();
 </script>
-
-<script>
-(function(){
-  function escapeHtmlLocal(text){
-    return String(text).replace(/[&<>"]/g,function(ch){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];
-    });
-  }
-
-  function upgradeStartupMarkup(){
-    var gate=document.getElementById('startGate');
-    if(gate && !gate.querySelector('.startGateVisual')){
-      var secWarning=document.getElementById('secWarning');
-      var initBtn=document.getElementById('initBtn');
-      gate.innerHTML='';
-      var visual=document.createElement('div');
-      visual.className='startGateVisual';
-      visual.innerHTML=
-        '<div class="startGateCoreRing"></div>'+
-        '<div class="startGateCoreRingB"></div>'+
-        '<div class="startGateCoreRingC"></div>'+
-        '<div class="startGateCrosshairH"></div>'+
-        '<div class="startGateCrosshairV"></div>'+
-        '<div class="startGateReactor"></div>';
-      gate.appendChild(visual);
-
-      var kicker=document.createElement('div');
-      kicker.className='startGateKicker';
-      kicker.textContent='STARK-CLASS NEURAL OPERATING SYSTEM';
-      gate.appendChild(kicker);
-
-      var logo=document.createElement('div');
-      logo.id='bootLogo';
-      logo.textContent='J.A.R.V.I.S';
-      gate.appendChild(logo);
-
-      var title=document.createElement('h1');
-      title.textContent='TACTICAL INTERFACE STANDBY';
-      gate.appendChild(title);
-
-      var desc=document.createElement('p');
-      desc.textContent='Grant access to camera, microphone, motion, and location sensors for the full HUD experience. Anything denied falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning, vision, and local bridge commands.';
-      gate.appendChild(desc);
-
-      if(secWarning){ gate.appendChild(secWarning); }
-      if(initBtn){ gate.appendChild(initBtn); }
-
-      var hint=document.createElement('div');
-      hint.className='startGateHint';
-      hint.textContent='AUTHORIZED OPERATOR INPUT REQUIRED';
-      gate.appendChild(hint);
-    }
-
-    var overlay=document.getElementById('bootOverlay');
-    if(overlay && !overlay.querySelector('.bootHudTop')){
-      var rain=document.createElement('div');
-      rain.className='bootDataRain';
-      var particles=document.createElement('div');
-      particles.className='bootParticles';
-      var top=document.createElement('div');
-      top.className='bootHudTop';
-      top.innerHTML=
-        '<div class="bootHudIdentity">'+
-          '<div class="bootHudMini">NEURAL BOOTSTRAP / MARK VIII</div>'+
-          '<div class="bootHudName">J.A.R.V.I.S</div>'+
-          '<div class="bootHudSub">TACTICAL INTERFACE INITIALIZATION SEQUENCE</div>'+
-        '</div>'+
-        '<div class="bootHudMetrics">'+
-          '<span>POWER<b id="bootPowerMetric">00%</b></span>'+
-          '<span>LATENCY<b id="bootLatencyMetric">-- ms</b></span>'+
-          '<span>CORE TEMP<b id="bootTempMetric">21.4°C</b></span>'+
-        '</div>';
-      overlay.insertBefore(rain, overlay.firstChild);
-      overlay.insertBefore(particles, overlay.firstChild);
-      overlay.insertBefore(top, overlay.firstChild);
-
-      var terminal=document.createElement('div');
-      terminal.className='bootTerminal';
-      terminal.innerHTML=
-        '<div class="bootTerminalHead">'+
-          '<span>INITIALIZATION LOG</span>'+
-          '<b id="bootTerminalStatus">WAITING</b>'+
-        '</div>'+
-        '<div class="bootTerminalBody" id="bootTerminalBody"></div>';
-      overlay.appendChild(terminal);
-    }
-  }
-
-  function buildBootRain(){
-    var rain=document.querySelector('#bootOverlay .bootDataRain');
-    if(!rain)return;
-    var chars='01JARVISCORELINKNEURAL';
-    var html='';
-    for(var i=0;i<20;i++){
-      var col='';
-      for(var j=0;j<36;j++){
-        col += chars[(i*5+j*3)%chars.length];
-        if(j<35) col += '<br>';
-      }
-      html += '<span style="left:'+(i*5)+'%;--rainDur:'+(7+(i%6)*0.7)+'s;--rainDelay:'+(-0.45*(i%8))+'s">'+col+'</span>';
-    }
-    rain.innerHTML=html;
-  }
-
-  function buildBootParticles(){
-    var wrap=document.querySelector('#bootOverlay .bootParticles');
-    if(!wrap)return;
-    var html='';
-    for(var i=0;i<42;i++){
-      html += '<i style="left:'+((i*13)%100)+'%;--psize:'+(1+(i%3))+'px;--pdur:'+(4.6+(i%7)*0.45)+'s;--pdelay:'+(-0.25*(i%9))+'s;--pdrift:'+(((i%2?1:-1)*(8+(i%6)*5)))+'px"></i>';
-    }
-    wrap.innerHTML=html;
-  }
-
-  function bootLog(text){
-    var body=document.getElementById('bootTerminalBody');
-    if(!body)return;
-    var line=document.createElement('div');
-    line.className='bootLogLine';
-    line.innerHTML=
-      '<span>SYS</span>'+
-      '<b>'+escapeHtmlLocal(text)+'</b>'+
-      '<i>OK</i>';
-    body.appendChild(line);
-    while(body.children.length>5){
-      body.removeChild(body.firstChild);
-    }
-  }
-
-  function updateBootMetrics(stage,total){
-    var power = Math.round(stage/total*100);
-    var latency = Math.max(4, 28 - stage*3);
-    var temp = (21.4 + stage*4.7).toFixed(1)+'°C';
-    var powerEl=document.getElementById('bootPowerMetric');
-    var latencyEl=document.getElementById('bootLatencyMetric');
-    var tempEl=document.getElementById('bootTempMetric');
-    var terminalStatus=document.getElementById('bootTerminalStatus');
-    if(powerEl) powerEl.textContent=String(power).padStart(2,'0')+'%';
-    if(latencyEl) latencyEl.textContent=latency+' ms';
-    if(tempEl) tempEl.textContent=temp;
-    if(terminalStatus){
-      terminalStatus.textContent = stage>=total ? 'ONLINE' : 'SYNCING';
-    }
-  }
-
-  function safeUpdateBootNodes(stage){
-    if(typeof updateBootNodes === 'function'){
-      updateBootNodes(stage);
-    }
-  }
-
-  function safeSwapBootStatus(text){
-    if(typeof swapBootStatus === 'function'){
-      swapBootStatus(text);
-    }else{
-      var sub=document.getElementById('bootSub');
-      if(sub) sub.textContent=text;
-    }
-  }
-
-  function safeChecksum(stage){
-    if(typeof bootChecksumForStage === 'function'){
-      return bootChecksumForStage(stage);
-    }
-    var left=(0xA17C+stage*0x317).toString(16).toUpperCase();
-    var right=(0x4B90+stage*0x4D1).toString(16).toUpperCase();
-    return ('0000'.slice(left.length)+left)+'-'+('0000'.slice(right.length)+right);
-  }
-
-  window.runBoot = function(cb){
-    upgradeStartupMarkup();
-    buildBootRain();
-    buildBootParticles();
-
-    var overlay=document.getElementById('bootOverlay');
-    var core=document.getElementById('coreWrap');
-    var fill=document.getElementById('bootProgressFill');
-    var percent=document.getElementById('bootPercent');
-    var stageLabel=document.getElementById('bootStageLabel');
-    var checksum=document.getElementById('bootChecksum');
-    var finalText=document.getElementById('bootFinalText');
-    var text=document.getElementById('bootText');
-    var sub=document.getElementById('bootSub');
-    var terminal=document.getElementById('bootTerminalBody');
-    var lines = Array.isArray(window.bootLines) ? window.bootLines : [
-      'Igniting arc-reactor power bus…',
-      'Loading adaptive neural matrix…',
-      'Authenticating operator profile…',
-      'Calibrating optical systems…',
-      'Opening encrypted voice link…',
-      'Establishing local browser bridge…',
-      'Aligning tactical interface…',
-      'Releasing command authority…'
-    ];
-    var total=lines.length;
-
-    document.body.classList.remove('jarvis-ready');
-    document.body.classList.add('jarvis-booting');
-
-    overlay.style.display='flex';
-    overlay.style.opacity='1';
-    overlay.classList.remove('departing','boot-complete');
-    overlay.classList.add('boot-prime');
-    if(core) core.className='bootCore bootCoreIdle';
-    if(fill) fill.style.width='0%';
-    if(percent) percent.textContent='0%';
-    if(stageLabel) stageLabel.textContent='STAGE 00 / '+String(total).padStart(2,'0');
-    if(checksum) checksum.textContent='CHECKSUM 0000-0000';
-    if(text) text.textContent='J.A.R.V.I.S // CINEMATIC BOOTSTRAP';
-    if(sub) sub.textContent='Staging reactor ignition and tactical system handshake…';
-    if(finalText) finalText.textContent='SYSTEM ONLINE';
-    if(terminal) terminal.innerHTML='';
-    updateBootMetrics(0,total);
-    safeUpdateBootNodes(0);
-    if(typeof playPowerUpTone === 'function'){ try{ playPowerUpTone(); }catch(e){} }
-
-    requestAnimationFrame(function(){
-      overlay.classList.add('boot-engaged');
-    });
-
-    var stageDelay=420;
-    lines.forEach(function(line,index){
-      var stage=index+1;
-      setTimeout(function(){
-        if(core) core.className='bootCore stage-'+Math.min(stage,8);
-        safeSwapBootStatus(line);
-        bootLog(line);
-        updateBootMetrics(stage,total);
-
-        var progress=Math.round(stage/total*100);
-        if(fill) fill.style.width=progress+'%';
-        if(percent) percent.textContent=progress+'%';
-        if(stageLabel){
-          stageLabel.textContent='STAGE '+String(stage).padStart(2,'0')+' / '+String(total).padStart(2,'0');
-        }
-        if(checksum){
-          checksum.textContent='CHECKSUM '+safeChecksum(stage);
-        }
-        safeUpdateBootNodes(stage);
-      }, stageDelay*stage);
-    });
-
-    setTimeout(function(){
-      safeUpdateBootNodes(total+1);
-      overlay.classList.add('boot-complete');
-      updateBootMetrics(total,total);
-      var terminalStatus=document.getElementById('bootTerminalStatus');
-      if(terminalStatus) terminalStatus.textContent='ONLINE';
-      bootLog('Command core online. J.A.R.V.I.S is ready.');
-      setTimeout(function(){
-        overlay.classList.add('departing');
-        setTimeout(function(){
-          overlay.style.display='none';
-          overlay.classList.remove('boot-prime','boot-engaged','boot-complete','departing');
-          document.body.classList.remove('jarvis-booting');
-          document.body.classList.add('jarvis-ready');
-          if(cb) cb();
-          if(typeof scheduleWakeLabelFade === 'function'){
-            scheduleWakeLabelFade();
-          }
-        }, 950);
-      }, 720);
-    }, stageDelay*total + 220);
-  };
-
-  window.__jarvisMainStart = function(){
-    upgradeStartupMarkup();
-
-    var gate=document.getElementById('startGate');
-    if(!gate || state.booted || gate.style.display==='none' || gate.classList.contains('launching')) return;
-
-    var overlay=document.getElementById('bootOverlay');
-    var button=document.getElementById('initBtn');
-
-    if(button){
-      button.disabled=true;
-      button.innerHTML='<span>POWERING REACTOR…</span><i></i>';
-    }
-
-    document.body.classList.add('jarvis-booting');
-    overlay.style.display='flex';
-    overlay.style.opacity='1';
-    overlay.classList.remove('departing','boot-complete');
-    overlay.classList.add('boot-prime');
-
-    requestAnimationFrame(function(){
-      gate.classList.add('launching');
-      overlay.classList.add('boot-engaged');
-    });
-
-    setTimeout(function(){
-      gate.style.display='none';
-      window.runBoot(function(){
-        if(typeof initGeo === 'function') initGeo();
-        if(typeof initOrientation === 'function') initOrientation();
-        if(typeof initBattery === 'function') initBattery();
-        if(typeof updateTelemetry === 'function') updateTelemetry();
-        if(typeof speak === 'function') speak('Good to see you. All systems nominal.');
-      });
-    }, 180);
-  };
-
-  upgradeStartupMarkup();
-
-  var initBtn=document.getElementById('initBtn');
-  if(initBtn){
-    var clone=initBtn.cloneNode(true);
-    initBtn.parentNode.replaceChild(clone, initBtn);
-    clone.addEventListener('click', function(event){
-      event.preventDefault();
-      window.__jarvisMainStart();
-    });
-  }
-})();
-</script>
-
 </body>
 </html>
