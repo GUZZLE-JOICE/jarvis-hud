@@ -1052,6 +1052,11 @@
     .cameraActualGrid{grid-template-columns:1fr}
   }
 
+
+  #cameraModeResult.cameraModeExact{color:var(--mint)}
+  #cameraModeResult.cameraModePartial{color:var(--amber)}
+  #cameraModeResult.cameraModeFailed{color:var(--red)}
+
 </style>
 </head>
 <body>
@@ -1157,8 +1162,10 @@
 </select>
 </div>
 <div class="cameraControlGroup">
-<label class="settingsLabel" for="cameraFpsSelect">Requested frame rate</label>
+<label class="settingsLabel" for="cameraFpsSelect">Capture frame rate</label>
 <select class="settingsField" id="cameraFpsSelect">
+<option value="15">15 FPS · low bandwidth</option>
+<option value="24">24 FPS · cinematic</option>
 <option value="30">30 FPS · stable</option>
 <option selected="" value="60">60 FPS · smoother tracking</option>
 </select>
@@ -1194,14 +1201,16 @@
 <div class="settingsCard">
 <h3><svg fill="none" viewbox="0 0 24 24"><path d="M4 6h16v12H4z"></path><path d="M8 21h8M12 18v3"></path></svg>Current Camera Mode</h3>
 <div class="cameraActualGrid">
+<div class="cameraActualItem"><span>Requested mode</span><b id="cameraRequestedMode">640 × 480 @ 60 FPS</b></div>
+<div class="cameraActualItem"><span>Mode result</span><b id="cameraModeResult">CAMERA OFF</b></div>
 <div class="cameraActualItem"><span>Actual resolution</span><b id="cameraActualResolution">CAMERA OFF</b></div>
 <div class="cameraActualItem"><span>Actual frame rate</span><b id="cameraActualFps">—</b></div>
 <div class="cameraActualItem"><span>Aspect ratio</span><b id="cameraActualAspect">—</b></div>
 <div class="cameraActualItem"><span>Active source</span><b id="cameraActualDevice">—</b></div>
 </div>
-<div class="cameraRecommendation"><b>Best wide-view starting point:</b> 640 × 480, Full feed, 1.00× preview zoom, and the minimum hardware zoom.</div>
+<div class="cameraRecommendation"><b>Best wide-view starting point:</b> 640 × 480, Full feed, 1.00× preview zoom, and minimum hardware zoom. Jarvis now requests the selected resolution and FPS as exact hardware modes first, then clearly reports any webcam or driver limitation.</div>
 <div class="settingsActions">
-<button class="smallBtn" id="applyCameraSettingsBtn" type="button">Apply camera settings</button>
+<button class="smallBtn" id="applyCameraSettingsBtn" type="button">Apply + restart camera</button>
 <button class="smallBtn" id="restartCameraBtn" type="button">Restart camera</button>
 <button class="smallBtn" id="resetCameraSettingsBtn" type="button">Reset wide view</button>
 </div>
@@ -3385,6 +3394,10 @@
   var cameraActiveTrack = null;
   var cameraTrackCapabilities = null;
   var cameraRestartWantsTracking = false;
+  var cameraModeRequestSerial = 0;
+  var cameraAutoApplyTimer = null;
+  var cameraLastAttemptLabel = '';
+  var cameraLastConstraintError = '';
 
   var CAMERA_SETTINGS_STORAGE='jarvis_camera_settings_v1';
   var CAMERA_HARDWARE_ZOOM_STORAGE='jarvis_camera_hardware_zoom_v1';
@@ -3447,25 +3460,189 @@
     };
   }
 
-  function buildCameraConstraints(){
-    var video={
-      facingMode:'user',
-      frameRate:{ideal:Number(cameraSettings.fps)||60},
-      resizeMode:{ideal:'none'}
-    };
-    var resolution=parseCameraResolution(cameraSettings.resolution);
-    if(resolution){
-      video.width={ideal:resolution.width};
-      video.height={ideal:resolution.height};
-    }
+  function cameraBaseVideoConstraints(){
+    var video={};
     if(cameraSettings.deviceId){
-      delete video.facingMode;
       video.deviceId={exact:cameraSettings.deviceId};
+    }else{
+      video.facingMode={ideal:'user'};
     }
-    return {
-      audio:false,
-      video:video
-    };
+    if(
+      navigator.mediaDevices&&
+      navigator.mediaDevices.getSupportedConstraints
+    ){
+      var supported=navigator.mediaDevices.getSupportedConstraints();
+      if(supported.resizeMode)video.resizeMode={ideal:'none'};
+    }
+    return video;
+  }
+
+  function cloneCameraConstraints(value){
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function buildCameraConstraintAttempts(){
+    var base=cameraBaseVideoConstraints();
+    var resolution=parseCameraResolution(cameraSettings.resolution);
+    var fps=Math.max(1,Number(cameraSettings.fps)||60);
+    var attempts=[];
+
+    function addAttempt(label,mode,modify){
+      var video=cloneCameraConstraints(base);
+      modify(video);
+      attempts.push({
+        label:label,
+        mode:mode,
+        constraints:{audio:false,video:video}
+      });
+    }
+
+    if(resolution){
+      // First attempt: force the exact resolution and exact frame rate.
+      addAttempt(
+        'EXACT RESOLUTION + FPS',
+        'exact',
+        function(video){
+          video.width={exact:resolution.width};
+          video.height={exact:resolution.height};
+          video.frameRate={exact:fps};
+        }
+      );
+
+      // Second attempt: never give up the selected resolution, but allow the
+      // webcam to deliver the closest FPS at that exact size.
+      addAttempt(
+        'EXACT RESOLUTION + BEST FPS',
+        'resolution-exact',
+        function(video){
+          video.width={exact:resolution.width};
+          video.height={exact:resolution.height};
+          video.frameRate={ideal:fps,max:fps};
+        }
+      );
+
+      // Third attempt: force FPS while letting the driver choose its closest
+      // resolution. This is useful on webcams with FPS-specific mode tables.
+      addAttempt(
+        'EXACT FPS + CLOSEST RESOLUTION',
+        'fps-exact',
+        function(video){
+          video.width={ideal:resolution.width};
+          video.height={ideal:resolution.height};
+          video.frameRate={exact:fps};
+        }
+      );
+
+      // Final requested-mode fallback before device default.
+      addAttempt(
+        'CLOSEST SUPPORTED MODE',
+        'closest',
+        function(video){
+          video.width={ideal:resolution.width};
+          video.height={ideal:resolution.height};
+          video.frameRate={ideal:fps};
+        }
+      );
+    }else{
+      addAttempt(
+        'EXACT FPS + DEVICE RESOLUTION',
+        'fps-exact',
+        function(video){
+          video.frameRate={exact:fps};
+        }
+      );
+      addAttempt(
+        'DEVICE DEFAULT + BEST FPS',
+        'closest',
+        function(video){
+          video.frameRate={ideal:fps};
+        }
+      );
+    }
+
+    // Last-resort camera opening attempt. It is only used after all selected
+    // modes fail, and the UI reports that the hardware ignored the request.
+    addAttempt(
+      'DEVICE DEFAULT',
+      'default',
+      function(){}
+    );
+    return attempts;
+  }
+
+  function requestCameraFromAttempts(attempts,index,errors){
+    errors=errors||[];
+    if(index>=attempts.length){
+      var last=errors.length
+        ?errors[errors.length-1].error
+        :new Error('No camera mode could be opened.');
+      last.jarvisCameraAttempts=errors;
+      return Promise.reject(last);
+    }
+
+    var attempt=attempts[index];
+    return navigator.mediaDevices
+      .getUserMedia(attempt.constraints)
+      .then(function(stream){
+        return {
+          stream:stream,
+          attempt:attempt,
+          errors:errors
+        };
+      })
+      .catch(function(error){
+        errors.push({
+          label:attempt.label,
+          error:error
+        });
+        return requestCameraFromAttempts(
+          attempts,
+          index+1,
+          errors
+        );
+      });
+  }
+
+  function selectedTrackModeConstraints(strictFps){
+    var resolution=parseCameraResolution(cameraSettings.resolution);
+    var fps=Math.max(1,Number(cameraSettings.fps)||60);
+    var constraints={};
+    if(resolution){
+      constraints.width={exact:resolution.width};
+      constraints.height={exact:resolution.height};
+    }
+    constraints.frameRate=strictFps
+      ?{exact:fps}
+      :{ideal:fps,max:fps};
+    return constraints;
+  }
+
+  function enforceSelectedCameraMode(track){
+    if(!track||!track.applyConstraints){
+      return Promise.resolve('browser-chosen');
+    }
+
+    return track.applyConstraints(
+      selectedTrackModeConstraints(true)
+    )
+      .then(function(){
+        return 'exact';
+      })
+      .catch(function(exactError){
+        cameraLastConstraintError=
+          exactError&&exactError.message
+            ?exactError.message
+            :String(exactError||'');
+        return track.applyConstraints(
+          selectedTrackModeConstraints(false)
+        )
+          .then(function(){
+            return 'resolution-exact';
+          })
+          .catch(function(){
+            return 'browser-chosen';
+          });
+      });
   }
 
   function applyCameraPreviewStyles(){
@@ -3510,14 +3687,145 @@
     applyCameraPreviewStyles();
   }
 
+  function requestedCameraModeLabel(){
+    var resolution=parseCameraResolution(cameraSettings.resolution);
+    var resolutionLabel=resolution
+      ?resolution.width+' × '+resolution.height
+      :'DEVICE DEFAULT';
+    return resolutionLabel+
+      ' @ '+(Number(cameraSettings.fps)||60)+' FPS';
+  }
+
+  function cameraModeComparison(){
+    var resolution=parseCameraResolution(cameraSettings.resolution);
+    var requestedFps=Number(cameraSettings.fps)||60;
+    var settings=
+      cameraActiveTrack&&cameraActiveTrack.getSettings
+        ?cameraActiveTrack.getSettings()
+        :{};
+    var actualWidth=Number(settings.width)||0;
+    var actualHeight=Number(settings.height)||0;
+    var actualFps=Number(settings.frameRate)||0;
+    var resolutionMatches=!resolution||(
+      actualWidth===resolution.width&&
+      actualHeight===resolution.height
+    );
+    var fpsMatches=
+      actualFps>0&&
+      Math.abs(actualFps-requestedFps)<=1.5;
+    return {
+      requestedResolution:resolution,
+      requestedFps:requestedFps,
+      actualWidth:actualWidth,
+      actualHeight:actualHeight,
+      actualFps:actualFps,
+      resolutionMatches:resolutionMatches,
+      fpsMatches:fpsMatches
+    };
+  }
+
+  function reportCameraModeResult(){
+    var resultElement=document.getElementById('cameraModeResult');
+    if(!resultElement)return;
+    resultElement.classList.remove(
+      'cameraModeExact',
+      'cameraModePartial',
+      'cameraModeFailed'
+    );
+
+    if(!cameraActiveTrack||cameraActiveTrack.readyState==='ended'){
+      resultElement.textContent='CAMERA OFF';
+      return;
+    }
+
+    var comparison=cameraModeComparison();
+    var actualLabel=
+      comparison.actualWidth+' × '+
+      comparison.actualHeight+' @ '+
+      (
+        comparison.actualFps
+          ?comparison.actualFps.toFixed(1)
+          :'?'
+      )+' FPS';
+
+    if(
+      comparison.resolutionMatches&&
+      comparison.fpsMatches
+    ){
+      resultElement.textContent='EXACT MODE ACTIVE';
+      resultElement.classList.add('cameraModeExact');
+      cameraStatusMessage(
+        'Exact camera mode active: '+actualLabel+'.',
+        true
+      );
+      return;
+    }
+
+    resultElement.classList.add('cameraModePartial');
+    if(
+      comparison.resolutionMatches&&
+      !comparison.fpsMatches
+    ){
+      resultElement.textContent='FPS LIMITED BY CAMERA';
+      cameraStatusMessage(
+        'Resolution changed correctly, but the camera or driver delivered '+
+        (
+          comparison.actualFps
+            ?comparison.actualFps.toFixed(1)
+            :'an unknown'
+        )+
+        ' FPS instead of '+comparison.requestedFps+' FPS.',
+        false
+      );
+      return;
+    }
+
+    if(
+      !comparison.resolutionMatches&&
+      comparison.fpsMatches
+    ){
+      resultElement.textContent='RESOLUTION NOT SUPPORTED';
+      cameraStatusMessage(
+        'FPS changed correctly, but the webcam did not support the selected '+
+        'resolution. Actual mode: '+actualLabel+'.',
+        false
+      );
+      return;
+    }
+
+    resultElement.textContent='CLOSEST SUPPORTED MODE';
+    cameraStatusMessage(
+      'The webcam or Windows camera driver does not expose the exact selected '+
+      'mode. Actual mode: '+actualLabel+
+      '. Attempt used: '+(cameraLastAttemptLabel||'browser default')+'.',
+      false
+    );
+  }
+
   function updateActualCameraStatus(){
+    var requestedElement=
+      document.getElementById('cameraRequestedMode');
+    var resultElement=
+      document.getElementById('cameraModeResult');
     var resolutionElement=
       document.getElementById('cameraActualResolution');
     var fpsElement=document.getElementById('cameraActualFps');
     var aspectElement=document.getElementById('cameraActualAspect');
     var deviceElement=document.getElementById('cameraActualDevice');
 
+    if(requestedElement){
+      requestedElement.textContent=requestedCameraModeLabel();
+    }
+
     if(!cameraActiveTrack||cameraActiveTrack.readyState==='ended'){
+      if(resultElement){
+        resultElement.textContent='CAMERA OFF';
+        resultElement.classList.remove(
+          'cameraModeExact',
+          'cameraModePartial',
+          'cameraModeFailed'
+        );
+      }
       if(resolutionElement)resolutionElement.textContent='CAMERA OFF';
       if(fpsElement)fpsElement.textContent='—';
       if(aspectElement)aspectElement.textContent='—';
@@ -3544,9 +3852,13 @@
     if(aspectElement){
       var ratio=width&&height?width/height:0;
       var label='UNKNOWN';
-      if(Math.abs(ratio-4/3)<.05)label='4:3 · WIDE SENSOR VIEW';
-      else if(Math.abs(ratio-16/9)<.05)label='16:9 · WIDESCREEN';
-      else if(ratio)label=ratio.toFixed(2)+':1';
+      if(Math.abs(ratio-4/3)<.05){
+        label='4:3 · WIDE SENSOR VIEW';
+      }else if(Math.abs(ratio-16/9)<.05){
+        label='16:9 · WIDESCREEN';
+      }else if(ratio){
+        label=ratio.toFixed(2)+':1';
+      }
       aspectElement.textContent=label;
     }
     if(deviceElement){
@@ -3555,6 +3867,7 @@
         settings.deviceId||
         'DEFAULT CAMERA';
     }
+    reportCameraModeResult();
   }
 
   function refreshCameraDeviceList(){
@@ -3692,6 +4005,7 @@
   }
 
   function stopCameraStreamOnly(){
+    cameraModeRequestSerial+=1;
     if(camStream){
       try{
         camStream.getTracks().forEach(function(track){
@@ -3718,8 +4032,17 @@
     cameraRestartWantsTracking=resumeTracking;
     stopCameraStreamOnly();
     document.getElementById('statCam').textContent='RESTARTING';
-    cameraStatusMessage('Restarting camera with the selected mode…',null);
-    return initCamera();
+    cameraStatusMessage(
+      'Releasing the old camera mode and applying '+
+      requestedCameraModeLabel()+'…',
+      null
+    );
+
+    // Windows webcam drivers often need a moment after track.stop() before
+    // they will negotiate a different resolution or FPS mode.
+    return new Promise(function(resolve){
+      setTimeout(resolve,260);
+    }).then(initCamera);
   }
 
   function readCameraSettingsFromUI(){
@@ -3778,6 +4101,36 @@
     refreshCameraDeviceList();
     updateActualCameraStatus();
 
+    function scheduleCameraModeApply(){
+      clearTimeout(cameraAutoApplyTimer);
+      readCameraSettingsFromUI();
+      updateActualCameraStatus();
+
+      if(!camStream){
+        cameraStatusMessage(
+          'Mode saved. Turn the camera on to apply '+
+          requestedCameraModeLabel()+'.',
+          true
+        );
+        return;
+      }
+
+      cameraStatusMessage(
+        'Applying '+requestedCameraModeLabel()+'…',
+        null
+      );
+      cameraAutoApplyTimer=setTimeout(function(){
+        restartCameraWithSettings();
+      },220);
+    }
+
+    document.getElementById('cameraDeviceSelect')
+      .addEventListener('change',scheduleCameraModeApply);
+    document.getElementById('cameraResolutionSelect')
+      .addEventListener('change',scheduleCameraModeApply);
+    document.getElementById('cameraFpsSelect')
+      .addEventListener('change',scheduleCameraModeApply);
+
     document.getElementById('cameraPreviewZoomSlider')
       .addEventListener('input',function(){
         cameraSettings.previewZoom=Math.max(
@@ -3814,12 +4167,15 @@
 
     document.getElementById('applyCameraSettingsBtn')
       .addEventListener('click',function(){
+        clearTimeout(cameraAutoApplyTimer);
         readCameraSettingsFromUI();
+        updateActualCameraStatus();
         if(camStream){
           restartCameraWithSettings();
         }else{
           cameraStatusMessage(
-            'Settings saved. Turn the camera on to use them.',
+            requestedCameraModeLabel()+
+            ' saved. Turn the camera on to apply it.',
             true
           );
         }
@@ -3849,6 +4205,27 @@
     }
   }
 
+  function waitForCameraMetadata(video){
+    if(
+      video.videoWidth&&
+      video.videoHeight&&
+      video.readyState>=1
+    ){
+      return Promise.resolve();
+    }
+    return new Promise(function(resolve){
+      var finished=false;
+      function done(){
+        if(finished)return;
+        finished=true;
+        video.removeEventListener('loadedmetadata',done);
+        resolve();
+      }
+      video.addEventListener('loadedmetadata',done,{once:true});
+      setTimeout(done,1400);
+    });
+  }
+
   function initCamera(){
     if(!isSecureCtx()){
       document.getElementById('statCam').textContent='NEEDS HTTPS';
@@ -3871,30 +4248,51 @@
       return Promise.resolve(camStream);
     }
 
-    cameraStatusMessage('Opening camera…',null);
-    var requestedConstraints=buildCameraConstraints();
+    var requestSerial=++cameraModeRequestSerial;
+    cameraLastConstraintError='';
+    cameraLastAttemptLabel='';
+    updateActualCameraStatus();
+    cameraStatusMessage(
+      'Requesting '+requestedCameraModeLabel()+'…',
+      null
+    );
 
-    function requestCamera(constraints){
-      return navigator.mediaDevices.getUserMedia(constraints);
+    function openSelectedDevice(){
+      return requestCameraFromAttempts(
+        buildCameraConstraintAttempts(),
+        0,
+        []
+      );
     }
 
-    return requestCamera(requestedConstraints)
+    return openSelectedDevice()
       .catch(function(error){
-        // A removed camera can leave a saved device ID behind. Fall back to
-        // the default device instead of making the camera unusable.
+        // A removed or renamed camera can leave a stale device ID. Retry all
+        // exact mode attempts on the current default camera.
         if(cameraSettings.deviceId){
           cameraSettings.deviceId='';
           saveCameraSettings();
           updateCameraSettingsUI();
-          return requestCamera(buildCameraConstraints());
+          return openSelectedDevice();
         }
         throw error;
       })
-      .then(function(stream){
-        camStream=stream;
+      .then(function(packet){
+        if(requestSerial!==cameraModeRequestSerial){
+          try{
+            packet.stream.getTracks().forEach(function(track){
+              track.stop();
+            });
+          }catch(e){}
+          return null;
+        }
+
+        camStream=packet.stream;
+        cameraLastAttemptLabel=packet.attempt.label;
         var video=document.getElementById('camVideo');
-        video.srcObject=stream;
+        video.srcObject=camStream;
         applyCameraPreviewStyles();
+
         try{
           var playResult=video.play();
           if(playResult&&playResult.catch){
@@ -3902,38 +4300,65 @@
           }
         }catch(e){}
 
-        var track=stream.getVideoTracks()[0]||null;
-        return configureCameraTrack(track).then(function(){
-          state.perms.cam=true;
-          setBadge('badgeCam',true);
-          document.getElementById('dotCam').classList.add('on');
-          document.getElementById('statCam').textContent='LIVE';
-          showCamera();
-          refreshCameraDeviceList();
-          updateActualCameraStatus();
-          cameraStatusMessage(
-            'Camera active with the selected settings.',
-            true
-          );
+        var track=camStream.getVideoTracks()[0]||null;
+        return waitForCameraMetadata(video)
+          .then(function(){
+            return enforceSelectedCameraMode(track);
+          })
+          .then(function(enforcement){
+            if(enforcement==='exact'){
+              cameraLastAttemptLabel=
+                'EXACT TRACK CONSTRAINTS';
+            }else if(enforcement==='resolution-exact'){
+              cameraLastAttemptLabel=
+                'EXACT RESOLUTION + BEST FPS';
+            }
+            return configureCameraTrack(track);
+          })
+          .then(function(){
+            return new Promise(function(resolve){
+              // Track settings can update one or two frames after constraints.
+              setTimeout(resolve,180);
+            });
+          })
+          .then(function(){
+            state.perms.cam=true;
+            setBadge('badgeCam',true);
+            document.getElementById('dotCam').classList.add('on');
+            document.getElementById('statCam').textContent='LIVE';
+            showCamera();
+            refreshCameraDeviceList();
+            updateActualCameraStatus();
 
-          if(cameraRestartWantsTracking){
-            cameraRestartWantsTracking=false;
-            setTimeout(function(){
-              if(
-                camStream&&
-                typeof startHandTracking==='function'&&
-                !handTrackingActive
-              ){
-                startHandTracking();
-              }
-            },350);
-          }
-          return stream;
-        });
+            if(cameraRestartWantsTracking){
+              cameraRestartWantsTracking=false;
+              setTimeout(function(){
+                if(
+                  camStream&&
+                  typeof startHandTracking==='function'&&
+                  !handTrackingActive
+                ){
+                  startHandTracking();
+                }
+              },350);
+            }
+            return camStream;
+          });
       })
       .catch(function(err){
         cameraRestartWantsTracking=false;
         updateActualCameraStatus();
+        var resultElement=
+          document.getElementById('cameraModeResult');
+        if(resultElement){
+          resultElement.textContent='MODE FAILED';
+          resultElement.classList.remove(
+            'cameraModeExact',
+            'cameraModePartial'
+          );
+          resultElement.classList.add('cameraModeFailed');
+        }
+
         if(err.name==='NotAllowedError'){
           if(isInIframe()){
             document.getElementById('statCam').textContent=
@@ -3952,7 +4377,8 @@
             err.name||'ERROR';
         }
         cameraStatusMessage(
-          'Camera could not use that mode: '+(err.message||err.name||err),
+          'Camera could not open any compatible mode: '+
+          (err.message||err.name||err),
           false
         );
         return null;
