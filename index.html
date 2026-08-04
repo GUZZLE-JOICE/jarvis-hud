@@ -816,7 +816,7 @@
   font-size:9px;
   letter-spacing:2.8px;
 }
-#reticleWrap.cam-active{transform:translate(calc(-50% + 430px),-50%) scale(.72);opacity:.62}
+#reticleWrap.cam-active{transform:translate(calc(-50% + var(--reactor-camera-shift,535px)),-50%) scale(.72);opacity:.72}
 
 #bottomBar{
   left:340px;
@@ -1057,6 +1057,604 @@
   #cameraModeResult.cameraModePartial{color:var(--amber)}
   #cameraModeResult.cameraModeFailed{color:var(--red)}
 
+
+/* =========================================================
+   CINEMATIC J.A.R.V.I.S STARTUP SEQUENCE
+   ========================================================= */
+#startGate{
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 44%,rgba(0,229,255,.095),transparent 24%),
+    radial-gradient(circle at 50% 50%,rgba(58,255,196,.025),transparent 46%),
+    linear-gradient(145deg,#010405,#030a0c 52%,#041115);
+  transition:
+    opacity .5s ease,
+    transform .65s cubic-bezier(.16,1,.3,1),
+    filter .5s ease;
+}
+#startGate::before{
+  content:'';
+  position:absolute;
+  inset:-25%;
+  opacity:.18;
+  background-image:
+    linear-gradient(rgba(0,229,255,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.08) 1px,transparent 1px);
+  background-size:42px 42px;
+  transform:perspective(750px) rotateX(62deg) translateY(18%);
+  transform-origin:center bottom;
+  animation:startGridDrift 8s linear infinite;
+}
+#startGate::after{
+  content:'';
+  position:absolute;
+  width:430px;
+  height:430px;
+  border:1px solid rgba(0,229,255,.13);
+  border-radius:50%;
+  box-shadow:
+    0 0 0 18px rgba(0,229,255,.018),
+    0 0 0 54px rgba(0,229,255,.01),
+    0 0 90px rgba(0,229,255,.08);
+  animation:startGateOrbit 18s linear infinite;
+}
+@keyframes startGridDrift{
+  to{background-position:42px 42px}
+}
+@keyframes startGateOrbit{
+  to{transform:rotate(360deg)}
+}
+#startGate>*{position:relative;z-index:2}
+#startGate #bootLogo{
+  font-size:clamp(30px,5vw,58px);
+  letter-spacing:clamp(8px,1.6vw,19px);
+  color:#e8feff;
+  text-shadow:
+    0 0 10px rgba(0,229,255,.72),
+    0 0 42px rgba(0,229,255,.28);
+}
+#startGate h1{
+  font-size:12px;
+  letter-spacing:5px;
+  color:var(--mint);
+}
+#startGate p{
+  max-width:580px;
+  color:#8ebdc2;
+  font-size:15px;
+}
+.startBtn{
+  position:relative;
+  overflow:hidden;
+  min-width:250px;
+  padding:16px 32px;
+  border-color:rgba(0,229,255,.55);
+  background:linear-gradient(145deg,rgba(0,229,255,.08),rgba(58,255,196,.035));
+  box-shadow:
+    0 18px 50px rgba(0,0,0,.32),
+    inset 0 0 24px rgba(0,229,255,.025);
+}
+.startBtn::before{
+  content:'';
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:-45%;
+  width:35%;
+  background:linear-gradient(90deg,transparent,rgba(220,255,255,.35),transparent);
+  transform:skewX(-18deg);
+  animation:startButtonSweep 2.8s ease-in-out infinite;
+}
+@keyframes startButtonSweep{
+  0%,40%{left:-45%;opacity:0}
+  62%{opacity:1}
+  100%{left:125%;opacity:0}
+}
+#startGate.launching{
+  opacity:0;
+  transform:scale(1.045);
+  filter:blur(10px);
+  pointer-events:none;
+}
+#startGate.launching .startBtn{
+  transform:scale(.92);
+  box-shadow:0 0 55px rgba(0,229,255,.5);
+}
+
+#bootOverlay{
+  overflow:hidden;
+  opacity:1;
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 50% 49%,rgba(0,229,255,.09),transparent 26%),
+    radial-gradient(circle at 50% 50%,rgba(58,255,196,.025),transparent 48%),
+    linear-gradient(145deg,#010405,#02090b 48%,#041215);
+  transition:
+    opacity .9s ease,
+    filter .9s ease,
+    transform 1s cubic-bezier(.16,1,.3,1);
+}
+#bootOverlay.departing{
+  opacity:0;
+  filter:blur(8px) brightness(1.55);
+  transform:scale(1.035);
+}
+.bootGrid{
+  position:absolute;
+  inset:-20%;
+  z-index:-4;
+  opacity:.19;
+  background-image:
+    linear-gradient(rgba(0,229,255,.075) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.075) 1px,transparent 1px);
+  background-size:48px 48px;
+  transform:perspective(850px) rotateX(61deg) translateY(16%);
+  transform-origin:center bottom;
+  animation:bootGridMove 7s linear infinite;
+}
+@keyframes bootGridMove{
+  to{background-position:48px 48px}
+}
+.bootSweep{
+  position:absolute;
+  z-index:-1;
+  left:0;
+  right:0;
+  top:-14%;
+  height:18%;
+  opacity:.5;
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.13),rgba(58,255,196,.035),transparent);
+  filter:blur(1px);
+  animation:bootSweepMove 2.2s linear infinite;
+}
+@keyframes bootSweepMove{
+  to{top:108%}
+}
+.bootVignette{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+  box-shadow:
+    inset 0 0 150px rgba(0,0,0,.82),
+    inset 0 0 34px rgba(0,229,255,.045);
+}
+.bootFrame{
+  position:absolute;
+  left:6%;
+  right:6%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  opacity:.32;
+}
+.bootFrameTop{top:7%}
+.bootFrameBottom{bottom:7%}
+.bootFrame::before,
+.bootFrame::after{
+  content:'';
+  position:absolute;
+  top:-5px;
+  width:11px;
+  height:11px;
+  border:1px solid var(--cyan);
+  transform:rotate(45deg);
+}
+.bootFrame::before{left:0}
+.bootFrame::after{right:0}
+
+.bootTelemetry{
+  position:absolute;
+  top:50%;
+  width:min(260px,22vw);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  opacity:0;
+  transform:translateY(-50%);
+  transition:opacity .55s ease,transform .65s cubic-bezier(.16,1,.3,1);
+}
+.bootTelemetryLeft{
+  left:6%;
+  transform:translate(-38px,-50%);
+}
+.bootTelemetryRight{
+  right:6%;
+  transform:translate(38px,-50%);
+}
+#bootOverlay.boot-engaged .bootTelemetry{
+  opacity:1;
+  transform:translate(0,-50%);
+}
+.bootTelemetryTitle{
+  margin-bottom:7px;
+  color:var(--cyan);
+  font:9px 'JetBrains Mono',monospace;
+  letter-spacing:2.6px;
+}
+.bootNode{
+  min-height:39px;
+  display:grid;
+  grid-template-columns:8px 1fr auto;
+  align-items:center;
+  gap:9px;
+  padding:0 10px;
+  border:1px solid rgba(0,229,255,.12);
+  background:linear-gradient(145deg,rgba(0,229,255,.035),rgba(255,255,255,.008));
+  color:#729ca1;
+  font:8px 'JetBrains Mono',monospace;
+  letter-spacing:1.2px;
+  transition:
+    border-color .3s,
+    background .3s,
+    color .3s,
+    transform .3s;
+}
+.bootNode i{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#284044;
+  box-shadow:none;
+  transition:.3s;
+}
+.bootNode b{
+  font-weight:500;
+  color:#55777b;
+}
+.bootNode.active{
+  transform:translateX(4px);
+  border-color:rgba(0,229,255,.58);
+  background:rgba(0,229,255,.09);
+  color:#dffeff;
+  box-shadow:0 0 22px rgba(0,229,255,.08);
+}
+.bootTelemetryRight .bootNode.active{
+  transform:translateX(-4px);
+}
+.bootNode.active i{
+  background:var(--cyan);
+  box-shadow:0 0 13px var(--cyan);
+  animation:bootNodePulse .55s ease-in-out infinite alternate;
+}
+.bootNode.active b{color:var(--cyan)}
+.bootNode.complete{
+  border-color:rgba(58,255,196,.2);
+  color:#a9ddd6;
+}
+.bootNode.complete i{
+  background:var(--mint);
+  box-shadow:0 0 9px rgba(58,255,196,.55);
+}
+.bootNode.complete b{color:var(--mint)}
+@keyframes bootNodePulse{
+  to{transform:scale(1.45);opacity:.7}
+}
+
+#bootStageLabel{
+  position:absolute;
+  top:9%;
+  left:50%;
+  transform:translateX(-50%);
+  padding:7px 14px;
+  border:1px solid rgba(0,229,255,.18);
+  background:rgba(3,12,15,.68);
+  color:#80b9be;
+  font:8px 'JetBrains Mono',monospace;
+  letter-spacing:3px;
+}
+
+.bootCoreShell{
+  position:relative;
+  width:360px;
+  height:360px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform:scale(.78);
+  opacity:0;
+  transition:
+    opacity .55s ease,
+    transform .8s cubic-bezier(.16,1,.3,1);
+}
+#bootOverlay.boot-engaged .bootCoreShell{
+  opacity:1;
+  transform:scale(1);
+}
+#coreWrap{
+  width:246px;
+  height:246px;
+  z-index:6;
+  transition:
+    transform .7s cubic-bezier(.16,1,.3,1),
+    filter .5s ease;
+}
+#coreSvg{
+  filter:drop-shadow(0 0 12px rgba(0,229,255,.08));
+}
+.bootCoreBloom{
+  position:absolute;
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  opacity:.22;
+  background:radial-gradient(circle,var(--cyan),rgba(0,229,255,.15) 38%,transparent 70%);
+  filter:blur(18px);
+  animation:bootBloom 1.8s ease-in-out infinite;
+}
+@keyframes bootBloom{
+  50%{transform:scale(1.25);opacity:.42}
+}
+.bootOrbit{
+  position:absolute;
+  left:50%;
+  top:50%;
+  border-radius:50%;
+  pointer-events:none;
+}
+.bootOrbitOne{
+  width:330px;
+  height:330px;
+  border:1px dashed rgba(0,229,255,.18);
+  animation:bootOrbitSpin 14s linear infinite;
+}
+.bootOrbitTwo{
+  width:292px;
+  height:292px;
+  border:1px solid rgba(0,229,255,.11);
+  animation:bootOrbitSpinReverse 9s linear infinite;
+}
+.bootOrbitThree{
+  width:266px;
+  height:266px;
+  border:1px dotted rgba(58,255,196,.18);
+  animation:bootOrbitSpin 6s linear infinite;
+}
+.bootOrbit span{
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 12px var(--cyan);
+}
+.bootOrbitOne span:nth-child(1){left:20px;top:76px}
+.bootOrbitOne span:nth-child(2){right:25px;bottom:72px}
+.bootOrbitOne span:nth-child(3){left:50%;top:-3px}
+.bootOrbitTwo span:nth-child(1){right:17px;top:78px}
+.bootOrbitTwo span:nth-child(2){left:28px;bottom:47px}
+@keyframes bootOrbitSpin{
+  from{transform:translate(-50%,-50%) rotate(0)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@keyframes bootOrbitSpinReverse{
+  from{transform:translate(-50%,-50%) rotate(360deg)}
+  to{transform:translate(-50%,-50%) rotate(0)}
+}
+.bootCrosshair{
+  position:absolute;
+  z-index:1;
+  opacity:.22;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+}
+.bootCrosshairH{width:470px;height:1px}
+.bootCrosshairV{
+  width:1px;
+  height:470px;
+  background:linear-gradient(180deg,transparent,var(--cyan),transparent);
+}
+.bootCoreLabel{
+  position:absolute;
+  z-index:8;
+  color:#6f9da2;
+  font:7px 'JetBrains Mono',monospace;
+  letter-spacing:2px;
+}
+.bootCoreLabelTop{top:10px}
+.bootCoreLabelBottom{bottom:10px}
+
+#coreWrap.stage-1{transform:scale(.94)}
+#coreWrap.stage-2{transform:scale(.98)}
+#coreWrap.stage-3{transform:scale(1.015)}
+#coreWrap.stage-4{transform:scale(1)}
+#coreWrap.stage-5{transform:scale(1.035)}
+#coreWrap.stage-6{transform:scale(1)}
+#coreWrap.stage-7{transform:scale(1.045)}
+#coreWrap.stage-8{
+  transform:scale(1.08);
+  filter:drop-shadow(0 0 35px var(--cyan-glow));
+}
+#coreWrap.stage-6 #coreOuterRing{
+  stroke:var(--cyan);
+  animation:coreSpin 1.9s linear infinite;
+  transform-origin:150px 150px;
+}
+#coreWrap.stage-6 #coreRing1{
+  stroke:var(--cyan);
+  animation:coreSpinRev 1.55s linear infinite;
+  transform-origin:150px 150px;
+}
+#coreWrap.stage-6 #coreRing2{
+  stroke:var(--cyan);
+  animation:coreSpin 2.2s linear infinite;
+  transform-origin:150px 150px;
+}
+#coreWrap.stage-6 #coreInner,
+#coreWrap.stage-7 #coreInner,
+#coreWrap.stage-8 #coreInner{stroke:var(--cyan)}
+#coreWrap.stage-7 #coreOuterRing{
+  stroke:var(--cyan);
+  animation:coreSpin 1.4s linear infinite;
+  transform-origin:150px 150px;
+}
+#coreWrap.stage-7 #coreRing1{
+  stroke:var(--cyan);
+  animation:coreSpinRev 1.15s linear infinite;
+  transform-origin:150px 150px;
+}
+#coreWrap.stage-7 #coreRing2{
+  stroke:var(--mint);
+  animation:coreSpin 1.75s linear infinite;
+  transform-origin:150px 150px;
+}
+#coreWrap.stage-8 #coreCenter{
+  fill:#efffff;
+  animation:centerPulse .6s ease-in-out infinite;
+}
+#coreWrap.stage-8 #coreOuterRing,
+#coreWrap.stage-8 #coreRing1,
+#coreWrap.stage-8 #coreRing2,
+#coreWrap.stage-8 #coreInner,
+#coreWrap.stage-8 #coreSpokes line{
+  stroke:var(--cyan);
+}
+#coreWrap.stage-8 #coreSvg{
+  filter:
+    drop-shadow(0 0 12px var(--cyan))
+    drop-shadow(0 0 32px var(--cyan-glow));
+}
+
+#bootText{
+  margin-top:9px;
+  color:#e7feff;
+  font-size:13px;
+  letter-spacing:5px;
+  text-shadow:0 0 14px rgba(0,229,255,.35);
+  transition:opacity .25s,transform .25s;
+}
+#bootSub{
+  width:min(620px,82vw);
+  min-height:18px;
+  margin-top:11px;
+  text-align:center;
+  color:#91c6cb;
+  font-size:10px;
+  letter-spacing:1.7px;
+  transition:opacity .2s,transform .2s;
+}
+.bootTextSwap{
+  opacity:0!important;
+  transform:translateY(5px)!important;
+}
+#bootProgress{
+  width:min(470px,72vw);
+  height:5px;
+  margin-top:24px;
+  overflow:hidden;
+  border:1px solid rgba(0,229,255,.22);
+  background:rgba(0,229,255,.025);
+}
+#bootProgressFill{
+  width:0;
+  height:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--mint));
+  box-shadow:0 0 16px var(--cyan);
+  transition:width .38s cubic-bezier(.2,.8,.3,1);
+}
+#bootProgressMeta{
+  width:min(470px,72vw);
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  color:#567b80;
+  font:7px 'JetBrains Mono',monospace;
+  letter-spacing:1.5px;
+}
+#bootFinalText{
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:18;
+  transform:translate(-50%,-50%) scale(.7);
+  opacity:0;
+  color:#efffff;
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(22px,5vw,54px);
+  letter-spacing:clamp(6px,1.5vw,18px);
+  white-space:nowrap;
+  text-shadow:
+    0 0 12px var(--cyan),
+    0 0 45px var(--cyan-glow);
+}
+#bootOverlay.boot-complete .bootCoreShell,
+#bootOverlay.boot-complete #bootText,
+#bootOverlay.boot-complete #bootSub,
+#bootOverlay.boot-complete #bootProgress,
+#bootOverlay.boot-complete #bootProgressMeta,
+#bootOverlay.boot-complete .bootTelemetry{
+  opacity:.14;
+  filter:blur(3px);
+}
+#bootOverlay.boot-complete #bootFinalText{
+  animation:bootFinalReveal .78s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes bootFinalReveal{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.68);filter:blur(12px)}
+  55%{opacity:1;transform:translate(-50%,-50%) scale(1.06);filter:blur(0)}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+
+/* HUD pieces appear in a staggered sequence after boot. */
+body.jarvis-booting #topBar,
+body.jarvis-booting #leftPanel,
+body.jarvis-booting #rightPanel,
+body.jarvis-booting #reticleWrap,
+body.jarvis-booting #bottomBar,
+body.jarvis-booting #hudStatusRail,
+body.jarvis-booting #modeSwitch,
+body.jarvis-booting #settingsBtn,
+body.jarvis-booting #permBadges,
+body.jarvis-booting #micBtn,
+body.jarvis-booting #camBtn,
+body.jarvis-booting #screenBtn,
+body.jarvis-booting #newTabBtn{
+  opacity:0!important;
+}
+body.jarvis-ready #topBar{animation:hudRevealTop .8s .08s both}
+body.jarvis-ready #leftPanel{animation:hudRevealLeft .8s .22s both}
+body.jarvis-ready #rightPanel{animation:hudRevealRight .8s .32s both}
+body.jarvis-ready #reticleWrap{animation:hudRevealCore 1s .26s both}
+body.jarvis-ready #bottomBar{animation:hudRevealBottom .8s .44s both}
+body.jarvis-ready #hudStatusRail{animation:hudRevealTop .7s .55s both}
+body.jarvis-ready #modeSwitch{animation:hudRevealTop .7s .62s both}
+body.jarvis-ready #settingsBtn,
+body.jarvis-ready #permBadges{animation:hudRevealTop .7s .68s both}
+body.jarvis-ready #micBtn,
+body.jarvis-ready #camBtn,
+body.jarvis-ready #screenBtn,
+body.jarvis-ready #newTabBtn{animation:hudRevealControls .65s .76s both}
+@keyframes hudRevealTop{
+  from{opacity:0;transform:translateY(-24px);filter:blur(8px)}
+  to{opacity:1;transform:translateY(0);filter:blur(0)}
+}
+@keyframes hudRevealLeft{
+  from{opacity:0;transform:translateX(-36px);filter:blur(8px)}
+  to{opacity:1;transform:translateX(0);filter:blur(0)}
+}
+@keyframes hudRevealRight{
+  from{opacity:0;transform:translateX(36px);filter:blur(8px)}
+  to{opacity:1;transform:translateX(0);filter:blur(0)}
+}
+@keyframes hudRevealCore{
+  from{opacity:0;filter:blur(14px);scale:.72}
+  to{opacity:1;filter:blur(0);scale:1}
+}
+@keyframes hudRevealBottom{
+  from{opacity:0;transform:translateY(35px);filter:blur(8px)}
+  to{opacity:1;transform:translateY(0);filter:blur(0)}
+}
+@keyframes hudRevealControls{
+  from{opacity:0;transform:translateY(20px) scale(.75)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@media(max-width:850px){
+  .bootTelemetry{display:none}
+  .bootCoreShell{width:310px;height:310px}
+  .bootOrbitOne{width:300px;height:300px}
+  .bootOrbitTwo{width:270px;height:270px}
+  .bootOrbitThree{width:244px;height:244px}
+}
+
 </style>
 </head>
 <body>
@@ -1079,18 +1677,56 @@
 <button class="startBtn" id="initBtn" onclick="window.__jarvisStartClick &amp;&amp; window.__jarvisStartClick()" type="button">Initialize System</button>
 </div>
 <div id="bootOverlay" style="display:none;">
-<div id="coreWrap">
+<div class="bootGrid"></div>
+<div class="bootSweep"></div>
+<div class="bootVignette"></div>
+<div class="bootFrame bootFrameTop"></div>
+<div class="bootFrame bootFrameBottom"></div>
+
+<div class="bootTelemetry bootTelemetryLeft">
+<div class="bootTelemetryTitle">NEURAL SUBSYSTEMS</div>
+<div class="bootNode" data-stage="1"><i></i><span>POWER BUS</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="2"><i></i><span>NEURAL MATRIX</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="4"><i></i><span>OPTIC ARRAY</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="5"><i></i><span>VOICE LINK</span><b>STANDBY</b></div>
+</div>
+
+<div class="bootTelemetry bootTelemetryRight">
+<div class="bootTelemetryTitle">TACTICAL SERVICES</div>
+<div class="bootNode" data-stage="3"><i></i><span>OPERATOR AUTH</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="6"><i></i><span>LOCAL BRIDGE</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="7"><i></i><span>HUD ALIGNMENT</span><b>STANDBY</b></div>
+<div class="bootNode" data-stage="8"><i></i><span>COMMAND CORE</span><b>STANDBY</b></div>
+</div>
+
+<div id="bootStageLabel">STAGE 00 / 08</div>
+
+<div class="bootCoreShell">
+<div class="bootOrbit bootOrbitOne"><span></span><span></span><span></span></div>
+<div class="bootOrbit bootOrbitTwo"><span></span><span></span></div>
+<div class="bootOrbit bootOrbitThree"></div>
+<div class="bootCoreBloom"></div>
+<div class="bootCrosshair bootCrosshairH"></div>
+<div class="bootCrosshair bootCrosshairV"></div>
+<div class="bootCoreLabel bootCoreLabelTop">ARC REACTOR // MK.VIII</div>
+<div class="bootCoreLabel bootCoreLabelBottom">ENERGY SIGNATURE LOCKED</div>
+<div class="bootCore bootCoreIdle" id="coreWrap">
 <svg id="coreSvg" viewbox="0 0 300 300">
 <circle cx="150" cy="150" fill="none" id="coreOuterRing" r="140" stroke="var(--cyan-dim)" stroke-dasharray="3 7" stroke-width="1"></circle>
-<circle cx="150" cy="150" fill="none" id="coreRing1" r="115" stroke="var(--cyan-dim)" stroke-width="1.5"></circle>
-<circle cx="150" cy="150" fill="none" id="coreRing2" r="90" stroke="var(--cyan-dim)" stroke-width="2"></circle>
+<circle cx="150" cy="150" fill="none" id="coreRing1" r="115" stroke="var(--cyan-dim)" stroke-dasharray="18 7" stroke-width="1.5"></circle>
+<circle cx="150" cy="150" fill="none" id="coreRing2" r="90" stroke="var(--cyan-dim)" stroke-dasharray="42 11" stroke-width="2"></circle>
 <g id="coreSpokes"></g>
 <circle cx="150" cy="150" fill="none" id="coreInner" r="55" stroke="var(--cyan-dim)" stroke-width="2"></circle>
 <circle cx="150" cy="150" fill="var(--cyan-dim)" id="coreCenter" r="8"></circle>
 </svg>
 </div>
-<div id="bootText">J.A.R.V.I.S.</div>
-<div id="bootSub">— standby —</div>
+</div>
+
+<div id="bootText">J.A.R.V.I.S // SYSTEM BOOT</div>
+<div id="bootSub">Awaiting reactor ignition…</div>
+<div id="bootProgress"><div id="bootProgressFill"></div></div>
+<div id="bootProgressMeta"><span id="bootPercent">0%</span><span id="bootChecksum">CHECKSUM 0000-0000</span></div>
+<div id="bootFinalText">SYSTEM ONLINE</div>
 </div>
 <!-- TOP -->
 <div class="hud-panel neuralHudPanel" data-hud-panel="COMMAND DECK" id="topBar">
@@ -3285,17 +3921,20 @@
 
   // ---------- Boot sequence ----------
   var bootLines = [
-    'Loading neural core…',
-    'Calibrating sensor array…',
-    'Establishing telemetry link…',
-    'Warming reticle systems…',
-    'All systems nominal.'
+    'Igniting arc-reactor power bus…',
+    'Loading adaptive neural matrix…',
+    'Authenticating operator command profile…',
+    'Calibrating optic and gesture arrays…',
+    'Synchronizing voice-recognition channel…',
+    'Establishing local browser bridge…',
+    'Aligning tactical holographic interface…',
+    'All systems nominal. Welcome back.'
   ];
 
   function buildCoreSpokes(){
     var g = document.getElementById('coreSpokes');
     var html = '';
-    var count = 12;
+    var count = 24;
     for(var i=0;i<count;i++){
       var ang = (i/count)*360;
       html += '<line x1="150" y1="105" x2="150" y2="120" stroke-width="1.5" transform="rotate('+ang+' 150 150)"/>';
@@ -3344,33 +3983,101 @@
     }catch(e){}
   }
 
+  function bootChecksumForStage(stage){
+    var left=(0xA17C+stage*0x317).toString(16).toUpperCase();
+    var right=(0x4B90+stage*0x4D1).toString(16).toUpperCase();
+    return (
+      '0000'.slice(left.length)+left+
+      '-'+
+      '0000'.slice(right.length)+right
+    );
+  }
+
+  function updateBootNodes(stage){
+    document.querySelectorAll('.bootNode').forEach(function(node){
+      var nodeStage=Number(node.dataset.stage)||0;
+      var status=node.querySelector('b');
+      node.classList.toggle('active',nodeStage===stage);
+      node.classList.toggle('complete',nodeStage<stage);
+      if(status){
+        status.textContent=
+          nodeStage<stage
+            ?'ONLINE'
+            :(nodeStage===stage?'LINKING':'STANDBY');
+      }
+    });
+  }
+
+  function swapBootStatus(text){
+    var sub=document.getElementById('bootSub');
+    sub.classList.add('bootTextSwap');
+    setTimeout(function(){
+      sub.textContent=text;
+      sub.classList.remove('bootTextSwap');
+    },120);
+  }
+
   function runBoot(cb){
-    document.getElementById('bootOverlay').style.display = 'flex';
-    var core = document.getElementById('coreWrap');
-    var sub = document.getElementById('bootSub');
-    core.className = '';
+    var overlay=document.getElementById('bootOverlay');
+    var core=document.getElementById('coreWrap');
+    var fill=document.getElementById('bootProgressFill');
+    var percent=document.getElementById('bootPercent');
+    var stageLabel=document.getElementById('bootStageLabel');
+    var checksum=document.getElementById('bootChecksum');
+
+    document.body.classList.remove('jarvis-ready');
+    document.body.classList.add('jarvis-booting');
+    overlay.style.display='flex';
+    overlay.style.opacity='1';
+    overlay.className='';
+    core.className='bootCore bootCoreIdle';
+    fill.style.width='0%';
+    percent.textContent='0%';
+    stageLabel.textContent='STAGE 00 / 08';
+    checksum.textContent='CHECKSUM 0000-0000';
+    updateBootNodes(0);
     playPowerUpTone();
 
-    var stageDelay = 480;
-    for(var s=1; s<=5; s++){
-      (function(stage){
+    requestAnimationFrame(function(){
+      overlay.classList.add('boot-engaged');
+    });
+
+    var stageDelay=430;
+    for(var stage=1;stage<=8;stage++){
+      (function(currentStage){
         setTimeout(function(){
-          core.className = 'stage-' + stage;
-          sub.textContent = bootLines[stage-1];
-        }, stageDelay * stage);
-      })(s);
+          core.className='bootCore stage-'+currentStage;
+          swapBootStatus(bootLines[currentStage-1]);
+          var progress=Math.round(currentStage/8*100);
+          fill.style.width=progress+'%';
+          percent.textContent=progress+'%';
+          stageLabel.textContent=
+            'STAGE '+
+            String(currentStage).padStart(2,'0')+
+            ' / 08';
+          checksum.textContent=
+            'CHECKSUM '+bootChecksumForStage(currentStage);
+          updateBootNodes(currentStage);
+        },stageDelay*currentStage);
+      })(stage);
     }
 
     setTimeout(function(){
+      updateBootNodes(9);
+      overlay.classList.add('boot-complete');
       setTimeout(function(){
-        document.getElementById('bootOverlay').style.opacity='0';
+        document.body.classList.remove('jarvis-booting');
+        document.body.classList.add('jarvis-ready');
+        overlay.classList.add('departing');
+
         setTimeout(function(){
-          document.getElementById('bootOverlay').style.display='none';
-          cb && cb();
+          overlay.style.display='none';
+          overlay.className='';
+          cb&&cb();
           scheduleWakeLabelFade();
-        }, 1000);
-      }, 500);
-    }, stageDelay * 5);
+        },950);
+      },720);
+    },stageDelay*8+170);
   }
 
   function scheduleWakeLabelFade(){
@@ -3656,6 +4363,12 @@
     video.style.setProperty('--camera-preview-zoom',String(zoom));
     video.style.objectFit=
       cameraSettings.fit==='cover'?'cover':'contain';
+    if(
+      document.getElementById('camLayer').classList.contains('on')&&
+      typeof positionReactorForCamera==='function'
+    ){
+      requestAnimationFrame(positionReactorForCamera);
+    }
   }
 
   function cameraStatusMessage(message,good){
@@ -4384,6 +5097,37 @@
         return null;
       });
   }
+  function positionReactorForCamera(){
+    var layer=document.getElementById('camLayer');
+    var reactor=document.getElementById('reticleWrap');
+    if(!layer||!reactor||!layer.classList.contains('on'))return;
+
+    var cameraRect=layer.getBoundingClientRect();
+    var scale=.72;
+    var visualHalf=(reactor.offsetWidth*scale)/2;
+    var readoutRoom=58;
+    var desiredCenter=
+      cameraRect.right+
+      34+
+      visualHalf+
+      readoutRoom;
+    var maximumCenter=
+      window.innerWidth-
+      visualHalf-
+      readoutRoom-
+      22;
+    var targetCenter=Math.min(desiredCenter,maximumCenter);
+    var shift=Math.max(
+      455,
+      targetCenter-window.innerWidth/2
+    );
+
+    reactor.style.setProperty(
+      '--reactor-camera-shift',
+      Math.round(shift)+'px'
+    );
+  }
+
   function showCamera(){
     var layer = document.getElementById('camLayer');
     layer.classList.add('on');
@@ -4392,14 +5136,27 @@
     layer.classList.add('pulse');
     document.getElementById('camBtn').classList.add('live');
     document.getElementById('reticleWrap').classList.add('cam-active');
+
+    requestAnimationFrame(positionReactorForCamera);
+    setTimeout(positionReactorForCamera,420);
   }
   function hideCamera(){
     document.getElementById('camLayer').classList.remove('on');
     document.getElementById('camBtn').classList.remove('live');
-    document.getElementById('reticleWrap').classList.remove('cam-active');
+    var reactor=document.getElementById('reticleWrap');
+    reactor.classList.remove('cam-active');
+    reactor.style.removeProperty('--reactor-camera-shift');
     if(typeof stopHandTracking === 'function') stopHandTracking();
     if(typeof applyHandZoom === 'function') applyHandZoom(1.0);
   }
+
+  window.addEventListener('resize',function(){
+    if(
+      document.getElementById('camLayer').classList.contains('on')
+    ){
+      requestAnimationFrame(positionReactorForCamera);
+    }
+  });
   function stopCameraHardware(){
     hideCamera();
     stopCameraStreamOnly();
@@ -6950,15 +7707,30 @@
   })();
 
   window.__jarvisMainStart = function(){
-    if(state.booted || document.getElementById('startGate').style.display === 'none') return;
-    document.getElementById('startGate').style.display = 'none';
-    runBoot(function(){
-      initGeo();
-      initOrientation();
-      initBattery();
-      updateTelemetry();
-      speak('Good to see you. All systems nominal.');
-    });
+    var gate=document.getElementById('startGate');
+    if(
+      state.booted||
+      gate.style.display==='none'||
+      gate.classList.contains('launching')
+    )return;
+
+    var button=document.getElementById('initBtn');
+    gate.classList.add('launching');
+    if(button){
+      button.disabled=true;
+      button.textContent='POWERING REACTOR…';
+    }
+
+    setTimeout(function(){
+      gate.style.display='none';
+      runBoot(function(){
+        initGeo();
+        initOrientation();
+        initBattery();
+        updateTelemetry();
+        speak('Good to see you. All systems nominal.');
+      });
+    },520);
   };
   document.getElementById('initBtn').addEventListener('click', function(event){
     event.preventDefault();
