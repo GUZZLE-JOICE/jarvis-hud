@@ -2187,36 +2187,6 @@
   }
   initManualControls();
 
-  (function setupHandMouseSpeedControls(){
-    var slider=document.getElementById('handMouseSpeedSlider');
-    var value=document.getElementById('handMouseSpeedValue');
-    var reset=document.getElementById('resetHandMouseSpeedBtn');
-    if(!slider||!value||!reset)return;
-
-    function speedDescription(v){
-      if(v <= 0.05) return 'Ultra precision';
-      if(v < 0.5) return 'Slow';
-      if(v < 1.5) return 'Normal';
-      if(v < 4) return 'Fast';
-      if(v < 10) return 'Very fast';
-      return 'Extreme';
-    }
-    function render(){
-      slider.value=String(handMouseSpeed);
-      value.textContent=handMouseSpeed.toFixed(2)+'× · '+speedDescription(handMouseSpeed);
-    }
-    slider.addEventListener('input',function(){
-      handMouseSpeed=clamp(parseFloat(this.value)||1,0.01,20);
-      try{localStorage.setItem(HAND_MOUSE_SPEED_STORAGE,String(handMouseSpeed));}catch(e){}
-      render();
-    });
-    reset.addEventListener('click',function(){
-      handMouseSpeed=1;
-      try{localStorage.setItem(HAND_MOUSE_SPEED_STORAGE,'1');}catch(e){}
-      render();
-    });
-    render();
-  })();
 
   var HAND_CONNECTIONS = [
     [0,1],[1,2],[2,3],[3,4],
@@ -2272,6 +2242,37 @@
     y01 = clamp(0.5 + (y01 - 0.5) * handMouseSpeed, 0, 1);
     return { x:x01 * window.innerWidth, y:y01 * window.innerHeight };
   }
+
+  (function setupHandMouseSpeedControls(){
+    var slider=document.getElementById('handMouseSpeedSlider');
+    var value=document.getElementById('handMouseSpeedValue');
+    var reset=document.getElementById('resetHandMouseSpeedBtn');
+    if(!slider||!value||!reset)return;
+
+    function speedDescription(v){
+      if(v <= 0.05) return 'Ultra precision';
+      if(v < 0.5) return 'Slow';
+      if(v < 1.5) return 'Normal';
+      if(v < 4) return 'Fast';
+      if(v < 10) return 'Very fast';
+      return 'Extreme';
+    }
+    function render(){
+      slider.value=String(handMouseSpeed);
+      value.textContent=handMouseSpeed.toFixed(2)+'× · '+speedDescription(handMouseSpeed);
+    }
+    slider.addEventListener('input',function(){
+      handMouseSpeed=clamp(parseFloat(this.value)||1,0.01,20);
+      try{localStorage.setItem(HAND_MOUSE_SPEED_STORAGE,String(handMouseSpeed));}catch(e){}
+      render();
+    });
+    reset.addEventListener('click',function(){
+      handMouseSpeed=1;
+      try{localStorage.setItem(HAND_MOUSE_SPEED_STORAGE,'1');}catch(e){}
+      render();
+    });
+    render();
+  })();
 
   function canvasPointToPageCoords(cx, cy){
     var camLayer = document.getElementById('camLayer');
