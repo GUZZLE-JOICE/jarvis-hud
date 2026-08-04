@@ -1655,6 +1655,82 @@ body.jarvis-ready #newTabBtn{animation:hudRevealControls .65s .76s both}
   .bootOrbitThree{width:244px;height:244px}
 }
 
+
+/* =========================================================
+   CHAT COMPOSER WIDTH + SEAMLESS BOTTOM FADE FIX
+   ========================================================= */
+.chatComposerWrap{
+  left:0!important;
+  right:0!important;
+  width:auto!important;
+  box-sizing:border-box!important;
+  padding:
+    48px
+    clamp(18px,2.2vw,40px)
+    22px!important;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2,7,9,0) 0%,
+      rgba(2,7,9,.48) 20%,
+      rgba(2,7,9,.88) 43%,
+      rgba(2,7,9,.98) 72%,
+      var(--void) 100%
+    )!important;
+  overflow:visible!important;
+}
+
+.chatComposerWrap::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(0,229,255,.065),
+      transparent 62%
+    );
+}
+
+.chatComposer{
+  position:relative!important;
+  z-index:1!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+
+.chatAttachmentTray,
+#chatInput,
+.chatQuickActions,
+.chatComposerBar{
+  position:relative;
+  z-index:2;
+}
+
+@media(max-width:920px){
+  .chatComposerWrap{
+    left:0!important;
+    right:0!important;
+    padding-left:20px!important;
+    padding-right:20px!important;
+  }
+}
+
+@media(max-width:720px){
+  .chatComposerWrap{
+    left:0!important;
+    right:0!important;
+    padding:
+      38px
+      11px
+      14px!important;
+  }
+}
+
 </style>
 </head>
 <body>
