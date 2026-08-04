@@ -475,6 +475,7 @@
 <button class="settingsNavBtn active" data-settings-page="memory"><svg fill="none" viewbox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h6"></path></svg><span>Memory</span></button>
 <button class="settingsNavBtn" data-settings-page="voice"><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path><path d="M5 11a7 7 0 0014 0M12 18v3"></path></svg><span>Voice</span></button>
 <button class="settingsNavBtn" data-settings-page="hands"><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8-3a2 2 0 014 0v5c0 4-3 7-7 7h-2c-3 0-5-1-7-4l-3-5a2 2 0 013-2l2 2"></path></svg><span>Hands</span></button>
+<button class="settingsNavBtn" data-settings-page="mouse"><svg fill="none" viewbox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="5"></rect><path d="M12 6v4"></path></svg><span>Mouse</span></button>
 <button class="settingsNavBtn" data-settings-page="ai"><svg fill="none" viewbox="0 0 24 24"><rect height="14" rx="3" width="16" x="4" y="5"></rect><path d="M9 10h.01M15 10h.01M8 15h8M12 2v3"></path></svg><span>AI</span></button>
 <button class="settingsNavBtn" data-settings-page="server"><svg fill="none" viewbox="0 0 24 24"><rect height="6" rx="2" width="18" x="3" y="4"></rect><rect height="6" rx="2" width="18" x="3" y="14"></rect><path d="M7 7h.01M7 17h.01"></path></svg><span>Server</span></button>
 <button class="settingsNavBtn" data-settings-page="appearance"><svg fill="none" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"></path><circle cx="8" cy="9" r="1"></circle><circle cx="11" cy="6" r="1"></circle><circle cx="15" cy="7" r="1"></circle></svg><span>Colors</span></button>
@@ -494,6 +495,19 @@
 <div class="settingsPage" data-page="hands">
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">The cursor follows wrist landmark 0. Pinch to scroll and use two pinches to resize browser panels.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
 <div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input id="manualPinchSlider" max="0.15" min="0.02" step="0.005" style="width:100%;margin-bottom:12px;" type="range"/><label class="settingsLabel">Skeleton X alignment</label><input id="alignOffsetX" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><label class="settingsLabel">Skeleton Y alignment</label><input id="alignOffsetY" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><div class="settingsActions"><button class="smallBtn" id="resetAlignBtn">Reset alignment</button></div></div>
+</div>
+<div class="settingsPage" data-page="mouse">
+<div class="settingsCard">
+<h3><svg fill="none" viewbox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="5"></rect><path d="M12 6v4"></path></svg>Hand Mouse Speed</h3>
+<p class="settingsHint">Controls how far the on-screen cursor moves for the same amount of hand movement. Very low values give tiny precision movement; very high values make small hand movements cross the screen.</p>
+<label class="settingsLabel">Cursor speed</label>
+<input id="handMouseSpeedSlider" max="20" min="0.01" step="0.01" style="width:100%;" type="range" value="1"/>
+<div class="statusLine" id="handMouseSpeedValue" style="margin-top:8px">1.00× · Normal</div>
+<div class="settingsActions"><button class="smallBtn" id="resetHandMouseSpeedBtn" type="button">Reset to normal</button></div>
+</div>
+<div class="settingsCard">
+<p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Examples:</b> 0.01× barely moves, 1× is normal, 5× is very fast, and 20× makes tiny movements travel across most of the screen.</p>
+</div>
 </div>
 <div class="settingsPage" data-page="ai">
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><rect height="14" rx="3" width="16" x="4" y="5"></rect><path d="M9 10h.01M15 10h.01M8 15h8"></path></svg>AI Provider</h3><p class="settingsHint">Use Claude, Gemini, Ollama on this PC, or another Jarvis PC through its access code.</p><div class="settingsActions"><button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button><button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button><button class="smallBtn providerTab" data-provider="local" id="tabLocal">Local</button><button class="smallBtn providerTab" data-provider="remote" id="tabRemote">Remote</button></div>
@@ -1710,7 +1724,7 @@
   function renderFontGrid(filter){var grid=document.getElementById('fontGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_FONTS.filter(function(n){return n.toLowerCase().includes(filter);}).forEach(function(n){var b=document.createElement('button');b.type='button';b.className='fontOption'+(n===selectedFontName?' active':'');b.style.setProperty('font-family',"'"+n+"', sans-serif",'important');b.innerHTML='<div class="fontOptionName"></div><div class="fontOptionPreview">JARVIS 0123 · System online</div>';b.querySelector('.fontOptionName').textContent=n;b.addEventListener('mouseenter',function(){loadGoogleFont(n);});b.addEventListener('click',function(){applyFont(n,true);});grid.appendChild(b);});}
 
   function openSettingsPage(name){
-    var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',ai:'AI PROVIDER',server:'SERVER SHARING',appearance:'COLOR COMBINATIONS',fonts:'INTERFACE FONTS'};
+    var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',mouse:'MOUSE CONTROL',ai:'AI PROVIDER',server:'SERVER SHARING',appearance:'COLOR COMBINATIONS',fonts:'INTERFACE FONTS'};
     document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.classList.toggle('active',b.dataset.settingsPage===name);});
     document.querySelectorAll('.settingsPage').forEach(function(p){p.classList.toggle('active',p.dataset.page===name);});
     document.getElementById('settingsPageTitle').textContent=titles[name]||'SETTINGS';
@@ -2173,6 +2187,37 @@
   }
   initManualControls();
 
+  (function setupHandMouseSpeedControls(){
+    var slider=document.getElementById('handMouseSpeedSlider');
+    var value=document.getElementById('handMouseSpeedValue');
+    var reset=document.getElementById('resetHandMouseSpeedBtn');
+    if(!slider||!value||!reset)return;
+
+    function speedDescription(v){
+      if(v <= 0.05) return 'Ultra precision';
+      if(v < 0.5) return 'Slow';
+      if(v < 1.5) return 'Normal';
+      if(v < 4) return 'Fast';
+      if(v < 10) return 'Very fast';
+      return 'Extreme';
+    }
+    function render(){
+      slider.value=String(handMouseSpeed);
+      value.textContent=handMouseSpeed.toFixed(2)+'× · '+speedDescription(handMouseSpeed);
+    }
+    slider.addEventListener('input',function(){
+      handMouseSpeed=clamp(parseFloat(this.value)||1,0.01,20);
+      try{localStorage.setItem(HAND_MOUSE_SPEED_STORAGE,String(handMouseSpeed));}catch(e){}
+      render();
+    });
+    reset.addEventListener('click',function(){
+      handMouseSpeed=1;
+      try{localStorage.setItem(HAND_MOUSE_SPEED_STORAGE,'1');}catch(e){}
+      render();
+    });
+    render();
+  })();
+
   var HAND_CONNECTIONS = [
     [0,1],[1,2],[2,3],[3,4],
     [0,5],[5,6],[6,7],[7,8],
@@ -2201,6 +2246,12 @@
 
   var CURSOR_MARGIN_X = 0.22;
   var CURSOR_MARGIN_Y = 0.18;
+  var HAND_MOUSE_SPEED_STORAGE = 'jarvis_hand_mouse_speed_v1';
+  var handMouseSpeed = 1;
+  try{
+    var savedHandMouseSpeed = parseFloat(localStorage.getItem(HAND_MOUSE_SPEED_STORAGE));
+    if(Number.isFinite(savedHandMouseSpeed)) handMouseSpeed = clamp(savedHandMouseSpeed, 0.01, 20);
+  }catch(e){}
   // Palm tracking is naturally steadier than fingertip tracking. A slightly
   // stronger smoothing value keeps it responsive without letting a pinch or
   // fist throw the pointer around.
@@ -2217,6 +2268,8 @@
     var mirroredX = 1 - nx;
     var x01 = clamp((mirroredX - CURSOR_MARGIN_X) / (1 - CURSOR_MARGIN_X * 2), 0, 1);
     var y01 = clamp((ny - CURSOR_MARGIN_Y) / (1 - CURSOR_MARGIN_Y * 2), 0, 1);
+    x01 = clamp(0.5 + (x01 - 0.5) * handMouseSpeed, 0, 1);
+    y01 = clamp(0.5 + (y01 - 0.5) * handMouseSpeed, 0, 1);
     return { x:x01 * window.innerWidth, y:y01 * window.innerHeight };
   }
 
