@@ -90,7 +90,7 @@
     0%{opacity:1;inset:-2px;}
     100%{opacity:0;inset:-14px;}
   }
-  #camVideo{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;transform:scaleX(-1);transform-origin:center;object-fit:contain;object-position:center center;background:#000;filter:contrast(1.05) brightness(0.95);}
+  #camVideo{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;transform:scaleX(-1) scale(var(--camera-preview-zoom,1));transform-origin:center center;object-fit:contain;object-position:center center;background:#000;filter:contrast(1.05) brightness(0.95);transition:transform .18s ease;}
   #camTint{position:absolute;inset:0;background:var(--cyan);mix-blend-mode:overlay;opacity:0.12;pointer-events:none;}
   #camScrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);pointer-events:none;}
   #camLabel{position:absolute;bottom:3px;left:6px;font-family:'JetBrains Mono';font-size:9px;color:var(--cyan);letter-spacing:1px;text-shadow:0 0 4px #000;}
@@ -969,6 +969,89 @@
     pointer-events:none;
   }
 
+
+  .cameraControlGrid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  .cameraControlGroup{
+    min-width:0;
+  }
+  .cameraRangeRow{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .cameraRangeRow input[type="range"]{
+    flex:1;
+    min-width:0;
+  }
+  .cameraRangeValue{
+    flex:none;
+    min-width:64px;
+    padding:7px 8px;
+    border:1px solid var(--cyan-dim);
+    background:rgba(0,229,255,.035);
+    color:var(--cyan);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    text-align:center;
+  }
+  .cameraActualGrid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin-top:10px;
+  }
+  .cameraActualItem{
+    min-width:0;
+    padding:9px 10px;
+    border:1px solid rgba(0,229,255,.15);
+    background:linear-gradient(145deg,rgba(0,229,255,.045),rgba(255,255,255,.01));
+  }
+  .cameraActualItem span{
+    display:block;
+    color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+    font-size:7px;
+    letter-spacing:1.3px;
+    text-transform:uppercase;
+  }
+  .cameraActualItem b{
+    display:block;
+    margin-top:4px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#dffcff;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:500;
+  }
+  .cameraRecommendation{
+    margin-top:10px;
+    padding:9px 10px;
+    border-left:2px solid var(--mint);
+    background:rgba(58,255,196,.035);
+    color:var(--text-dim);
+    font-family:'Rajdhani',sans-serif;
+    font-size:12px;
+    line-height:1.45;
+  }
+  .cameraRecommendation b{color:var(--mint)}
+  #cameraHardwareZoomWrap.off{
+    opacity:.52;
+  }
+  .settingsNav{
+    overflow-y:auto;
+    scrollbar-width:thin;
+  }
+  @media(max-width:720px){
+    .cameraControlGrid,
+    .cameraActualGrid{grid-template-columns:1fr}
+  }
+
 </style>
 </head>
 <body>
@@ -1034,6 +1117,7 @@
 <nav class="settingsNav">
 <button class="settingsNavBtn active" data-settings-page="memory"><svg fill="none" viewbox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h6"></path></svg><span>Memory</span></button>
 <button class="settingsNavBtn" data-settings-page="voice"><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path><path d="M5 11a7 7 0 0014 0M12 18v3"></path></svg><span>Voice</span></button>
+<button class="settingsNavBtn" data-settings-page="camera"><svg fill="none" viewbox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><path d="M8 5l1.5-2h5L16 5"></path></svg><span>Camera</span></button>
 <button class="settingsNavBtn" data-settings-page="hands"><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8-3a2 2 0 014 0v5c0 4-3 7-7 7h-2c-3 0-5-1-7-4l-3-5a2 2 0 013-2l2 2"></path></svg><span>Hands</span></button>
 <button class="settingsNavBtn" data-settings-page="mouse"><svg fill="none" viewbox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="5"></rect><path d="M12 6v4"></path></svg><span>Mouse</span></button>
 <button class="settingsNavBtn" data-settings-page="ai"><svg fill="none" viewbox="0 0 24 24"><rect height="14" rx="3" width="16" x="4" y="5"></rect><path d="M9 10h.01M15 10h.01M8 15h8M12 2v3"></path></svg><span>AI</span></button>
@@ -1051,6 +1135,78 @@
 </div>
 <div class="settingsPage" data-page="voice">
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path></svg>Voice Output</h3><p class="settingsHint">Choose the system voice Jarvis uses.</p><select class="settingsField" id="voiceSelect"></select></div>
+</div>
+<div class="settingsPage" data-page="camera">
+<div class="settingsCard">
+<h3><svg fill="none" viewbox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><path d="M8 5l1.5-2h5L16 5"></path></svg>Camera Feed</h3>
+<p class="settingsHint">Control how much of the camera sensor is captured and how large the feed appears inside Jarvis. A 4:3 resolution usually shows more vertical and horizontal room than a cropped 16:9 webcam mode.</p>
+<div class="cameraControlGrid">
+<div class="cameraControlGroup">
+<label class="settingsLabel" for="cameraDeviceSelect">Camera source</label>
+<select class="settingsField" id="cameraDeviceSelect"><option value="">Default camera</option></select>
+</div>
+<div class="cameraControlGroup">
+<label class="settingsLabel" for="cameraResolutionSelect">Capture resolution</label>
+<select class="settingsField" id="cameraResolutionSelect">
+<option value="default">Device default</option>
+<option selected="" value="640x480">640 × 480 · 4:3 · usually widest</option>
+<option value="1280x960">1280 × 960 · 4:3 · high quality</option>
+<option value="1280x720">1280 × 720 · 16:9</option>
+<option value="1920x1080">1920 × 1080 · 16:9</option>
+<option value="2560x1440">2560 × 1440 · 16:9</option>
+</select>
+</div>
+<div class="cameraControlGroup">
+<label class="settingsLabel" for="cameraFpsSelect">Requested frame rate</label>
+<select class="settingsField" id="cameraFpsSelect">
+<option value="30">30 FPS · stable</option>
+<option selected="" value="60">60 FPS · smoother tracking</option>
+</select>
+</div>
+<div class="cameraControlGroup">
+<label class="settingsLabel" for="cameraFitSelect">Preview fit</label>
+<select class="settingsField" id="cameraFitSelect">
+<option selected="" value="contain">Full feed · never crop</option>
+<option value="cover">Fill camera box · crop edges</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="settingsCard">
+<label class="settingsLabel" for="cameraPreviewZoomSlider">Preview zoom</label>
+<div class="cameraRangeRow">
+<input id="cameraPreviewZoomSlider" max="2" min="0.5" step="0.05" type="range" value="1"/>
+<div class="cameraRangeValue" id="cameraPreviewZoomValue">1.00×</div>
+</div>
+<p class="settingsHint" style="margin-top:9px">Use less than 1.00× to make the entire feed smaller and reveal more margin. Use more than 1.00× only when you intentionally want to crop closer. Hand landmarks scale with the preview.</p>
+
+<div class="off" id="cameraHardwareZoomWrap">
+<label class="settingsLabel" for="cameraHardwareZoomSlider">Webcam hardware zoom</label>
+<div class="cameraRangeRow">
+<input disabled="" id="cameraHardwareZoomSlider" max="1" min="1" step="0.1" type="range" value="1"/>
+<div class="cameraRangeValue" id="cameraHardwareZoomValue">NOT SUPPORTED</div>
+</div>
+<p class="settingsHint" id="cameraHardwareZoomHint" style="margin-top:9px">Jarvis will enable this when the webcam exposes a hardware zoom control.</p>
+</div>
+</div>
+
+<div class="settingsCard">
+<h3><svg fill="none" viewbox="0 0 24 24"><path d="M4 6h16v12H4z"></path><path d="M8 21h8M12 18v3"></path></svg>Current Camera Mode</h3>
+<div class="cameraActualGrid">
+<div class="cameraActualItem"><span>Actual resolution</span><b id="cameraActualResolution">CAMERA OFF</b></div>
+<div class="cameraActualItem"><span>Actual frame rate</span><b id="cameraActualFps">—</b></div>
+<div class="cameraActualItem"><span>Aspect ratio</span><b id="cameraActualAspect">—</b></div>
+<div class="cameraActualItem"><span>Active source</span><b id="cameraActualDevice">—</b></div>
+</div>
+<div class="cameraRecommendation"><b>Best wide-view starting point:</b> 640 × 480, Full feed, 1.00× preview zoom, and the minimum hardware zoom.</div>
+<div class="settingsActions">
+<button class="smallBtn" id="applyCameraSettingsBtn" type="button">Apply camera settings</button>
+<button class="smallBtn" id="restartCameraBtn" type="button">Restart camera</button>
+<button class="smallBtn" id="resetCameraSettingsBtn" type="button">Reset wide view</button>
+</div>
+<div class="statusLine" id="cameraSettingsStatus"></div>
+</div>
 </div>
 <div class="settingsPage" data-page="hands">
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">Curl at least 3 fingers into your palm for a fist click. Thumb + index touching is pinch. Hold up only your index and middle fingers while curling ring and pinky to drag the selected browser tab.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
@@ -2873,11 +3029,31 @@
   function renderFontGrid(filter){var grid=document.getElementById('fontGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_FONTS.filter(function(n){return n.toLowerCase().includes(filter);}).forEach(function(n){var b=document.createElement('button');b.type='button';b.className='fontOption'+(n===selectedFontName?' active':'');b.style.setProperty('font-family',"'"+n+"', sans-serif",'important');b.innerHTML='<div class="fontOptionName"></div><div class="fontOptionPreview">JARVIS 0123 · System online</div>';b.querySelector('.fontOptionName').textContent=n;b.addEventListener('mouseenter',function(){loadGoogleFont(n);});b.addEventListener('click',function(){applyFont(n,true);});grid.appendChild(b);});}
 
   function openSettingsPage(name){
-    var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',mouse:'MOUSE CONTROL',ai:'AI PROVIDER',server:'SERVER SHARING',appearance:'COLOR COMBINATIONS',fonts:'INTERFACE FONTS'};
-    document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.classList.toggle('active',b.dataset.settingsPage===name);});
-    document.querySelectorAll('.settingsPage').forEach(function(p){p.classList.toggle('active',p.dataset.page===name);});
-    document.getElementById('settingsPageTitle').textContent=titles[name]||'SETTINGS';
-    if(name==='server') loadOwnerCode();
+    var titles={
+      memory:'MEMORY',
+      voice:'VOICE',
+      camera:'CAMERA',
+      hands:'HAND TRACKING',
+      mouse:'MOUSE CONTROL',
+      ai:'AI PROVIDER',
+      server:'SERVER SHARING',
+      appearance:'COLOR COMBINATIONS',
+      fonts:'INTERFACE FONTS'
+    };
+    document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){
+      b.classList.toggle('active',b.dataset.settingsPage===name);
+    });
+    document.querySelectorAll('.settingsPage').forEach(function(p){
+      p.classList.toggle('active',p.dataset.page===name);
+    });
+    document.getElementById('settingsPageTitle').textContent=
+      titles[name]||'SETTINGS';
+    if(name==='server')loadOwnerCode();
+    if(name==='camera'){
+      refreshCameraDeviceList();
+      updateCameraSettingsUI();
+      updateActualCameraStatus();
+    }
   }
   document.querySelectorAll('.settingsNavBtn[data-settings-page]').forEach(function(b){b.addEventListener('click',function(){openSettingsPage(b.dataset.settingsPage);});});
   document.getElementById('themeSearchInput').addEventListener('input',function(){renderThemeGrid(this.value);});
@@ -3206,83 +3382,581 @@
   }
 
   var camStream = null;
+  var cameraActiveTrack = null;
+  var cameraTrackCapabilities = null;
+  var cameraRestartWantsTracking = false;
+
+  var CAMERA_SETTINGS_STORAGE='jarvis_camera_settings_v1';
+  var CAMERA_HARDWARE_ZOOM_STORAGE='jarvis_camera_hardware_zoom_v1';
+  var cameraSettings={
+    deviceId:'',
+    resolution:'640x480',
+    fps:60,
+    fit:'contain',
+    previewZoom:1
+  };
+  var cameraHardwareZoom=null;
+
+  try{
+    var savedCameraSettings=JSON.parse(
+      localStorage.getItem(CAMERA_SETTINGS_STORAGE)||'null'
+    );
+    if(savedCameraSettings){
+      cameraSettings.deviceId=
+        String(savedCameraSettings.deviceId||'');
+      cameraSettings.resolution=
+        String(savedCameraSettings.resolution||'640x480');
+      cameraSettings.fps=
+        Number(savedCameraSettings.fps)||60;
+      cameraSettings.fit=
+        savedCameraSettings.fit==='cover'?'cover':'contain';
+      cameraSettings.previewZoom=Math.max(
+        .5,
+        Math.min(2,Number(savedCameraSettings.previewZoom)||1)
+      );
+    }
+    var savedHardwareZoom=parseFloat(
+      localStorage.getItem(CAMERA_HARDWARE_ZOOM_STORAGE)
+    );
+    if(Number.isFinite(savedHardwareZoom)){
+      cameraHardwareZoom=savedHardwareZoom;
+    }
+  }catch(e){}
+
+  function saveCameraSettings(){
+    try{
+      localStorage.setItem(
+        CAMERA_SETTINGS_STORAGE,
+        JSON.stringify(cameraSettings)
+      );
+      if(Number.isFinite(cameraHardwareZoom)){
+        localStorage.setItem(
+          CAMERA_HARDWARE_ZOOM_STORAGE,
+          String(cameraHardwareZoom)
+        );
+      }
+    }catch(e){}
+  }
+
+  function parseCameraResolution(value){
+    var match=String(value||'').match(/^(\d+)x(\d+)$/);
+    if(!match)return null;
+    return {
+      width:Number(match[1]),
+      height:Number(match[2])
+    };
+  }
+
+  function buildCameraConstraints(){
+    var video={
+      facingMode:'user',
+      frameRate:{ideal:Number(cameraSettings.fps)||60},
+      resizeMode:{ideal:'none'}
+    };
+    var resolution=parseCameraResolution(cameraSettings.resolution);
+    if(resolution){
+      video.width={ideal:resolution.width};
+      video.height={ideal:resolution.height};
+    }
+    if(cameraSettings.deviceId){
+      delete video.facingMode;
+      video.deviceId={exact:cameraSettings.deviceId};
+    }
+    return {
+      audio:false,
+      video:video
+    };
+  }
+
+  function applyCameraPreviewStyles(){
+    var video=document.getElementById('camVideo');
+    if(!video)return;
+    var zoom=Math.max(
+      .5,
+      Math.min(2,Number(cameraSettings.previewZoom)||1)
+    );
+    cameraSettings.previewZoom=zoom;
+    video.style.setProperty('--camera-preview-zoom',String(zoom));
+    video.style.objectFit=
+      cameraSettings.fit==='cover'?'cover':'contain';
+  }
+
+  function cameraStatusMessage(message,good){
+    var element=document.getElementById('cameraSettingsStatus');
+    if(!element)return;
+    element.textContent=message||'';
+    element.style.color=
+      good===true
+        ?'var(--mint)'
+        :(good===false?'var(--amber)':'var(--text-dim)');
+  }
+
+  function updateCameraSettingsUI(){
+    var device=document.getElementById('cameraDeviceSelect');
+    var resolution=document.getElementById('cameraResolutionSelect');
+    var fps=document.getElementById('cameraFpsSelect');
+    var fit=document.getElementById('cameraFitSelect');
+    var preview=document.getElementById('cameraPreviewZoomSlider');
+    var previewValue=document.getElementById('cameraPreviewZoomValue');
+    if(device)device.value=cameraSettings.deviceId||'';
+    if(resolution)resolution.value=cameraSettings.resolution||'640x480';
+    if(fps)fps.value=String(cameraSettings.fps||60);
+    if(fit)fit.value=cameraSettings.fit||'contain';
+    if(preview)preview.value=String(cameraSettings.previewZoom||1);
+    if(previewValue){
+      previewValue.textContent=
+        Number(cameraSettings.previewZoom||1).toFixed(2)+'×';
+    }
+    applyCameraPreviewStyles();
+  }
+
+  function updateActualCameraStatus(){
+    var resolutionElement=
+      document.getElementById('cameraActualResolution');
+    var fpsElement=document.getElementById('cameraActualFps');
+    var aspectElement=document.getElementById('cameraActualAspect');
+    var deviceElement=document.getElementById('cameraActualDevice');
+
+    if(!cameraActiveTrack||cameraActiveTrack.readyState==='ended'){
+      if(resolutionElement)resolutionElement.textContent='CAMERA OFF';
+      if(fpsElement)fpsElement.textContent='—';
+      if(aspectElement)aspectElement.textContent='—';
+      if(deviceElement)deviceElement.textContent='—';
+      return;
+    }
+
+    var settings=cameraActiveTrack.getSettings
+      ?cameraActiveTrack.getSettings()
+      :{};
+    var width=Number(settings.width)||0;
+    var height=Number(settings.height)||0;
+    if(resolutionElement){
+      resolutionElement.textContent=
+        width&&height
+          ?width+' × '+height
+          :'UNKNOWN';
+    }
+    if(fpsElement){
+      fpsElement.textContent=settings.frameRate
+        ?Number(settings.frameRate).toFixed(1)+' FPS'
+        :'UNKNOWN';
+    }
+    if(aspectElement){
+      var ratio=width&&height?width/height:0;
+      var label='UNKNOWN';
+      if(Math.abs(ratio-4/3)<.05)label='4:3 · WIDE SENSOR VIEW';
+      else if(Math.abs(ratio-16/9)<.05)label='16:9 · WIDESCREEN';
+      else if(ratio)label=ratio.toFixed(2)+':1';
+      aspectElement.textContent=label;
+    }
+    if(deviceElement){
+      deviceElement.textContent=
+        cameraActiveTrack.label||
+        settings.deviceId||
+        'DEFAULT CAMERA';
+    }
+  }
+
+  function refreshCameraDeviceList(){
+    var select=document.getElementById('cameraDeviceSelect');
+    if(!select||!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){
+      return Promise.resolve();
+    }
+    return navigator.mediaDevices.enumerateDevices()
+      .then(function(devices){
+        var cameras=devices.filter(function(device){
+          return device.kind==='videoinput';
+        });
+        var current=cameraSettings.deviceId||'';
+        select.innerHTML='<option value="">Default camera</option>';
+        cameras.forEach(function(camera,index){
+          var option=document.createElement('option');
+          option.value=camera.deviceId;
+          option.textContent=
+            camera.label||('Camera '+(index+1));
+          select.appendChild(option);
+        });
+        if(
+          current&&
+          Array.from(select.options).some(function(option){
+            return option.value===current;
+          })
+        ){
+          select.value=current;
+        }else{
+          select.value='';
+        }
+      })
+      .catch(function(){});
+  }
+
+  function configureCameraTrack(track){
+    cameraActiveTrack=track||null;
+    cameraTrackCapabilities=null;
+    if(!track)return Promise.resolve();
+
+    var constraints=[];
+    try{
+      if(track.getCapabilities){
+        cameraTrackCapabilities=track.getCapabilities()||{};
+        var capabilities=cameraTrackCapabilities;
+        var continuous={};
+
+        if(
+          Array.isArray(capabilities.focusMode)&&
+          capabilities.focusMode.indexOf('continuous')!==-1
+        ){
+          continuous.focusMode='continuous';
+        }
+        if(
+          Array.isArray(capabilities.exposureMode)&&
+          capabilities.exposureMode.indexOf('continuous')!==-1
+        ){
+          continuous.exposureMode='continuous';
+        }
+        if(
+          Array.isArray(capabilities.whiteBalanceMode)&&
+          capabilities.whiteBalanceMode.indexOf('continuous')!==-1
+        ){
+          continuous.whiteBalanceMode='continuous';
+        }
+        if(Object.keys(continuous).length){
+          constraints.push(continuous);
+        }
+
+        var hardwareWrap=
+          document.getElementById('cameraHardwareZoomWrap');
+        var hardwareSlider=
+          document.getElementById('cameraHardwareZoomSlider');
+        var hardwareValue=
+          document.getElementById('cameraHardwareZoomValue');
+        var hardwareHint=
+          document.getElementById('cameraHardwareZoomHint');
+        var zoomCapability=capabilities.zoom;
+
+        if(
+          zoomCapability&&
+          Number.isFinite(Number(zoomCapability.min))&&
+          Number.isFinite(Number(zoomCapability.max))
+        ){
+          var min=Number(zoomCapability.min);
+          var max=Number(zoomCapability.max);
+          var step=Number(zoomCapability.step)||.1;
+          if(
+            !Number.isFinite(cameraHardwareZoom)||
+            cameraHardwareZoom<min||
+            cameraHardwareZoom>max
+          ){
+            // Minimum hardware zoom gives the widest physical camera view.
+            cameraHardwareZoom=min;
+          }
+          hardwareWrap.classList.remove('off');
+          hardwareSlider.disabled=false;
+          hardwareSlider.min=String(min);
+          hardwareSlider.max=String(max);
+          hardwareSlider.step=String(step);
+          hardwareSlider.value=String(cameraHardwareZoom);
+          hardwareValue.textContent=
+            Number(cameraHardwareZoom).toFixed(2)+'×';
+          hardwareHint.textContent=
+            'Supported range: '+min.toFixed(2)+'× to '+
+            max.toFixed(2)+'×. Minimum is the widest view.';
+          constraints.push({zoom:cameraHardwareZoom});
+        }else{
+          hardwareWrap.classList.add('off');
+          hardwareSlider.disabled=true;
+          hardwareSlider.min='1';
+          hardwareSlider.max='1';
+          hardwareSlider.value='1';
+          hardwareValue.textContent='NOT SUPPORTED';
+          hardwareHint.textContent=
+            'This webcam does not expose hardware zoom. Preview zoom still works.';
+        }
+      }
+    }catch(e){}
+
+    saveCameraSettings();
+    updateActualCameraStatus();
+
+    if(
+      constraints.length&&
+      track.applyConstraints
+    ){
+      return track.applyConstraints({advanced:constraints})
+        .catch(function(){})
+        .then(function(){
+          updateActualCameraStatus();
+        });
+    }
+    return Promise.resolve();
+  }
+
+  function stopCameraStreamOnly(){
+    if(camStream){
+      try{
+        camStream.getTracks().forEach(function(track){
+          track.stop();
+        });
+      }catch(e){}
+    }
+    camStream=null;
+    cameraActiveTrack=null;
+    cameraTrackCapabilities=null;
+    var video=document.getElementById('camVideo');
+    if(video){
+      try{video.pause();}catch(e){}
+      video.srcObject=null;
+    }
+    updateActualCameraStatus();
+  }
+
+  function restartCameraWithSettings(){
+    var resumeTracking=handTrackingActive;
+    if(resumeTracking&&typeof stopHandTracking==='function'){
+      stopHandTracking();
+    }
+    cameraRestartWantsTracking=resumeTracking;
+    stopCameraStreamOnly();
+    document.getElementById('statCam').textContent='RESTARTING';
+    cameraStatusMessage('Restarting camera with the selected mode…',null);
+    return initCamera();
+  }
+
+  function readCameraSettingsFromUI(){
+    var device=document.getElementById('cameraDeviceSelect');
+    var resolution=document.getElementById('cameraResolutionSelect');
+    var fps=document.getElementById('cameraFpsSelect');
+    var fit=document.getElementById('cameraFitSelect');
+    var preview=document.getElementById('cameraPreviewZoomSlider');
+
+    cameraSettings.deviceId=device?device.value:'';
+    cameraSettings.resolution=
+      resolution?resolution.value:'640x480';
+    cameraSettings.fps=
+      fps?Number(fps.value)||60:60;
+    cameraSettings.fit=
+      fit&&fit.value==='cover'?'cover':'contain';
+    cameraSettings.previewZoom=Math.max(
+      .5,
+      Math.min(2,preview?Number(preview.value)||1:1)
+    );
+    saveCameraSettings();
+    updateCameraSettingsUI();
+  }
+
+  function resetWideCameraView(){
+    cameraSettings.deviceId='';
+    cameraSettings.resolution='640x480';
+    cameraSettings.fps=60;
+    cameraSettings.fit='contain';
+    cameraSettings.previewZoom=1;
+
+    if(
+      cameraTrackCapabilities&&
+      cameraTrackCapabilities.zoom&&
+      Number.isFinite(Number(cameraTrackCapabilities.zoom.min))
+    ){
+      cameraHardwareZoom=Number(cameraTrackCapabilities.zoom.min);
+    }else{
+      cameraHardwareZoom=null;
+    }
+    saveCameraSettings();
+    updateCameraSettingsUI();
+    refreshCameraDeviceList();
+    if(camStream){
+      restartCameraWithSettings();
+    }else{
+      cameraStatusMessage(
+        'Wide-view defaults saved. Turn the camera on to apply them.',
+        true
+      );
+    }
+  }
+
+  function initCameraSettingsControls(){
+    updateCameraSettingsUI();
+    refreshCameraDeviceList();
+    updateActualCameraStatus();
+
+    document.getElementById('cameraPreviewZoomSlider')
+      .addEventListener('input',function(){
+        cameraSettings.previewZoom=Math.max(
+          .5,
+          Math.min(2,Number(this.value)||1)
+        );
+        saveCameraSettings();
+        updateCameraSettingsUI();
+      });
+
+    document.getElementById('cameraFitSelect')
+      .addEventListener('change',function(){
+        cameraSettings.fit=
+          this.value==='cover'?'cover':'contain';
+        saveCameraSettings();
+        applyCameraPreviewStyles();
+      });
+
+    document.getElementById('cameraHardwareZoomSlider')
+      .addEventListener('input',function(){
+        if(
+          !cameraActiveTrack||
+          !cameraActiveTrack.applyConstraints||
+          this.disabled
+        )return;
+        cameraHardwareZoom=Number(this.value);
+        document.getElementById('cameraHardwareZoomValue')
+          .textContent=cameraHardwareZoom.toFixed(2)+'×';
+        saveCameraSettings();
+        cameraActiveTrack.applyConstraints({
+          advanced:[{zoom:cameraHardwareZoom}]
+        }).then(updateActualCameraStatus).catch(function(){});
+      });
+
+    document.getElementById('applyCameraSettingsBtn')
+      .addEventListener('click',function(){
+        readCameraSettingsFromUI();
+        if(camStream){
+          restartCameraWithSettings();
+        }else{
+          cameraStatusMessage(
+            'Settings saved. Turn the camera on to use them.',
+            true
+          );
+        }
+      });
+
+    document.getElementById('restartCameraBtn')
+      .addEventListener('click',function(){
+        readCameraSettingsFromUI();
+        if(camStream){
+          restartCameraWithSettings();
+        }else{
+          initCamera();
+        }
+      });
+
+    document.getElementById('resetCameraSettingsBtn')
+      .addEventListener('click',resetWideCameraView);
+
+    if(
+      navigator.mediaDevices&&
+      navigator.mediaDevices.addEventListener
+    ){
+      navigator.mediaDevices.addEventListener(
+        'devicechange',
+        refreshCameraDeviceList
+      );
+    }
+  }
+
   function initCamera(){
     if(!isSecureCtx()){
-      document.getElementById('statCam').textContent = 'NEEDS HTTPS';
-      speak('Camera access needs a secure connection. This page must be served over https, or from localhost, not opened as a local file.');
-      return;
+      document.getElementById('statCam').textContent='NEEDS HTTPS';
+      speak(
+        'Camera access needs a secure connection. This page must be served over https, or from localhost, not opened as a local file.'
+      );
+      return Promise.resolve(null);
     }
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-      document.getElementById('statCam').textContent = 'UNSUPPORTED';
-      return;
+    if(
+      !navigator.mediaDevices||
+      !navigator.mediaDevices.getUserMedia
+    ){
+      document.getElementById('statCam').textContent='UNSUPPORTED';
+      return Promise.resolve(null);
     }
     if(camStream){
+      applyCameraPreviewStyles();
       showCamera();
-      return;
+      updateActualCameraStatus();
+      return Promise.resolve(camStream);
     }
-    var cameraConstraints={
-      audio:false,
-      video:{
-        facingMode:'user',
-        width:{ideal:1280},
-        height:{ideal:720},
-        frameRate:{ideal:60},
-        aspectRatio:{ideal:16/9}
-      }
-    };
-    navigator.mediaDevices.getUserMedia(cameraConstraints).then(function(stream){
-      camStream = stream;
-      var v = document.getElementById('camVideo');
-      v.srcObject = stream;
 
-      // Ask supported webcams to keep focus, exposure, and white balance
-      // adjusting continuously. Unsupported controls are ignored safely.
-      try{
-        var videoTrack=stream.getVideoTracks()[0];
-        if(videoTrack&&videoTrack.getCapabilities&&videoTrack.applyConstraints){
-          var capabilities=videoTrack.getCapabilities();
-          var advanced={};
-          if(
-            Array.isArray(capabilities.focusMode)&&
-            capabilities.focusMode.indexOf('continuous')!==-1
-          ){
-            advanced.focusMode='continuous';
-          }
-          if(
-            Array.isArray(capabilities.exposureMode)&&
-            capabilities.exposureMode.indexOf('continuous')!==-1
-          ){
-            advanced.exposureMode='continuous';
-          }
-          if(
-            Array.isArray(capabilities.whiteBalanceMode)&&
-            capabilities.whiteBalanceMode.indexOf('continuous')!==-1
-          ){
-            advanced.whiteBalanceMode='continuous';
-          }
-          if(Object.keys(advanced).length){
-            videoTrack.applyConstraints({advanced:[advanced]}).catch(function(){});
-          }
+    cameraStatusMessage('Opening camera…',null);
+    var requestedConstraints=buildCameraConstraints();
+
+    function requestCamera(constraints){
+      return navigator.mediaDevices.getUserMedia(constraints);
+    }
+
+    return requestCamera(requestedConstraints)
+      .catch(function(error){
+        // A removed camera can leave a saved device ID behind. Fall back to
+        // the default device instead of making the camera unusable.
+        if(cameraSettings.deviceId){
+          cameraSettings.deviceId='';
+          saveCameraSettings();
+          updateCameraSettingsUI();
+          return requestCamera(buildCameraConstraints());
         }
-      }catch(e){}
-      state.perms.cam = true;
-      setBadge('badgeCam', true);
-      document.getElementById('dotCam').classList.add('on');
-      document.getElementById('statCam').textContent = 'LIVE';
-      showCamera();
-    }).catch(function(err){
-      if(err.name === 'NotAllowedError'){
-        if(isInIframe()){
-          document.getElementById('statCam').textContent = 'IFRAME BLOCKED';
-          setCaption('Camera access is blocked because this is running in an embedded preview. Open the file directly in its own browser tab instead.');
-        } else {
-          document.getElementById('statCam').textContent = 'BLOCKED';
-          setCaption('Camera is blocked for this site. Click the lock or camera icon in the address bar, allow camera access, then reload.');
+        throw error;
+      })
+      .then(function(stream){
+        camStream=stream;
+        var video=document.getElementById('camVideo');
+        video.srcObject=stream;
+        applyCameraPreviewStyles();
+        try{
+          var playResult=video.play();
+          if(playResult&&playResult.catch){
+            playResult.catch(function(){});
+          }
+        }catch(e){}
+
+        var track=stream.getVideoTracks()[0]||null;
+        return configureCameraTrack(track).then(function(){
+          state.perms.cam=true;
+          setBadge('badgeCam',true);
+          document.getElementById('dotCam').classList.add('on');
+          document.getElementById('statCam').textContent='LIVE';
+          showCamera();
+          refreshCameraDeviceList();
+          updateActualCameraStatus();
+          cameraStatusMessage(
+            'Camera active with the selected settings.',
+            true
+          );
+
+          if(cameraRestartWantsTracking){
+            cameraRestartWantsTracking=false;
+            setTimeout(function(){
+              if(
+                camStream&&
+                typeof startHandTracking==='function'&&
+                !handTrackingActive
+              ){
+                startHandTracking();
+              }
+            },350);
+          }
+          return stream;
+        });
+      })
+      .catch(function(err){
+        cameraRestartWantsTracking=false;
+        updateActualCameraStatus();
+        if(err.name==='NotAllowedError'){
+          if(isInIframe()){
+            document.getElementById('statCam').textContent=
+              'IFRAME BLOCKED';
+            setCaption(
+              'Camera access is blocked because this is running in an embedded preview. Open the file directly in its own browser tab instead.'
+            );
+          }else{
+            document.getElementById('statCam').textContent='BLOCKED';
+            setCaption(
+              'Camera is blocked for this site. Click the lock or camera icon in the address bar, allow camera access, then reload.'
+            );
+          }
+        }else{
+          document.getElementById('statCam').textContent=
+            err.name||'ERROR';
         }
-      } else {
-        document.getElementById('statCam').textContent = err.name || 'ERROR';
-      }
-    });
+        cameraStatusMessage(
+          'Camera could not use that mode: '+(err.message||err.name||err),
+          false
+        );
+        return null;
+      });
   }
   function showCamera(){
     var layer = document.getElementById('camLayer');
@@ -3302,15 +3976,8 @@
   }
   function stopCameraHardware(){
     hideCamera();
-    if(camStream){
-      try{ camStream.getTracks().forEach(function(track){ track.stop(); }); }catch(e){}
-    }
-    camStream = null;
-    var video = document.getElementById('camVideo');
-    if(video){
-      try{ video.pause(); }catch(e){}
-      video.srcObject = null;
-    }
+    stopCameraStreamOnly();
+    cameraRestartWantsTracking=false;
     state.perms.cam = false;
     setBadge('badgeCam', false);
     document.getElementById('dotCam').classList.remove('on');
@@ -3335,6 +4002,7 @@
     }
   }
   document.getElementById('camBtn').addEventListener('click', toggleCamera);
+  initCameraSettingsControls();
 
   // ---------- Hand tracking ----------
   var handsInstance = null;
@@ -3880,24 +4548,36 @@
     var videoH=video.videoHeight;
     if(!videoW||!videoH)return null;
 
-    // The visible camera now uses object-fit: contain. Use the same geometry
-    // for hand landmarks so the skeleton stays exactly over the full feed,
-    // including when the preview has letterbox bars.
-    var containScale=Math.min(
-      canvasW/videoW,
-      canvasH/videoH
+    var fitMode=
+      cameraSettings&&cameraSettings.fit==='cover'
+        ?'cover'
+        :'contain';
+    var baseScale=fitMode==='cover'
+      ?Math.max(canvasW/videoW,canvasH/videoH)
+      :Math.min(canvasW/videoW,canvasH/videoH);
+    var previewZoom=Math.max(
+      .5,
+      Math.min(
+        2,
+        Number(
+          cameraSettings&&cameraSettings.previewZoom
+        )||1
+      )
     );
-    var renderedW=videoW*containScale;
-    var renderedH=videoH*containScale;
+    var finalScale=baseScale*previewZoom;
+    var renderedW=videoW*finalScale;
+    var renderedH=videoH*finalScale;
+
     return {
       videoW:videoW,
       videoH:videoH,
-      scale:containScale,
-      // mapNormalizedPointRaw subtracts these values, so negative offsets
-      // correctly add the centered letterbox space.
+      scale:finalScale,
+      // mapNormalizedPointRaw subtracts these values. Negative values add
+      // centered letterbox space; positive values remove cropped edges.
       offsetX:(renderedW-canvasW)/2,
       offsetY:(renderedH-canvasH)/2,
-      fitMode:'contain'
+      fitMode:fitMode,
+      previewZoom:previewZoom
     };
   }
 
