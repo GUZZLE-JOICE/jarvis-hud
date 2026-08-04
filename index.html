@@ -351,7 +351,7 @@
   @keyframes chatMessageIn{to{opacity:1;transform:none}}
   @keyframes typingPulse{0%,80%,100%{transform:translateY(0);opacity:.28}40%{transform:translateY(-3px);opacity:1}}
   .chatComposerWrap{position:absolute;left:230px;right:0;bottom:0;padding:18px max(28px,calc((100vw - 920px)/2)) 24px;background:linear-gradient(180deg,transparent,var(--void) 22%)}
-  .chatComposer{max-width:780px;margin:auto;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09)}
+  .chatComposer{width:100%;max-width:920px;margin:auto;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09);box-sizing:border-box}
   #chatInput{display:block;width:100%;min-height:82px;max-height:190px;resize:none;border:0;background:transparent;color:#d4f8fb;font-family:'Rajdhani';font-size:16px;padding:15px 16px 8px;outline:none;box-sizing:border-box}
   #chatInput::placeholder{color:var(--text-dim)}
   .chatComposerBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px 10px}
