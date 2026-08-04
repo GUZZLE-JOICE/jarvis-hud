@@ -355,6 +355,31 @@
   .typingDots span:nth-child(3){animation-delay:.36s}
   @keyframes chatMessageIn{to{opacity:1;transform:none}}
   @keyframes typingPulse{0%,80%,100%{transform:translateY(0);opacity:.28}40%{transform:translateY(-3px);opacity:1}}
+  .chatScrollBottomBtn{
+    position:absolute;
+    right:32px;
+    bottom:156px;
+    width:42px;
+    height:42px;
+    border:1px solid var(--cyan-mid);
+    background:rgba(5,17,21,.96);
+    color:var(--cyan);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    line-height:1;
+    cursor:pointer;
+    z-index:15;
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(10px);
+    transition:opacity .18s ease,transform .18s ease,visibility .18s ease,background .18s ease;
+    box-shadow:0 0 22px rgba(0,229,255,.13);
+  }
+  .chatScrollBottomBtn.show{opacity:1;visibility:visible;transform:translateY(0)}
+  .chatScrollBottomBtn:hover{background:rgba(0,229,255,.12)}
+  .chatScrollBottomBtn:active{transform:translateY(1px)}
   .chatComposerWrap{position:absolute;left:230px;right:0;bottom:0;padding:18px 18px 24px;background:linear-gradient(180deg,transparent,var(--void) 22%)}
   .chatComposer{width:100%;max-width:none;margin:0;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09);box-sizing:border-box}
   #chatInput{display:block;width:100%;min-height:82px;max-height:190px;resize:none;border:0;background:transparent;color:#d4f8fb;font-family:'Rajdhani';font-size:16px;padding:15px 16px 8px;outline:none;box-sizing:border-box}
@@ -384,7 +409,7 @@
   .profileUserName{font-family:'Orbitron';font-size:13px;letter-spacing:1px;color:var(--cyan);margin-bottom:5px}
   .profileSyncInfo{font-family:'JetBrains Mono';font-size:10px;color:var(--text-dim);line-height:1.5}
 
-  @media(max-width:720px){#chatWorkspace.open{grid-template-columns:72px 1fr}.chatSidebarTop{padding:8px}.chatNewBtn span{display:none}.chatHistoryItem span{display:none}.chatHistoryItem{justify-content:center}.chatComposerWrap{left:72px}.chatMessages{padding-left:14px;padding-right:14px}.chatComposerWrap{padding-left:14px;padding-right:14px}.modeSwitchBtn{min-width:82px;padding:8px 10px}}
+  @media(max-width:720px){#chatWorkspace.open{grid-template-columns:72px 1fr}.chatSidebarTop{padding:8px}.chatNewBtn span{display:none}.chatHistoryItem span{display:none}.chatHistoryItem{justify-content:center}.chatComposerWrap{left:72px}.chatMessages{padding-left:14px;padding-right:14px}.chatComposerWrap{padding-left:14px;padding-right:14px}.chatScrollBottomBtn{right:22px;bottom:154px}.modeSwitchBtn{min-width:82px;padding:8px 10px}}
 
 </style>
 </head>
@@ -637,6 +662,7 @@
 </aside>
 <main class="chatMain">
 <div class="chatMessages" id="chatMessages"><div class="chatEmpty">What should we work on?</div></div>
+<button class="chatScrollBottomBtn" id="chatScrollBottomBtn" type="button" title="Jump to newest message" aria-label="Jump to newest message">↓</button>
 <div class="chatComposerWrap">
 <div class="chatComposer">
 <textarea id="chatInput" placeholder="Message Jarvis" rows="3"></textarea>
@@ -3426,8 +3452,31 @@
       if(last && typeof last.scrollIntoView==='function'){
         last.scrollIntoView({block:'end'});
       }
+      updateChatScrollBottomButton();
     });
   }
+  function updateChatScrollBottomButton(){
+    var box=document.getElementById('chatMessages');
+    var btn=document.getElementById('chatScrollBottomBtn');
+    if(!box||!btn)return;
+    var distanceFromBottom=box.scrollHeight-box.scrollTop-box.clientHeight;
+    btn.classList.toggle('show',distanceFromBottom>180);
+  }
+  function scrollChatToBottom(smooth){
+    var box=document.getElementById('chatMessages');
+    if(!box)return;
+    box.scrollTo({top:box.scrollHeight,behavior:smooth?'smooth':'auto'});
+  }
+  (function setupChatScrollBottomButton(){
+    var box=document.getElementById('chatMessages');
+    var btn=document.getElementById('chatScrollBottomBtn');
+    if(!box||!btn)return;
+    box.addEventListener('scroll',updateChatScrollBottomButton,{passive:true});
+    btn.addEventListener('click',function(){scrollChatToBottom(true);});
+    window.addEventListener('resize',updateChatScrollBottomButton);
+    updateChatScrollBottomButton();
+  })();
+
   function effortInstruction(level){
     if(level==='low') return 'FAST MODE. Give the direct answer immediately. Do not deliberate aloud, do not add background, and use at most 2 short sentences unless the user explicitly asks for code.';
     if(level==='high') return 'DEEP MODE. Analyze carefully, verify assumptions, consider edge cases, and produce a detailed complete answer. For coding, include robust complete code and explain important choices.';
