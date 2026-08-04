@@ -478,7 +478,7 @@
         </div>
         <div class="settingsPage" data-page="server">
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div id="ownerCodeStatus" class="statusLine"></div></div>
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to Someone Else</h3><p class="settingsHint">Enter their server address and access code. They need Ollama; you do not. Choose Remote on the AI page after saving.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="https://your-current-link.trycloudflare.com"><div class="statusLine" style="margin-top:5px">Use the host PC's current Cloudflare base URL. Do not paste the GitHub Pages URL or add /health.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" placeholder="Their shared code"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to This Jarvis Server</h3><p class="settingsHint">The server address is already filled in. Enter the access code that the owner gives you, then connect. The access code is not included in this public GitHub file.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" value="https://banana-cup-codes-engaged.trycloudflare.com"><div class="statusLine" style="margin-top:5px">Only change this when the Cloudflare Quick Tunnel gives the owner a new address.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
           <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 17l5 3 5-3V7l-5-3-5 3v10z"/><path d="M7 7l5 3 5-3"/><path d="M12 10v10"/></svg>Cloudflare Quick Tunnel</h3><p class="settingsHint">For internet sharing without giving anyone your IP, run the two commands below in separate terminals. Paste the <code>.trycloudflare.com</code> address here so you can copy it again anytime from settings.</p><div class="settingsGrid"><div><label class="settingsLabel">Start Jarvis server</label><input class="settingsField" id="cloudflareCmdServer" readonly value='python "C:\\Users\\Oguz\\OneDrive\\Desktop\\Games\\jarvis_browser.py"'></div><div><label class="settingsLabel">Start Cloudflare tunnel</label><input class="settingsField" id="cloudflareCmdTunnel" readonly value='cloudflared tunnel --url http://127.0.0.1:5005'></div></div><div class="settingsActions"><button class="smallBtn" id="copyServerRunCmdBtn">Copy server cmd</button><button class="smallBtn" id="copyTunnelCmdBtn">Copy tunnel cmd</button></div><label class="settingsLabel" style="margin-top:10px">Current public tunnel URL</label><div class="codeDisplay"><input class="settingsField" id="cloudflarePublicUrl" placeholder="https://your-name.trycloudflare.com"><button class="smallBtn" id="saveCloudflareUrlBtn">Save</button><button class="smallBtn" id="copyCloudflareUrlBtn">Copy</button><button class="smallBtn" id="clearCloudflareUrlBtn">Clear</button></div><div id="cloudflareStatus" class="statusLine"></div></div>
         </div>
@@ -760,6 +760,7 @@
   var REMOTE_URL_STORAGE = 'jarvis_remote_url_v1';
   var REMOTE_CODE_STORAGE = 'jarvis_remote_code_v1';
   var PUBLIC_TUNNEL_URL_STORAGE = 'jarvis_public_tunnel_url_v1';
+  var DEFAULT_REMOTE_SERVER = 'https://banana-cup-codes-engaged.trycloudflare.com';
   var claudeKey = null, geminiKey = null, localModel = null, remoteServerUrl = null, remoteAccessCode = null, publicTunnelUrl = null;
   var activeProvider = 'claude';
   try{
@@ -767,9 +768,9 @@
     geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || null;
     localModel = localStorage.getItem(LOCAL_MODEL_STORAGE) || null;
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
-    remoteServerUrl = localStorage.getItem(REMOTE_URL_STORAGE) || null;
+    remoteServerUrl = localStorage.getItem(REMOTE_URL_STORAGE) || DEFAULT_REMOTE_SERVER;
     remoteAccessCode = localStorage.getItem(REMOTE_CODE_STORAGE) || null;
-    publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || null;
+    publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || DEFAULT_REMOTE_SERVER;
   }catch(e){}
 
   function currentKey(){
@@ -809,7 +810,7 @@
   function refreshKeyStatus(){
     var el = document.getElementById('keyStatus');
     if(activeProvider === 'remote'){
-      if(remoteServerUrl && remoteAccessCode){ el.textContent = 'Remote Jarvis server saved: ' + remoteServerUrl; el.style.color = 'var(--mint)'; }
+      if(remoteServerUrl && remoteAccessCode){ el.textContent = 'Remote Jarvis server connected: ' + remoteServerUrl; el.style.color = 'var(--mint)'; }
       else { el.textContent = 'Enter a server address and access code.'; el.style.color = 'var(--text-dim)'; }
       return;
     }
@@ -834,7 +835,7 @@
       remoteServerUrl = document.getElementById('remoteServerUrl').value.trim().replace(/\/$/, '');
       remoteAccessCode = document.getElementById('remoteAccessCode').value.trim();
       if(!/^https?:\/\//i.test(remoteServerUrl) || remoteAccessCode.length < 8){ document.getElementById('keyStatus').textContent='Enter a full http:// or https:// address and an access code with at least 8 characters.'; document.getElementById('keyStatus').style.color='var(--amber)'; return; }
-      try{ localStorage.setItem(REMOTE_URL_STORAGE, remoteServerUrl); localStorage.setItem(REMOTE_CODE_STORAGE, remoteAccessCode); }catch(e){}
+      try{ localStorage.setItem(REMOTE_URL_STORAGE, remoteServerUrl); localStorage.setItem(REMOTE_CODE_STORAGE, remoteAccessCode);  }catch(e){}
       refreshKeyStatus(); return;
     }
     if(activeProvider === 'local'){
@@ -862,7 +863,7 @@
     refreshKeyStatus();
   });
   document.getElementById('clearKeyBtn').addEventListener('click', function(){
-    if(activeProvider === 'remote'){ remoteServerUrl=null; remoteAccessCode=null; try{localStorage.removeItem(REMOTE_URL_STORAGE);localStorage.removeItem(REMOTE_CODE_STORAGE);}catch(e){} document.getElementById('remoteServerUrl').value='';document.getElementById('remoteAccessCode').value=''; }
+    if(activeProvider === 'remote'){ remoteServerUrl=DEFAULT_REMOTE_SERVER; remoteAccessCode=null; try{localStorage.setItem(REMOTE_URL_STORAGE,DEFAULT_REMOTE_SERVER);localStorage.removeItem(REMOTE_CODE_STORAGE);}catch(e){} document.getElementById('remoteServerUrl').value=DEFAULT_REMOTE_SERVER;document.getElementById('remoteAccessCode').value=''; }
     else if(activeProvider === 'gemini'){
       geminiKey = null;
       try{ localStorage.removeItem(GEMINI_KEY_STORAGE); }catch(e){}
@@ -1324,11 +1325,38 @@
     }
   }
 
+  function researchBridgeBase(){
+    var host=(location.hostname||'').toLowerCase();
+    var pageIsLocal=(host==='127.0.0.1'||host==='localhost'||location.protocol==='file:');
+    if(pageIsLocal)return 'http://localhost:5005';
+    return (remoteServerUrl||DEFAULT_REMOTE_SERVER).replace(/\/$/,'');
+  }
+  function researchFetch(path,options){
+    var base=researchBridgeBase();
+    var isRemote=base.indexOf('localhost:5005')===-1&&base.indexOf('127.0.0.1:5005')===-1;
+    options=options||{};
+    options.headers=Object.assign({},options.headers||{});
+    if(isRemote){
+      if(!remoteAccessCode){
+        return Promise.reject(new Error('Enter the Jarvis access code in Settings → Server before using research on this computer.'));
+      }
+      options.headers['X-Jarvis-Code']=remoteAccessCode;
+    }
+    return fetch(base+path,options).then(function(response){
+      if(response.ok)return response;
+      return response.text().then(function(raw){
+        var message='Research server returned '+response.status+'.';
+        try{var data=raw?JSON.parse(raw):{};if(data.error)message=data.error;}catch(e){if(/^\s*</.test(raw||''))message='That server address returned a webpage instead of the Jarvis research API.';}
+        throw new Error(message);
+      });
+    });
+  }
+
   function pollTabStatus(localId){
     var tab = browseTabs[localId];
     if(!tab || !tab.backendTabId) return;
 
-    fetch('http://localhost:5005/status/' + encodeURIComponent(tab.backendTabId))
+    researchFetch('/status/' + encodeURIComponent(tab.backendTabId))
       .then(function(r){
         if(!r.ok) throw new Error('Status request failed: ' + r.status);
         return r.json();
@@ -1420,7 +1448,7 @@
     if(!tab) return;
     if(tab.pollTimer) clearInterval(tab.pollTimer);
     if(tab.backendTabId){
-      fetch('http://localhost:5005/close_tab', {
+      researchFetch('/close_tab', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({tab_id: tab.backendTabId})
       }).catch(function(){});
@@ -1460,7 +1488,7 @@
     var relX = clientX - rect.left, relY = clientY - rect.top;
     // Map from displayed image size back to the real 1000x700 screenshot space
     var scaleX = 1000 / rect.width, scaleY = 700 / rect.height;
-    fetch('http://localhost:5005/click', {
+    researchFetch('/click', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({tab_id: tab.backendTabId, x: Math.round(relX*scaleX), y: Math.round(relY*scaleY)})
     }).then(function(r){ return r.json(); }).then(function(data){
@@ -1500,7 +1528,7 @@
       st.busy = true;
       amount = Math.max(-900, Math.min(900, amount));
 
-      fetch('http://localhost:5005/scroll', {
+      researchFetch('/scroll', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({tab_id: tab.backendTabId, delta_y: amount})
       }).then(function(r){ return r.json(); }).then(function(data){
@@ -1589,7 +1617,7 @@
       tab.pollTimer = null;
     }
     if(tab.backendTabId){
-      fetch('http://localhost:5005/close_tab', {
+      researchFetch('/close_tab', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({tab_id: tab.backendTabId})
       }).catch(function(){});
@@ -1605,7 +1633,7 @@
     tab.el.querySelector('.browseDot').classList.add('busy');
     setBrowseOverlay(tab, 'Opening DuckDuckGo…\n' + query, false);
 
-    fetch('http://localhost:5005/browse', {
+    researchFetch('/browse', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({query: query})
@@ -1629,7 +1657,7 @@
           currentTab.el.querySelector('.browseDot').classList.remove('busy');
           setBrowseOverlay(currentTab, 'Could not start search.\n' + err.message, true);
         }
-        if(speakResult) speak('I could not start browsing. Check the local browser bridge.');
+        if(speakResult) speak('I could not start browsing. Check the server address, access code, Python bridge, and Cloudflare tunnel.');
       });
   }
 
@@ -1668,7 +1696,7 @@
   document.getElementById('resetFontBtn').addEventListener('click',function(){applyFont('Rajdhani',true);document.getElementById('fontSearchInput').value='';});
   document.getElementById('settingsCloseBtn').addEventListener('click',function(){document.getElementById('memPanel').classList.remove('settings-open');});
   function bridgeBase(){ return 'http://localhost:5005'; }
-  function updateBridgeBadge(){ fetch(bridgeBase()+'/health').then(function(r){return r.json();}).then(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){var b=document.getElementById('bridgeStatusBadge');b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';}); }
+  function updateBridgeBadge(){var b=document.getElementById('bridgeStatusBadge');fetch(bridgeBase()+'/health').then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='LOCAL BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){if(!remoteAccessCode){b.textContent='CODE REQUIRED';b.className='serverBadge bad';return;}fetch((remoteServerUrl||DEFAULT_REMOTE_SERVER)+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':remoteAccessCode}}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(){b.textContent='REMOTE BRIDGE ONLINE';b.className='serverBadge ok';}).catch(function(){b.textContent='BRIDGE OFFLINE';b.className='serverBadge bad';});}); }
   function loadOwnerCode(){ fetch(bridgeBase()+'/owner/access-code').then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';var shareUrl=(publicTunnelUrl||'').trim();document.getElementById('ownerCodeStatus').textContent='Server listens on port '+(d.port||5005)+'. Share '+(shareUrl?shareUrl:'your reachable server address')+' plus this code.';}).catch(function(){document.getElementById('ownerCodeStatus').textContent='Start jarvis_browser.py to manage the server code.';}); }
   document.getElementById('saveOwnerCodeBtn').addEventListener('click',function(){var c=document.getElementById('ownerAccessCode').value.trim();fetch(bridgeBase()+'/owner/access-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){document.getElementById('ownerCodeStatus').textContent=x.ok?'Custom code saved. The old code no longer works.':(x.d.error||'Could not save code.');});});
   document.getElementById('generateOwnerCodeBtn').addEventListener('click',function(){fetch(bridgeBase()+'/owner/access-code/refresh',{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='New code generated. The old code was disabled.';});});
@@ -1713,13 +1741,36 @@
         statusEl.style.color='var(--amber)';
         return;
       }
-      statusEl.textContent='Connected. Model: '+((x.d&&x.d.model)||'Ollama');
+      statusEl.textContent='Connected manually. Model: '+((x.d&&x.d.model)||'Ollama');
       statusEl.style.color='var(--mint)';
       if(typeof onSuccess==='function')onSuccess(url,code,x.d||{});
     }).catch(function(e){
       statusEl.textContent='Could not connect: '+e.message;
       statusEl.style.color='var(--amber)';
     });
+  }
+  function saveRemoteConnection(url,code){
+    remoteServerUrl=(url||DEFAULT_REMOTE_SERVER).trim().replace(/\/$/,'');
+    remoteAccessCode=(code||'').trim();
+    try{
+      localStorage.setItem(REMOTE_URL_STORAGE,remoteServerUrl);
+      localStorage.setItem(REMOTE_CODE_STORAGE,remoteAccessCode);
+    }catch(e){}
+    var remoteUrlInput=document.getElementById('remoteServerUrl');
+    var remoteCodeInput=document.getElementById('remoteAccessCode');
+    var connectUrlInput=document.getElementById('serverConnectUrl');
+    var connectCodeInput=document.getElementById('serverConnectCode');
+    if(remoteUrlInput)remoteUrlInput.value=remoteServerUrl;
+    if(remoteCodeInput)remoteCodeInput.value=remoteAccessCode;
+    if(connectUrlInput)connectUrlInput.value=remoteServerUrl;
+    if(connectCodeInput)connectCodeInput.value='';
+    setProviderTab('remote');
+  }
+  // Old auto-connect links are intentionally disabled. They must never carry
+  // the private access code inside a public URL.
+  try{localStorage.removeItem('jarvis_auto_remote_v1');}catch(e){}
+  if(location.hash&&location.hash.indexOf('jarvis-connect=')!==-1){
+    history.replaceState(null,'',location.pathname+location.search);
   }
   function savePublicTunnelUrl(){ var input=document.getElementById('cloudflarePublicUrl'); var status=document.getElementById('cloudflareStatus'); if(!input||!status) return; var url=(input.value||'').trim().replace(/\/$/,''); publicTunnelUrl=url; try{ if(url) localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,url); else localStorage.removeItem(PUBLIC_TUNNEL_URL_STORAGE); }catch(e){} status.textContent=url?'Saved public tunnel URL. Share this URL plus your access code.':'Cleared the saved public tunnel URL.'; status.style.color=url?'var(--mint)':'var(--text-dim)'; loadOwnerCode(); }
   function copyTextValue(v,statusEl,msg){ if(!v) return; navigator.clipboard.writeText(v).then(function(){ if(statusEl){statusEl.textContent=msg||'Copied.'; statusEl.style.color='var(--mint)'; }}).catch(function(){ if(statusEl){statusEl.textContent='Copy failed.'; statusEl.style.color='var(--amber)'; }}); }
@@ -1728,12 +1779,7 @@
     var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');
     var c=document.getElementById('serverConnectCode').value.trim();
     testRemoteConnection(u,c,document.getElementById('serverConnectStatus'),function(validUrl,validCode){
-      remoteServerUrl=validUrl;
-      remoteAccessCode=validCode;
-      try{localStorage.setItem(REMOTE_URL_STORAGE,validUrl);localStorage.setItem(REMOTE_CODE_STORAGE,validCode);}catch(e){}
-      document.getElementById('remoteServerUrl').value=validUrl;
-      document.getElementById('remoteAccessCode').value=validCode;
-      setProviderTab('remote');
+      saveRemoteConnection(validUrl,validCode);
     });
   });
   updateBridgeBadge();
@@ -1743,6 +1789,10 @@
   document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ document.getElementById('memPanel').classList.remove('settings-open'); } });
   var cfInput=document.getElementById('cloudflarePublicUrl'); if(cfInput && publicTunnelUrl) cfInput.value=publicTunnelUrl;
   if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Paste your current .trycloudflare.com link here if you want quick access later.';
+  var presetRemoteUrl=remoteServerUrl||DEFAULT_REMOTE_SERVER;
+  if(document.getElementById('serverConnectUrl'))document.getElementById('serverConnectUrl').value=presetRemoteUrl;
+  if(document.getElementById('remoteServerUrl'))document.getElementById('remoteServerUrl').value=presetRemoteUrl;
+  if(document.getElementById('serverConnectCode'))document.getElementById('serverConnectCode').value='';
   document.getElementById('saveCloudflareUrlBtn').addEventListener('click', savePublicTunnelUrl);
   document.getElementById('clearCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=''; savePublicTunnelUrl(); });
   document.getElementById('copyCloudflareUrlBtn').addEventListener('click', function(){ copyTextValue((document.getElementById('cloudflarePublicUrl').value||'').trim(), document.getElementById('cloudflareStatus'), 'Public tunnel URL copied.'); });
