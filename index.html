@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>J.A.R.V.I.S.</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <script type="module">
   import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm";
   window.__mpHandLandmarker = HandLandmarker;
@@ -380,296 +381,288 @@
 </head>
 <body>
 <div id="app">
-
-  <div id="camLayer">
-    <video id="camVideo" autoplay muted playsinline></video>
-    <canvas id="handCanvas"></canvas>
-    <div id="camTint"></div>
-    <div id="camScrim"></div>
-    <div id="camLabel">OPTIC FEED</div>
-    <div id="pinchIndicator"></div>
-  </div>
-  <div id="hexbg"></div>
-  <div id="scanline"></div>
-
-  <div id="startGate">
-    <div id="bootLogo">J.A.R.V.I.S.</div>
-    <h1>Interface Standby</h1>
-    <p>Grant access to camera, microphone, motion and location sensors for the full HUD experience. Anything denied just falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning and vision commands like "Jarvis, what am I looking at."</p>
-    <p id="secWarning" style="display:none;color:var(--amber);font-family:'JetBrains Mono';font-size:11px;max-width:380px;"></p>
-    <button class="startBtn" id="initBtn" type="button" onclick="window.__jarvisStartClick && window.__jarvisStartClick()">Initialize System</button>
-  </div>
-
-  <div id="bootOverlay" style="display:none;">
-    <div id="coreWrap">
-      <svg id="coreSvg" viewBox="0 0 300 300">
-        <circle id="coreOuterRing" cx="150" cy="150" r="140" fill="none" stroke="var(--cyan-dim)" stroke-width="1" stroke-dasharray="3 7"/>
-        <circle id="coreRing1" cx="150" cy="150" r="115" fill="none" stroke="var(--cyan-dim)" stroke-width="1.5"/>
-        <circle id="coreRing2" cx="150" cy="150" r="90" fill="none" stroke="var(--cyan-dim)" stroke-width="2"/>
-        <g id="coreSpokes"></g>
-        <circle id="coreInner" cx="150" cy="150" r="55" fill="none" stroke="var(--cyan-dim)" stroke-width="2"/>
-        <circle id="coreCenter" cx="150" cy="150" r="8" fill="var(--cyan-dim)"/>
-      </svg>
-    </div>
-    <div id="bootText">J.A.R.V.I.S.</div>
-    <div id="bootSub">— standby —</div>
-  </div>
-
-  <!-- TOP -->
-  <div class="hud-panel" id="topBar">
-    <div id="compassWrap">
-      <div id="compassTicks"><div id="compassStrip"></div></div>
-      <div id="headingVal">--°</div>
-    </div>
-    <div id="topBarTitle">
-      <div class="hud-label" style="letter-spacing:4px;">Stark-Class Assistant</div>
-    </div>
-    <div id="clockBlock">
-      <div id="clockTime">--:--:--</div>
-      <div id="clockDate">-- --- ----</div>
-    </div>
-  </div>
-
-  <div id="permBadges">
-    <div class="permBadge" id="badgeCam">CAM</div>
-    <div class="permBadge" id="badgeMic">MIC</div>
-    <div class="permBadge" id="badgeGeo">GPS</div>
-  </div>
-
-  <div id="settingsBtn" title="Memory log">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.63.77 1.05 1.42 1.05H21a2 2 0 010 4h-.09c-.65 0-1.22.42-1.51 1z"/></svg>
-  </div>
-
-  <div id="memPanel">
-    <aside class="settingsSidebar">
-      <div class="settingsBrand">JARVIS CONTROL</div>
-      <nav class="settingsNav">
-        <button class="settingsNavBtn active" data-settings-page="memory"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg><span>Memory</span></button>
-        <button class="settingsNavBtn" data-settings-page="voice"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg><span>Voice</span></button>
-        <button class="settingsNavBtn" data-settings-page="hands"><svg viewBox="0 0 24 24" fill="none"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8-3a2 2 0 014 0v5c0 4-3 7-7 7h-2c-3 0-5-1-7-4l-3-5a2 2 0 013-2l2 2"/></svg><span>Hands</span></button>
-        <button class="settingsNavBtn" data-settings-page="ai"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10h.01M15 10h.01M8 15h8M12 2v3"/></svg><span>AI</span></button>
-        <button class="settingsNavBtn" data-settings-page="server"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg><span>Server</span></button>
-        <button class="settingsNavBtn" data-settings-page="appearance"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"/><circle cx="8" cy="9" r="1"/><circle cx="11" cy="6" r="1"/><circle cx="15" cy="7" r="1"/></svg><span>Colors</span></button>
-        <button class="settingsNavBtn" data-settings-page="fonts"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14M8 19h8"/><path d="M7 9V5h10v4"/></svg><span>Fonts</span></button>
-      </nav>
-      <button class="settingsNavBtn settingsClose" id="settingsCloseBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Close</span></button>
-    </aside>
-    <section class="settingsMain">
-      <div class="settingsTopbar"><span id="settingsPageTitle">MEMORY</span><span class="serverBadge" id="bridgeStatusBadge">BRIDGE CHECKING</span></div>
-      <div class="settingsPages">
-        <div class="settingsPage active" data-page="memory">
-          <div class="settingsCard">
-  <h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to This Jarvis Server</h3>
-  <p class="settingsHint">Enter the access code the owner gives you. The server address is fixed automatically.</p>
-  <label class="settingsLabel">Access code</label>
-  <input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you">
-  <div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div>
-  <div id="serverConnectStatus" class="statusLine"></div>
-  <div hidden aria-hidden="true">
-    <input id="serverConnectUrl" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly>
-  </div>
-</div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
-          <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
-          <div hidden aria-hidden="true">
-  <input id="cloudflareCmdServer" value='python "C:\\Users\\Oguz\\OneDrive\\Desktop\\Games\\jarvis_browser.py"' readonly>
-  <input id="cloudflareCmdTunnel" value="ngrok http 5005" readonly>
-  <button id="copyServerRunCmdBtn" type="button"></button>
-  <button id="copyTunnelCmdBtn" type="button"></button>
-  <input id="cloudflarePublicUrl" value="https://certify-calamity-prodigal.ngrok-free.dev" readonly>
-  <button id="saveCloudflareUrlBtn" type="button"></button>
-  <button id="copyCloudflareUrlBtn" type="button"></button>
-  <button id="clearCloudflareUrlBtn" type="button"></button>
-  <div id="cloudflareStatus"></div>
+<div id="camLayer">
+<video autoplay="" id="camVideo" muted="" playsinline=""></video>
+<canvas id="handCanvas"></canvas>
+<div id="camTint"></div>
+<div id="camScrim"></div>
+<div id="camLabel">OPTIC FEED</div>
+<div id="pinchIndicator"></div>
 </div>
-        </div>
-        <div class="settingsPage" data-page="appearance">
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"/></svg>Color Combinations</h3><p class="settingsHint">Choose a complete Jarvis color system. These dark-interface palettes are curated around cyber, sci-fi, terminal, and accessible high-contrast combinations.</p><div class="appearancePreview"><div class="appearancePreviewTitle">JARVIS INTERFACE PREVIEW</div><div class="appearancePreviewText">Neural core online · systems nominal · theme changes apply instantly.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="themeSearchInput" placeholder="Search 60+ themes"><button class="smallBtn" id="resetThemeBtn" type="button">Reset</button></div><div class="themeGrid" id="themeGrid"></div><div class="statusLine" id="themeStatus"></div></div>
-        </div>
-        <div class="settingsPage" data-page="fonts">
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M12 5v14M8 19h8"/><path d="M7 9V5h10v4"/></svg>Interface Font</h3><p class="settingsHint">Choose from 35+ UI, futuristic, and coding fonts. The selected font is loaded only when needed and saved on this browser.</p><div class="appearancePreview"><div class="appearancePreviewTitle" id="fontPreviewTitle">JARVIS NEURAL INTERFACE</div><div class="appearancePreviewText" id="fontPreviewText">The quick brown fox jumps over 0123456789.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="fontSearchInput" placeholder="Search fonts"><button class="smallBtn" id="resetFontBtn" type="button">Reset</button></div><div class="fontGrid" id="fontGrid"></div><div class="statusLine" id="fontStatus"></div></div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- LEFT -->
-  <div class="hud-panel" id="leftPanel">
-    <div class="panel-inner" style="display:flex;flex-direction:column;gap:11px;">
-      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;font-size:11px;">Diagnostics</div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">CPU load</span><span class="hud-value" id="cpuVal">--%</span></div>
-        <div class="bar-track"><div class="bar-fill" id="cpuBar" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">Memory</span><span class="hud-value" id="memVal">-- GB</span></div>
-        <div class="bar-track"><div class="bar-fill" id="memBar" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">Power cell</span><span class="hud-value" id="battVal">--%</span></div>
-        <div class="bar-track"><div class="bar-fill" id="battBar" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric-row">
-        <div class="metric-top"><span class="hud-label">Uplink</span><span class="hud-value" id="netVal">--</span></div>
-        <div class="bar-track"><div class="bar-fill" id="netBar" style="width:0%"></div></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
-        <div class="metric-top"><span class="hud-label">Cores</span><span class="hud-value" id="coreVal">--</span></div>
-        <div class="metric-top"><span class="hud-label">Latency</span><span class="hud-value" id="pingVal">-- ms</span></div>
-        <div class="metric-top"><span class="hud-label">Viewport</span><span class="hud-value" id="viewportVal">--</span></div>
-        <div class="metric-top"><span class="hud-label">Display</span><span class="hud-value" id="displayVal">--</span></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
-        <div class="metric-top"><span class="hud-label">Platform</span><span class="hud-value" id="platformVal" style="font-size:10px;">--</span></div>
-        <div class="metric-top"><span class="hud-label">Browser</span><span class="hud-value" id="browserVal" style="font-size:10px;">--</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="hud-panel" id="rightPanel">
-    <div class="panel-inner" style="display:flex;flex-direction:column;gap:7px;">
-      <div class="hud-label" style="color:var(--cyan);letter-spacing:2px;margin-bottom:2px;font-size:11px;">Systems</div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotCam"></span>Optic feed</span><span class="tile-stat" id="statCam">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotMic"></span>Audio link</span><span class="tile-stat" id="statMic">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotGeo"></span>Geo-lock</span><span class="tile-stat" id="statGeo">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotOrient"></span>Gyro array</span><span class="tile-stat" id="statOrient">OFF</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot on"></span>Neural core</span><span class="tile-stat">ONLINE</span></div>
-      <div class="tile"><span class="tile-name"><span class="dot" id="dotVoice"></span>Voice synth</span><span class="tile-stat" id="statVoice">--</span></div>
-      <div class="tile" style="border-top:1px solid var(--cyan-dim);margin-top:2px;padding-top:9px;"><span class="tile-name">AI provider</span><span class="tile-stat" id="statProvider">CLAUDE</span></div>
-    </div>
-  </div>
-
-  <!-- CENTER -->
-  <div class="hud-panel" id="reticleWrap">
-    <svg id="reticleSvg" viewBox="0 0 260 260">
-      <circle class="ring" cx="130" cy="130" r="118" stroke-width="0.6" stroke-dasharray="2 6"/>
-      <circle class="ring" cx="130" cy="130" r="95" stroke-width="1"/>
-      <circle class="ring-active" id="audioRing" cx="130" cy="130" r="70" stroke-width="1.5" stroke-dasharray="440" stroke-dashoffset="110"/>
-      <circle class="ring" cx="130" cy="130" r="46" stroke-width="0.6"/>
-      <g id="tickMarks"></g>
-      <line x1="130" y1="6" x2="130" y2="20" stroke="var(--cyan)" stroke-width="1.5"/>
-      <line x1="130" y1="254" x2="130" y2="240" stroke="var(--cyan)" stroke-width="1.5"/>
-      <line x1="6" y1="130" x2="20" y2="130" stroke="var(--cyan)" stroke-width="1.5"/>
-      <line x1="254" y1="130" x2="240" y2="130" stroke="var(--cyan)" stroke-width="1.5"/>
-      <circle id="pupil" cx="130" cy="130" r="4" fill="var(--cyan)"/>
-    </svg>
-    <div id="wakeLabel">Say "Jarvis" to wake</div>
-  </div>
-
-  <!-- BOTTOM -->
-  <div class="hud-panel" id="bottomBar">
-    <div id="captionBox"></div>
-    <div id="tickerRow">
-      <span>LOC <b id="tickerLoc">acquiring</b></span>
-      <span>TIME ONLINE <b id="tickerUptime">00:00:00</b></span>
-      <span>ENTRIES LOGGED <b id="tickerMem">0</b></span>
-      <span>MODE <b id="tickerMode">STANDBY</b></span>
-    </div>
-  </div>
-
-  <div id="camBtn" title="Toggle camera">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-  </div>
-
-  <div id="screenBtn" title="Share screen">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-  </div>
-
-  <div id="newTabBtn" title="Open new tab">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
-  </div>
-
-  <video id="screenVideo" autoplay muted playsinline style="display:none;"></video>
-  <canvas id="screenCaptureCanvas" style="display:none;"></canvas>
-
-  <template id="browsePanelTemplate">
-    <div class="browsePanel">
-      <div class="browseTabBar">
-        <div class="browseDot"></div>
-        <div class="browseTabLabel">NEW TAB</div>
-        <div class="browseCloseBtn">&times;</div>
-      </div>
-      <div class="browseAddressBar">
-        <input class="browseSearchInput" type="text" placeholder="Search DuckDuckGo or enter a URL" autocomplete="off">
-        <button class="browseGoBtn" type="button">GO</button>
-      </div>
-      <div class="browseImageWrap">
-        <img class="browseScreenshot" alt="">
-        <div class="browseOverlay">Waiting for research…</div>
-      </div>
-      <div class="browseFooter">JARVIS · LOCAL BROWSER BRIDGE</div>
-      <div class="browseResizeHandle"></div>
-    </div>
-  </template>
-  <div id="browseTabsLayer"></div>
-  <div id="globalHandCursor"></div>
-
-  <canvas id="captureCanvas" style="display:none;"></canvas>
-
-
-  <div id="modeSwitch" aria-label="Jarvis mode switch">
-    <button class="modeSwitchBtn active" id="hudModeBtn" type="button">HUD</button>
-    <button class="modeSwitchBtn" id="chatModeBtn" type="button">CHAT</button>
-  </div>
-
-  <section id="chatWorkspace" aria-label="Jarvis chat workspace">
-    <aside class="chatSidebar">
-      <div class="chatSidebarBrand">JARVIS</div>
-      <div class="chatSidebarTop"><button class="chatNewBtn" id="chatNewBtn" type="button">＋ <span>NEW CHAT</span></button></div>
-      <div class="chatHistoryList" id="chatHistoryList"></div>
-      <div class="chatSidebarFooter">
-        <button class="profileIconBtn" id="profileBtn" type="button" title="Profile and sync"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></button>
-        <button class="chatSettingsRect" id="chatSettingsBtn" type="button"><span class="profileStateDot" id="profileStateDot"></span><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1-2.9 2.9-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21h-4v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1-2.9-2.9.1-.1a1.7 1.7 0 00.3-1.8A1.7 1.7 0 003 14H3v-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.8l-.1-.1 2.9-2.9.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1 2.9 2.9-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1h.1v4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>SETTINGS</button>
-      </div>
-    </aside>
-    <main class="chatMain">
-      <div class="chatMessages" id="chatMessages"><div class="chatEmpty">What should we work on?</div></div>
-      <div class="chatComposerWrap">
-        <div class="chatComposer">
-          <textarea id="chatInput" placeholder="Message Jarvis" rows="3"></textarea>
-          <div class="chatComposerBar">
-            <div class="effortControl"><span>EFFORT</span><select id="chatEffort"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option></select><span class="chatStatus" id="chatStatus"></span></div>
-            <button id="chatSendBtn" type="button" title="Send">↑</button>
-          </div>
-        </div>
-      </div>
-    </main>
-  </section>
-
-  <div id="profileModal" aria-hidden="true">
-    <div class="profilePanel" role="dialog" aria-modal="true" aria-label="Jarvis profile">
-      <div class="profilePanelHead"><div class="profilePanelTitle">JARVIS PROFILE</div><button class="profileCloseBtn" id="profileCloseBtn" type="button">×</button></div>
-      <div class="profilePanelBody">
-        <div class="profileAuthForm" id="profileAuthForm">
-          <div class="profileTabs"><button class="profileTabBtn active" id="profileLoginTab" type="button">LOG IN</button><button class="profileTabBtn" id="profileRegisterTab" type="button">CREATE ACCOUNT</button></div>
-          <label class="settingsLabel">Profile server address</label><input class="settingsField" id="profileServerUrl" placeholder="http://127.0.0.1:5005 or your tunnel URL">
-          <label class="settingsLabel" style="margin-top:10px">Username</label><input class="settingsField" id="profileUsername" autocomplete="username" placeholder="Username">
-          <label class="settingsLabel" style="margin-top:10px">Password</label><input class="settingsField" id="profilePassword" type="password" autocomplete="current-password" placeholder="Password">
-          <div class="settingsActions"><button class="smallBtn" id="profileSubmitBtn" type="button">LOG IN</button></div>
-          <div class="statusLine" id="profileStatus">Your chats and Jarvis memory sync to the profile server after you log in.</div>
-        </div>
-        <div class="profileLoggedIn" id="profileLoggedIn">
-          <div class="profileUserCard"><div class="profileUserName" id="profileDisplayName">SIGNED IN</div><div class="profileSyncInfo" id="profileSyncInfo"></div></div>
-          <div class="settingsActions"><button class="smallBtn" id="profileSyncNowBtn" type="button">SYNC NOW</button><button class="smallBtn" id="profileLogoutBtn" type="button">LOG OUT</button></div>
-          <div class="statusLine" id="profileLoggedStatus"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="micBtn" title="Push to talk">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-  </div>
-
+<div id="hexbg"></div>
+<div id="scanline"></div>
+<div id="startGate">
+<div id="bootLogo">J.A.R.V.I.S.</div>
+<h1>Interface Standby</h1>
+<p>Grant access to camera, microphone, motion and location sensors for the full HUD experience. Anything denied just falls back to simulated telemetry. Add an API key in settings later to unlock real reasoning and vision commands like "Jarvis, what am I looking at."</p>
+<p id="secWarning" style="display:none;color:var(--amber);font-family:'JetBrains Mono';font-size:11px;max-width:380px;"></p>
+<button class="startBtn" id="initBtn" onclick="window.__jarvisStartClick &amp;&amp; window.__jarvisStartClick()" type="button">Initialize System</button>
 </div>
-
-
+<div id="bootOverlay" style="display:none;">
+<div id="coreWrap">
+<svg id="coreSvg" viewbox="0 0 300 300">
+<circle cx="150" cy="150" fill="none" id="coreOuterRing" r="140" stroke="var(--cyan-dim)" stroke-dasharray="3 7" stroke-width="1"></circle>
+<circle cx="150" cy="150" fill="none" id="coreRing1" r="115" stroke="var(--cyan-dim)" stroke-width="1.5"></circle>
+<circle cx="150" cy="150" fill="none" id="coreRing2" r="90" stroke="var(--cyan-dim)" stroke-width="2"></circle>
+<g id="coreSpokes"></g>
+<circle cx="150" cy="150" fill="none" id="coreInner" r="55" stroke="var(--cyan-dim)" stroke-width="2"></circle>
+<circle cx="150" cy="150" fill="var(--cyan-dim)" id="coreCenter" r="8"></circle>
+</svg>
+</div>
+<div id="bootText">J.A.R.V.I.S.</div>
+<div id="bootSub">— standby —</div>
+</div>
+<!-- TOP -->
+<div class="hud-panel" id="topBar">
+<div id="compassWrap">
+<div id="compassTicks"><div id="compassStrip"></div></div>
+<div id="headingVal">--°</div>
+</div>
+<div id="topBarTitle">
+<div class="hud-label" style="letter-spacing:4px;">Stark-Class Assistant</div>
+</div>
+<div id="clockBlock">
+<div id="clockTime">--:--:--</div>
+<div id="clockDate">-- --- ----</div>
+</div>
+</div>
+<div id="permBadges">
+<div class="permBadge" id="badgeCam">CAM</div>
+<div class="permBadge" id="badgeMic">MIC</div>
+<div class="permBadge" id="badgeGeo">GPS</div>
+</div>
+<div id="settingsBtn" title="Memory log">
+<svg fill="none" height="18" stroke="currentColor" stroke-width="1.6" viewbox="0 0 24 24" width="18"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.63.77 1.05 1.42 1.05H21a2 2 0 010 4h-.09c-.65 0-1.22.42-1.51 1z"></path></svg>
+</div>
+<div id="memPanel">
+<aside class="settingsSidebar">
+<div class="settingsBrand">JARVIS CONTROL</div>
+<nav class="settingsNav">
+<button class="settingsNavBtn active" data-settings-page="memory"><svg fill="none" viewbox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h6"></path></svg><span>Memory</span></button>
+<button class="settingsNavBtn" data-settings-page="voice"><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path><path d="M5 11a7 7 0 0014 0M12 18v3"></path></svg><span>Voice</span></button>
+<button class="settingsNavBtn" data-settings-page="hands"><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8-3a2 2 0 014 0v5c0 4-3 7-7 7h-2c-3 0-5-1-7-4l-3-5a2 2 0 013-2l2 2"></path></svg><span>Hands</span></button>
+<button class="settingsNavBtn" data-settings-page="ai"><svg fill="none" viewbox="0 0 24 24"><rect height="14" rx="3" width="16" x="4" y="5"></rect><path d="M9 10h.01M15 10h.01M8 15h8M12 2v3"></path></svg><span>AI</span></button>
+<button class="settingsNavBtn" data-settings-page="server"><svg fill="none" viewbox="0 0 24 24"><rect height="6" rx="2" width="18" x="3" y="4"></rect><rect height="6" rx="2" width="18" x="3" y="14"></rect><path d="M7 7h.01M7 17h.01"></path></svg><span>Server</span></button>
+<button class="settingsNavBtn" data-settings-page="appearance"><svg fill="none" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"></path><circle cx="8" cy="9" r="1"></circle><circle cx="11" cy="6" r="1"></circle><circle cx="15" cy="7" r="1"></circle></svg><span>Colors</span></button>
+<button class="settingsNavBtn" data-settings-page="fonts"><svg fill="none" viewbox="0 0 24 24"><path d="M5 5h14M12 5v14M8 19h8"></path><path d="M7 9V5h10v4"></path></svg><span>Fonts</span></button>
+</nav>
+<button class="settingsNavBtn settingsClose" id="settingsCloseBtn"><svg fill="none" viewbox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg><span>Close</span></button>
+</aside>
+<section class="settingsMain">
+<div class="settingsTopbar"><span id="settingsPageTitle">MEMORY</span><span class="serverBadge" id="bridgeStatusBadge">BRIDGE CHECKING</span></div>
+<div class="settingsPages">
+<div class="settingsPage active" data-page="memory">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h6"></path></svg>Memory Log</h3><div id="memList"></div><div class="settingsActions"><button class="smallBtn" id="clearMemBtn">Purge memory</button></div></div>
+</div>
+<div class="settingsPage" data-page="voice">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path></svg>Voice Output</h3><p class="settingsHint">Choose the system voice Jarvis uses.</p><select class="settingsField" id="voiceSelect"></select></div>
+</div>
+<div class="settingsPage" data-page="hands">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">The cursor follows wrist landmark 0. Pinch to scroll and use two pinches to resize browser panels.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
+<div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input id="manualPinchSlider" max="0.15" min="0.02" step="0.005" style="width:100%;margin-bottom:12px;" type="range"/><label class="settingsLabel">Skeleton X alignment</label><input id="alignOffsetX" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><label class="settingsLabel">Skeleton Y alignment</label><input id="alignOffsetY" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><div class="settingsActions"><button class="smallBtn" id="resetAlignBtn">Reset alignment</button></div></div>
+</div>
+<div class="settingsPage" data-page="ai">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><rect height="14" rx="3" width="16" x="4" y="5"></rect><path d="M9 10h.01M15 10h.01M8 15h8"></path></svg>AI Provider</h3><p class="settingsHint">Use Claude, Gemini, Ollama on this PC, or another Jarvis PC through its access code.</p><div class="settingsActions"><button class="smallBtn providerTab" data-provider="claude" id="tabClaude">Claude</button><button class="smallBtn providerTab" data-provider="gemini" id="tabGemini">Gemini</button><button class="smallBtn providerTab" data-provider="local" id="tabLocal">Local</button><button class="smallBtn providerTab" data-provider="remote" id="tabRemote">Remote</button></div>
+<div id="claudeKeySection" style="margin-top:10px"><input class="settingsField" id="apiKeyInputClaude" placeholder="sk-ant-..." type="password"/></div>
+<div id="geminiKeySection" style="display:none;margin-top:10px"><input class="settingsField" id="apiKeyInputGemini" placeholder="AIza..." type="password"/></div>
+<div id="localKeySection" style="display:none;margin-top:10px"><input class="settingsField" id="localModelInput" placeholder="llava:7b" type="text"/></div>
+<div id="remoteKeySection" style="display:none;margin-top:10px">
+<label class="settingsLabel">Access code</label>
+<input autocomplete="off" class="settingsField" id="remoteAccessCode" placeholder="Enter the code the owner gives you" type="password"/>
+<input id="remoteServerUrl" readonly="" type="hidden" value="https://certify-calamity-prodigal.ngrok-free.dev"/>
+<div class="statusLine" style="margin-top:6px">The Jarvis server is selected automatically.</div>
+</div>
+<div class="settingsActions"><button class="smallBtn" id="saveKeyBtn">Save</button><button class="smallBtn" id="clearKeyBtn">Remove</button><button class="smallBtn" id="testRemoteBtn" style="display:none">Test connection</button></div><div class="statusLine" id="keyStatus"></div>
+</div>
+</div>
+<div class="settingsPage" data-page="server">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><rect height="6" rx="2" width="18" x="3" y="4"></rect><rect height="6" rx="2" width="18" x="3" y="14"></rect></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"/><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div class="statusLine" id="ownerCodeStatus"></div></div>
+<div class="settingsCard">
+<h3><svg fill="none" viewbox="0 0 24 24"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"></path><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"></path></svg>Connect to This Jarvis Server</h3>
+<p class="settingsHint">Enter the access code that the owner gives you, then connect. The server address is built into Jarvis and cannot be changed here.</p>
+<label class="settingsLabel">Access code</label>
+<input autocomplete="off" class="settingsField" id="serverConnectCode" placeholder="Enter the code the owner gives you" type="password"/>
+<input id="serverConnectUrl" readonly="" type="hidden" value="https://certify-calamity-prodigal.ngrok-free.dev"/>
+<div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div>
+<div class="statusLine" id="serverConnectStatus"></div>
+</div>
+<div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Remote note:</b> Keep <code>jarvis_browser.py</code> and <code>ngrok http 5005</code> running on the host computer while remote Jarvis is in use.</p></div>
+<div aria-hidden="true" hidden="">
+<input id="cloudflareCmdServer" readonly="" value='python "C:\Users\Oguz\OneDrive\Desktop\Games\jarvis_browser.py"'/>
+<input id="cloudflareCmdTunnel" readonly="" value="ngrok http 5005"/>
+<button id="copyServerRunCmdBtn" type="button"></button>
+<button id="copyTunnelCmdBtn" type="button"></button>
+<input id="cloudflarePublicUrl" readonly="" value="https://certify-calamity-prodigal.ngrok-free.dev"/>
+<button id="saveCloudflareUrlBtn" type="button"></button>
+<button id="copyCloudflareUrlBtn" type="button"></button>
+<button id="clearCloudflareUrlBtn" type="button"></button>
+<div id="cloudflareStatus"></div>
+</div>
+</div>
+<div class="settingsPage" data-page="appearance">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 000 18c2 0 2-3 0-3h-1a2 2 0 010-4h4a6 6 0 000-11z"></path></svg>Color Combinations</h3><p class="settingsHint">Choose a complete Jarvis color system. These dark-interface palettes are curated around cyber, sci-fi, terminal, and accessible high-contrast combinations.</p><div class="appearancePreview"><div class="appearancePreviewTitle">JARVIS INTERFACE PREVIEW</div><div class="appearancePreviewText">Neural core online · systems nominal · theme changes apply instantly.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="themeSearchInput" placeholder="Search 60+ themes"/><button class="smallBtn" id="resetThemeBtn" type="button">Reset</button></div><div class="themeGrid" id="themeGrid"></div><div class="statusLine" id="themeStatus"></div></div>
+</div>
+<div class="settingsPage" data-page="fonts">
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M5 5h14M12 5v14M8 19h8"></path><path d="M7 9V5h10v4"></path></svg>Interface Font</h3><p class="settingsHint">Choose from 35+ UI, futuristic, and coding fonts. The selected font is loaded only when needed and saved on this browser.</p><div class="appearancePreview"><div class="appearancePreviewTitle" id="fontPreviewTitle">JARVIS NEURAL INTERFACE</div><div class="appearancePreviewText" id="fontPreviewText">The quick brown fox jumps over 0123456789.</div></div><div class="themeToolbar"><input class="settingsField themeSearch" id="fontSearchInput" placeholder="Search fonts"/><button class="smallBtn" id="resetFontBtn" type="button">Reset</button></div><div class="fontGrid" id="fontGrid"></div><div class="statusLine" id="fontStatus"></div></div>
+</div>
+</div>
+</section>
+</div>
+<!-- LEFT -->
+<div class="hud-panel" id="leftPanel">
+<div class="panel-inner" style="display:flex;flex-direction:column;gap:11px;">
+<div class="hud-label" style="color:var(--cyan);letter-spacing:2px;font-size:11px;">Diagnostics</div>
+<div class="metric-row">
+<div class="metric-top"><span class="hud-label">CPU load</span><span class="hud-value" id="cpuVal">--%</span></div>
+<div class="bar-track"><div class="bar-fill" id="cpuBar" style="width:0%"></div></div>
+</div>
+<div class="metric-row">
+<div class="metric-top"><span class="hud-label">Memory</span><span class="hud-value" id="memVal">-- GB</span></div>
+<div class="bar-track"><div class="bar-fill" id="memBar" style="width:0%"></div></div>
+</div>
+<div class="metric-row">
+<div class="metric-top"><span class="hud-label">Power cell</span><span class="hud-value" id="battVal">--%</span></div>
+<div class="bar-track"><div class="bar-fill" id="battBar" style="width:0%"></div></div>
+</div>
+<div class="metric-row">
+<div class="metric-top"><span class="hud-label">Uplink</span><span class="hud-value" id="netVal">--</span></div>
+<div class="bar-track"><div class="bar-fill" id="netBar" style="width:0%"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
+<div class="metric-top"><span class="hud-label">Cores</span><span class="hud-value" id="coreVal">--</span></div>
+<div class="metric-top"><span class="hud-label">Latency</span><span class="hud-value" id="pingVal">-- ms</span></div>
+<div class="metric-top"><span class="hud-label">Viewport</span><span class="hud-value" id="viewportVal">--</span></div>
+<div class="metric-top"><span class="hud-label">Display</span><span class="hud-value" id="displayVal">--</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--cyan-dim);padding-top:9px;">
+<div class="metric-top"><span class="hud-label">Platform</span><span class="hud-value" id="platformVal" style="font-size:10px;">--</span></div>
+<div class="metric-top"><span class="hud-label">Browser</span><span class="hud-value" id="browserVal" style="font-size:10px;">--</span></div>
+</div>
+</div>
+</div>
+<!-- RIGHT -->
+<div class="hud-panel" id="rightPanel">
+<div class="panel-inner" style="display:flex;flex-direction:column;gap:7px;">
+<div class="hud-label" style="color:var(--cyan);letter-spacing:2px;margin-bottom:2px;font-size:11px;">Systems</div>
+<div class="tile"><span class="tile-name"><span class="dot" id="dotCam"></span>Optic feed</span><span class="tile-stat" id="statCam">OFF</span></div>
+<div class="tile"><span class="tile-name"><span class="dot" id="dotMic"></span>Audio link</span><span class="tile-stat" id="statMic">OFF</span></div>
+<div class="tile"><span class="tile-name"><span class="dot" id="dotGeo"></span>Geo-lock</span><span class="tile-stat" id="statGeo">OFF</span></div>
+<div class="tile"><span class="tile-name"><span class="dot" id="dotOrient"></span>Gyro array</span><span class="tile-stat" id="statOrient">OFF</span></div>
+<div class="tile"><span class="tile-name"><span class="dot on"></span>Neural core</span><span class="tile-stat">ONLINE</span></div>
+<div class="tile"><span class="tile-name"><span class="dot" id="dotVoice"></span>Voice synth</span><span class="tile-stat" id="statVoice">--</span></div>
+<div class="tile" style="border-top:1px solid var(--cyan-dim);margin-top:2px;padding-top:9px;"><span class="tile-name">AI provider</span><span class="tile-stat" id="statProvider">CLAUDE</span></div>
+</div>
+</div>
+<!-- CENTER -->
+<div class="hud-panel" id="reticleWrap">
+<svg id="reticleSvg" viewbox="0 0 260 260">
+<circle class="ring" cx="130" cy="130" r="118" stroke-dasharray="2 6" stroke-width="0.6"></circle>
+<circle class="ring" cx="130" cy="130" r="95" stroke-width="1"></circle>
+<circle class="ring-active" cx="130" cy="130" id="audioRing" r="70" stroke-dasharray="440" stroke-dashoffset="110" stroke-width="1.5"></circle>
+<circle class="ring" cx="130" cy="130" r="46" stroke-width="0.6"></circle>
+<g id="tickMarks"></g>
+<line stroke="var(--cyan)" stroke-width="1.5" x1="130" x2="130" y1="6" y2="20"></line>
+<line stroke="var(--cyan)" stroke-width="1.5" x1="130" x2="130" y1="254" y2="240"></line>
+<line stroke="var(--cyan)" stroke-width="1.5" x1="6" x2="20" y1="130" y2="130"></line>
+<line stroke="var(--cyan)" stroke-width="1.5" x1="254" x2="240" y1="130" y2="130"></line>
+<circle cx="130" cy="130" fill="var(--cyan)" id="pupil" r="4"></circle>
+</svg>
+<div id="wakeLabel">Say "Jarvis" to wake</div>
+</div>
+<!-- BOTTOM -->
+<div class="hud-panel" id="bottomBar">
+<div id="captionBox"></div>
+<div id="tickerRow">
+<span>LOC <b id="tickerLoc">acquiring</b></span>
+<span>TIME ONLINE <b id="tickerUptime">00:00:00</b></span>
+<span>ENTRIES LOGGED <b id="tickerMem">0</b></span>
+<span>MODE <b id="tickerMode">STANDBY</b></span>
+</div>
+</div>
+<div id="camBtn" title="Toggle camera">
+<svg fill="none" stroke-width="1.6" viewbox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect height="14" rx="2" width="15" x="1" y="5"></rect></svg>
+</div>
+<div id="screenBtn" title="Share screen">
+<svg fill="none" stroke-width="1.6" viewbox="0 0 24 24"><rect height="14" rx="2" width="20" x="2" y="3"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
+</div>
+<div id="newTabBtn" title="Open new tab">
+<svg fill="none" stroke-width="1.6" viewbox="0 0 24 24"><rect height="16" rx="2" width="18" x="3" y="4"></rect><line x1="12" x2="12" y1="10" y2="16"></line><line x1="9" x2="15" y1="13" y2="13"></line></svg>
+</div>
+<video autoplay="" id="screenVideo" muted="" playsinline="" style="display:none;"></video>
+<canvas id="screenCaptureCanvas" style="display:none;"></canvas>
+<template id="browsePanelTemplate">
+<div class="browsePanel">
+<div class="browseTabBar">
+<div class="browseDot"></div>
+<div class="browseTabLabel">NEW TAB</div>
+<div class="browseCloseBtn">×</div>
+</div>
+<div class="browseAddressBar">
+<input autocomplete="off" class="browseSearchInput" placeholder="Search DuckDuckGo or enter a URL" type="text"/>
+<button class="browseGoBtn" type="button">GO</button>
+</div>
+<div class="browseImageWrap">
+<img alt="" class="browseScreenshot"/>
+<div class="browseOverlay">Waiting for research…</div>
+</div>
+<div class="browseFooter">JARVIS · LOCAL BROWSER BRIDGE</div>
+<div class="browseResizeHandle"></div>
+</div>
+</template>
+<div id="browseTabsLayer"></div>
+<div id="globalHandCursor"></div>
+<canvas id="captureCanvas" style="display:none;"></canvas>
+<div aria-label="Jarvis mode switch" id="modeSwitch">
+<button class="modeSwitchBtn active" id="hudModeBtn" type="button">HUD</button>
+<button class="modeSwitchBtn" id="chatModeBtn" type="button">CHAT</button>
+</div>
+<section aria-label="Jarvis chat workspace" id="chatWorkspace">
+<aside class="chatSidebar">
+<div class="chatSidebarBrand">JARVIS</div>
+<div class="chatSidebarTop"><button class="chatNewBtn" id="chatNewBtn" type="button">＋ <span>NEW CHAT</span></button></div>
+<div class="chatHistoryList" id="chatHistoryList"></div>
+<div class="chatSidebarFooter">
+<button class="profileIconBtn" id="profileBtn" title="Profile and sync" type="button"><svg fill="none" stroke-width="1.7" viewbox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0116 0"></path></svg></button>
+<button class="chatSettingsRect" id="chatSettingsBtn" type="button"><span class="profileStateDot" id="profileStateDot"></span><svg fill="none" stroke-width="1.7" viewbox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1-2.9 2.9-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21h-4v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1-2.9-2.9.1-.1a1.7 1.7 0 00.3-1.8A1.7 1.7 0 003 14H3v-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.8l-.1-.1 2.9-2.9.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1 2.9 2.9-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1h.1v4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg>SETTINGS</button>
+</div>
+</aside>
+<main class="chatMain">
+<div class="chatMessages" id="chatMessages"><div class="chatEmpty">What should we work on?</div></div>
+<div class="chatComposerWrap">
+<div class="chatComposer">
+<textarea id="chatInput" placeholder="Message Jarvis" rows="3"></textarea>
+<div class="chatComposerBar">
+<div class="effortControl"><span>EFFORT</span><select id="chatEffort"><option value="low">LOW</option><option selected="" value="medium">MEDIUM</option><option value="high">HIGH</option></select><span class="chatStatus" id="chatStatus"></span></div>
+<button id="chatSendBtn" title="Send" type="button">↑</button>
+</div>
+</div>
+</div>
+</main>
+</section>
+<div aria-hidden="true" id="profileModal">
+<div aria-label="Jarvis profile" aria-modal="true" class="profilePanel" role="dialog">
+<div class="profilePanelHead"><div class="profilePanelTitle">JARVIS PROFILE</div><button class="profileCloseBtn" id="profileCloseBtn" type="button">×</button></div>
+<div class="profilePanelBody">
+<div class="profileAuthForm" id="profileAuthForm">
+<div class="profileTabs"><button class="profileTabBtn active" id="profileLoginTab" type="button">LOG IN</button><button class="profileTabBtn" id="profileRegisterTab" type="button">CREATE ACCOUNT</button></div>
+<input class="settingsField" id="profileServerUrl" readonly="" type="hidden" value="https://certify-calamity-prodigal.ngrok-free.dev"/><div class="statusLine" style="margin-bottom:8px">Profile sync uses the built-in Jarvis server.</div>
+<label class="settingsLabel" style="margin-top:10px">Username</label><input autocomplete="username" class="settingsField" id="profileUsername" placeholder="Username"/>
+<label class="settingsLabel" style="margin-top:10px">Password</label><input autocomplete="current-password" class="settingsField" id="profilePassword" placeholder="Password" type="password"/>
+<div class="settingsActions"><button class="smallBtn" id="profileSubmitBtn" type="button">LOG IN</button></div>
+<div class="statusLine" id="profileStatus">Your chats and Jarvis memory sync to the profile server after you log in.</div>
+</div>
+<div class="profileLoggedIn" id="profileLoggedIn">
+<div class="profileUserCard"><div class="profileUserName" id="profileDisplayName">SIGNED IN</div><div class="profileSyncInfo" id="profileSyncInfo"></div></div>
+<div class="settingsActions"><button class="smallBtn" id="profileSyncNowBtn" type="button">SYNC NOW</button><button class="smallBtn" id="profileLogoutBtn" type="button">LOG OUT</button></div>
+<div class="statusLine" id="profileLoggedStatus"></div>
+</div>
+</div>
+</div>
+</div>
+<div id="micBtn" title="Push to talk">
+<svg fill="none" stroke-width="1.6" viewbox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"></path><path d="M19 10v2a7 7 0 01-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="23"></line><line x1="8" x2="16" y1="23" y2="23"></line></svg>
+</div>
+</div>
 <script>
   (function(){
     window.__jarvisStartHandled = false;
@@ -694,7 +687,6 @@
     });
   })();
 </script>
-
 <script>
 (function(){
 
@@ -770,7 +762,7 @@
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
     remoteServerUrl = DEFAULT_REMOTE_SERVER;
     remoteAccessCode = localStorage.getItem(REMOTE_CODE_STORAGE) || null;
-    publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || '';
+    publicTunnelUrl = DEFAULT_REMOTE_SERVER;
   }catch(e){}
 
   function currentKey(){
@@ -832,7 +824,7 @@
   }
   document.getElementById('saveKeyBtn').addEventListener('click', function(){
     if(activeProvider === 'remote'){
-      remoteServerUrl = document.getElementById('remoteServerUrl').value.trim().replace(/\/$/, '');
+      remoteServerUrl = DEFAULT_REMOTE_SERVER;
       remoteAccessCode = document.getElementById('remoteAccessCode').value.trim();
       if(!/^https?:\/\//i.test(remoteServerUrl) || remoteAccessCode.length < 8){ document.getElementById('keyStatus').textContent='Enter a full http:// or https:// address and an access code with at least 8 characters.'; document.getElementById('keyStatus').style.color='var(--amber)'; return; }
       try{ localStorage.setItem(REMOTE_URL_STORAGE, remoteServerUrl); localStorage.setItem(REMOTE_CODE_STORAGE, remoteAccessCode);  }catch(e){}
@@ -1657,7 +1649,7 @@
           currentTab.el.querySelector('.browseDot').classList.remove('busy');
           setBrowseOverlay(currentTab, 'Could not start search.\n' + err.message, true);
         }
-        if(speakResult) speak('I could not start browsing. Check the server address, access code, Python bridge, and Cloudflare tunnel.');
+        if(speakResult) speak('I could not start browsing. Check the server address, access code, Python bridge, and ngrok tunnel.');
       });
   }
 
@@ -1705,12 +1697,12 @@
     url=(url||'').trim().replace(/\/$/,'');
     code=(code||'').trim();
     if(!url){
-      statusEl.textContent='Enter the host computer\'s Cloudflare URL first. The access code alone cannot locate the server.';
+      statusEl.textContent='Enter the host computer\'s Jarvis server first. The access code alone cannot locate the server.';
       statusEl.style.color='var(--amber)';
       return;
     }
     if(!/^https?:\/\//i.test(url)){
-      statusEl.textContent='Server address must start with https:// or http://. For another network, use the current https://....trycloudflare.com address.';
+      statusEl.textContent='Server address must start with https:// or http://. For another network, use the current https://....ngrok-free.dev address.';
       statusEl.style.color='var(--amber)';
       return;
     }
@@ -1730,7 +1722,7 @@
         try{d=raw?JSON.parse(raw):{};}catch(parseError){
           var looksLikeHtml=/^\s*</.test(raw||'');
           throw new Error(looksLikeHtml
-            ? 'That address returned a webpage instead of the Jarvis server. Use the Cloudflare tunnel base URL, not the GitHub Pages URL and not a /health link.'
+            ? 'That address returned a webpage instead of the Jarvis server. Use the ngrok tunnel base URL, not the GitHub Pages URL and not a /health link.'
             : 'The server returned an invalid response.');
         }
         return {ok:r.ok,d:d};
@@ -1797,7 +1789,7 @@
         var ids=['serverConnectUrl','remoteServerUrl','cloudflarePublicUrl','profileServerUrl'];
         ids.forEach(function(id){var input=document.getElementById(id);if(input)input.value=url;});
         if(status){
-          status.textContent='Latest Cloudflare address loaded automatically. Enter the access code the owner gives you.';
+          status.textContent='Latest Jarvis server address loaded automatically. Enter the access code the owner gives you.';
           status.style.color='var(--mint)';
         }
         updateBridgeBadge();
@@ -1813,7 +1805,7 @@
   }
   document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(document.getElementById('remoteServerUrl').value,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
   document.getElementById('connectRemoteBtn').addEventListener('click',function(){
-    var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');
+    var u=DEFAULT_REMOTE_SERVER;
     var c=document.getElementById('serverConnectCode').value.trim();
     testRemoteConnection(u,c,document.getElementById('serverConnectStatus'),function(validUrl,validCode){
       saveRemoteConnection(validUrl,validCode);
@@ -1825,7 +1817,7 @@
   document.addEventListener('mousedown', function(e){ var p=document.getElementById('memPanel'); var btn=document.getElementById('settingsBtn'); if(p.classList.contains('settings-open') && !p.contains(e.target) && !btn.contains(e.target)){ p.classList.remove('settings-open'); } });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ document.getElementById('memPanel').classList.remove('settings-open'); } });
   var cfInput=document.getElementById('cloudflarePublicUrl'); if(cfInput && publicTunnelUrl) cfInput.value=publicTunnelUrl;
-  if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Paste your current .trycloudflare.com link here if you want quick access later.';
+  if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Paste your current .ngrok-free.dev link here if you want quick access later.';
   var presetRemoteUrl=remoteServerUrl||DEFAULT_REMOTE_SERVER;
   if(document.getElementById('serverConnectUrl')&&presetRemoteUrl)document.getElementById('serverConnectUrl').value=presetRemoteUrl;
   if(document.getElementById('remoteServerUrl')&&presetRemoteUrl)document.getElementById('remoteServerUrl').value=presetRemoteUrl;
@@ -1833,9 +1825,13 @@
   DEFAULT_REMOTE_SERVER='https://certify-calamity-prodigal.ngrok-free.dev';
   remoteServerUrl=DEFAULT_REMOTE_SERVER;
   publicTunnelUrl=DEFAULT_REMOTE_SERVER;
-  try{ localStorage.setItem(REMOTE_URL_STORAGE, DEFAULT_REMOTE_SERVER); localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE, DEFAULT_REMOTE_SERVER); }catch(e){}
+  profileServerUrl=DEFAULT_REMOTE_SERVER;
+  try{
+    localStorage.setItem(REMOTE_URL_STORAGE,DEFAULT_REMOTE_SERVER);
+    localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,DEFAULT_REMOTE_SERVER);
+    localStorage.setItem(PROFILE_SERVER_KEY,DEFAULT_REMOTE_SERVER);
+  }catch(e){}
   ['serverConnectUrl','remoteServerUrl','cloudflarePublicUrl','profileServerUrl'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=DEFAULT_REMOTE_SERVER;});
-
   document.getElementById('saveCloudflareUrlBtn').addEventListener('click', savePublicTunnelUrl);
   document.getElementById('clearCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=''; savePublicTunnelUrl(); });
   document.getElementById('copyCloudflareUrlBtn').addEventListener('click', function(){ copyTextValue((document.getElementById('cloudflarePublicUrl').value||'').trim(), document.getElementById('cloudflareStatus'), 'Public tunnel URL copied.'); });
@@ -3381,7 +3377,7 @@
   var profileToken = '';
   var profileAuthMode = 'login';
   var profileSyncTimer = null;
-  try{ profileServerUrl=localStorage.getItem(PROFILE_SERVER_KEY)||''; profileUsername=localStorage.getItem(PROFILE_USER_KEY)||''; profileToken=sessionStorage.getItem(PROFILE_TOKEN_KEY)||''; }catch(e){}
+  try{ profileServerUrl=DEFAULT_REMOTE_SERVER; profileUsername=localStorage.getItem(PROFILE_USER_KEY)||''; profileToken=sessionStorage.getItem(PROFILE_TOKEN_KEY)||''; }catch(e){ profileServerUrl=DEFAULT_REMOTE_SERVER; }
   try{ manualChats = JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || '[]'); if(!Array.isArray(manualChats)) manualChats=[]; }catch(e){ manualChats=[]; }
 
   function saveManualChats(){ try{ localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(manualChats)); }catch(e){} scheduleProfileSync(); }
@@ -3497,7 +3493,7 @@
   function closeProfileModal(){ document.getElementById('profileModal').classList.remove('open'); document.getElementById('profileModal').setAttribute('aria-hidden','true'); }
   function setProfileMode(mode){ profileAuthMode=mode; document.getElementById('profileLoginTab').classList.toggle('active',mode==='login'); document.getElementById('profileRegisterTab').classList.toggle('active',mode==='register'); document.getElementById('profileSubmitBtn').textContent=mode==='login'?'LOG IN':'CREATE ACCOUNT'; document.getElementById('profilePassword').autocomplete=mode==='login'?'current-password':'new-password'; }
   function profileAuthSubmit(){
-    var server=normalizeServerUrl(document.getElementById('profileServerUrl').value);
+    var server=DEFAULT_REMOTE_SERVER;
     var username=document.getElementById('profileUsername').value.trim();
     var password=document.getElementById('profilePassword').value;
     if(!/^https?:\/\//i.test(server)){setProfileStatus('Enter a full http:// or https:// server address.',false,false);return;}
