@@ -24,10 +24,18 @@
     --red:#ff3b30;
     --mint:#3affc4;
     --text-dim:#5fa8b0;
+    --jarvis-font:'Rajdhani';
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:'Rajdhani',sans-serif;}
+  html,body{margin:0;padding:0;background:var(--void);overflow:hidden;height:100%;width:100%;font-family:var(--jarvis-font,'Rajdhani'),sans-serif;}
   #app{position:relative;width:100vw;height:100vh;background:var(--void);}
+  #app,
+  #app *:not(svg):not(path):not(circle):not(rect):not(line):not(polyline):not(polygon):not(ellipse):not(g),
+  #app button,
+  #app input,
+  #app textarea,
+  #app select,
+  #app option{font-family:var(--jarvis-font,'Rajdhani'),sans-serif !important;}
 
   #camLayer{position:absolute;top:50%;left:50%;width:560px;height:420px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.85);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
 
@@ -59,6 +67,7 @@
   #globalHandCursor.visible{display:block;}
   #globalHandCursor.clicking{border-color:var(--mint);background:rgba(58,255,196,0.3);transform:scale(0.75);box-shadow:0 0 16px rgba(58,255,196,0.8);}
   #globalHandCursor.scrolling{border-color:var(--amber);background:rgba(255,176,32,0.2);box-shadow:0 0 14px rgba(255,176,32,0.6);}
+  .hand-hover-target{outline:1px solid var(--mint) !important;outline-offset:3px;box-shadow:0 0 18px rgba(58,255,196,.22) !important;}
   #browseTabsLayer .browsePanel{pointer-events:auto;}
   #camLayer.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto;box-shadow:0 0 40px rgba(0,229,255,0.25);}
   #camLayer::before{content:'';position:absolute;inset:0;border:1px solid var(--cyan);opacity:0;z-index:2;pointer-events:none;}
@@ -131,19 +140,19 @@
   .startBtn:hover{background:var(--cyan);color:#00151a;box-shadow:0 0 24px var(--cyan-glow);}
 
   /* TOP NAV BAR */
-  #topBar{top:58px;left:76px;right:170px;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;}
-  #compassWrap{display:flex;flex-direction:column;align-items:center;}
-  #compassTicks{width:280px;height:22px;overflow:hidden;position:relative;}
+  #topBar{top:72px;left:16px;right:16px;height:86px;display:block;padding:0;overflow:visible;}
+  #compassWrap{position:absolute;left:50%;transform:translateX(-50%);top:0;display:flex;flex-direction:column;align-items:center;width:320px;pointer-events:none;}
+  #compassTicks{width:320px;height:22px;overflow:hidden;position:relative;}
   #compassStrip{display:flex;position:absolute;left:50%;transform:translateX(-50%);transition:transform .3s ease;}
   .tick{width:35px;text-align:center;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim);flex-shrink:0;}
   .tick.card{color:var(--cyan);font-weight:700;}
-  #headingVal{font-family:'Orbitron';color:var(--cyan);font-size:14px;letter-spacing:2px;margin-top:2px;}
-  #clockBlock{text-align:right;margin-right:8px;}
+  #headingVal{font-family:'Orbitron';color:var(--cyan);font-size:14px;letter-spacing:2px;margin-top:6px;text-align:center;}
+  #clockBlock{position:absolute;right:0;top:2px;text-align:right;min-width:170px;}
   #clockTime{font-family:'JetBrains Mono';color:var(--cyan);font-size:18px;letter-spacing:1px;white-space:nowrap;}
   #clockDate{font-family:'Rajdhani';color:var(--text-dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
 
   /* LEFT DIAGNOSTICS */
-  #leftPanel{top:110px;left:16px;width:190px;display:flex;flex-direction:column;gap:10px;}
+  #leftPanel{top:156px;left:16px;width:190px;display:flex;flex-direction:column;gap:10px;}
   .metric-row{display:flex;flex-direction:column;gap:3px;}
   .metric-top{display:flex;justify-content:space-between;align-items:baseline;}
   .bar-track{height:5px;background:rgba(0,229,255,0.08);position:relative;overflow:hidden;}
@@ -152,7 +161,7 @@
   .bar-fill.crit{background:var(--red);box-shadow:0 0 8px rgba(255,59,48,0.5);}
 
   /* RIGHT EQUIPMENT */
-  #rightPanel{top:110px;right:16px;width:190px;display:flex;flex-direction:column;gap:8px;}
+  #rightPanel{top:156px;right:16px;width:190px;display:flex;flex-direction:column;gap:8px;}
   .tile{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);}
   .tile-name{font-family:'Rajdhani';font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
   .tile-stat{font-family:'JetBrains Mono';font-size:12px;color:var(--cyan);}
@@ -212,15 +221,28 @@
   ::-webkit-scrollbar{width:4px;}
   ::-webkit-scrollbar-thumb{background:var(--cyan-dim);}
 
+  #topBarTitle{position:absolute;left:50%;transform:translateX(-50%);top:54px;text-align:center;white-space:nowrap;pointer-events:none;}
   @media (max-width:640px){
-    #leftPanel, #rightPanel{width:150px;font-size:11px;}
-    #compassTicks{width:180px;}
+    #leftPanel, #rightPanel{width:150px;font-size:11px;top:150px;}
+    #topBar{top:66px;height:82px;}
+    #compassWrap{width:210px;}
+    #compassTicks{width:210px;}
+    #headingVal{font-size:12px;}
+    #clockBlock{right:0;top:0;min-width:120px;}
+    #clockTime{font-size:15px;}
+    #clockDate{font-size:10px;}
+    #topBarTitle{top:50px;}
     #reticleWrap{width:200px;height:200px;}
     .hud-label{font-size:9px;}
     #camLayer{width:280px;height:210px;}
   }
   @media (max-width:900px) and (min-width:641px){
     #camLayer{width:380px;height:285px;}
+    #topBar{top:68px;height:84px;}
+    #leftPanel,#rightPanel{top:152px;}
+    #compassWrap{width:260px;}
+    #compassTicks{width:260px;}
+    #topBarTitle{top:52px;}
   }
 
 
@@ -392,7 +414,7 @@
       <div id="compassTicks"><div id="compassStrip"></div></div>
       <div id="headingVal">--°</div>
     </div>
-    <div style="text-align:center;">
+    <div id="topBarTitle">
       <div class="hud-label" style="letter-spacing:4px;">Stark-Class Assistant</div>
     </div>
     <div id="clockBlock">
@@ -586,7 +608,7 @@
 
   <div id="modeSwitch" aria-label="Jarvis mode switch">
     <button class="modeSwitchBtn active" id="hudModeBtn" type="button">HUD</button>
-    <button class="modeSwitchBtn" id="chatModeBtn" type="button">TALK / CHAT</button>
+    <button class="modeSwitchBtn" id="chatModeBtn" type="button">CHAT</button>
   </div>
 
   <section id="chatWorkspace" aria-label="Jarvis chat workspace">
@@ -1622,8 +1644,8 @@
   function applyTheme(theme,save){if(!theme)return;var root=document.documentElement;root.style.setProperty('--void',theme.void);root.style.setProperty('--panel',theme.panel);root.style.setProperty('--cyan',theme.accent);root.style.setProperty('--cyan-dim',hexToRgba(theme.accent,.22));root.style.setProperty('--cyan-mid',hexToRgba(theme.accent,.46));root.style.setProperty('--cyan-glow',hexToRgba(theme.accent,.55));root.style.setProperty('--mint',theme.secondary);root.style.setProperty('--amber',theme.secondary);root.style.setProperty('--text-dim',hexToRgba(theme.text,.62));selectedThemeName=theme.name;if(save){try{localStorage.setItem(THEME_STORAGE_KEY,theme.name);}catch(e){}scheduleProfileSync();}renderThemeGrid(document.getElementById('themeSearchInput')?document.getElementById('themeSearchInput').value:'');var st=document.getElementById('themeStatus');if(st)st.textContent='ACTIVE: '+theme.name.toUpperCase();}
   function renderThemeGrid(filter){var grid=document.getElementById('themeGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_THEMES.filter(function(t){return t.name.toLowerCase().includes(filter);}).forEach(function(t){var b=document.createElement('button');b.type='button';b.className='themeOption'+(t.name===selectedThemeName?' active':'');b.innerHTML='<div class="themeSwatches"><span style="background:'+t.void+'"></span><span style="background:'+t.panel+'"></span><span style="background:'+t.accent+'"></span><span style="background:'+t.secondary+'"></span><span style="background:'+t.text+'"></span></div><div class="themeName"></div>';b.querySelector('.themeName').textContent=t.name;b.addEventListener('click',function(){applyTheme(t,true);});grid.appendChild(b);});}
   function loadGoogleFont(name){if(!name)return;var id='jarvisDynamicFont';var old=document.getElementById(id);if(old)old.remove();var link=document.createElement('link');link.id=id;link.rel='stylesheet';link.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(name).replace(/%20/g,'+')+':wght@400;500;600;700&display=swap';document.head.appendChild(link);}
-  function applyFont(name,save){if(!name)return;loadGoogleFont(name);selectedFontName=name;document.documentElement.style.setProperty('--jarvis-body-font',"'"+name+"'");document.documentElement.style.setProperty('--jarvis-display-font',"'"+name+"'");document.body.style.fontFamily="'"+name+"', sans-serif";if(save){try{localStorage.setItem(FONT_STORAGE_KEY,name);}catch(e){}scheduleProfileSync();}setTimeout(function(){renderFontGrid(document.getElementById('fontSearchInput')?document.getElementById('fontSearchInput').value:'');var st=document.getElementById('fontStatus');if(st)st.textContent='ACTIVE: '+name.toUpperCase();},80);}
-  function renderFontGrid(filter){var grid=document.getElementById('fontGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_FONTS.filter(function(n){return n.toLowerCase().includes(filter);}).forEach(function(n){var b=document.createElement('button');b.type='button';b.className='fontOption'+(n===selectedFontName?' active':'');b.style.fontFamily="'"+n+"', sans-serif";b.innerHTML='<div class="fontOptionName"></div><div class="fontOptionPreview">JARVIS 0123 · System online</div>';b.querySelector('.fontOptionName').textContent=n;b.addEventListener('mouseenter',function(){loadGoogleFont(n);});b.addEventListener('click',function(){applyFont(n,true);});grid.appendChild(b);});}
+  function applyFont(name,save){if(!name)return;loadGoogleFont(name);selectedFontName=name;document.documentElement.style.setProperty('--jarvis-font',"'"+name+"'");document.documentElement.style.setProperty('--jarvis-body-font',"'"+name+"'");document.documentElement.style.setProperty('--jarvis-display-font',"'"+name+"'");document.body.style.fontFamily="'"+name+"', sans-serif";if(save){try{localStorage.setItem(FONT_STORAGE_KEY,name);}catch(e){}scheduleProfileSync();}setTimeout(function(){renderFontGrid(document.getElementById('fontSearchInput')?document.getElementById('fontSearchInput').value:'');var st=document.getElementById('fontStatus');if(st)st.textContent='ACTIVE: '+name.toUpperCase()+' · FULL INTERFACE';},80);}
+  function renderFontGrid(filter){var grid=document.getElementById('fontGrid');if(!grid)return;filter=(filter||'').toLowerCase();grid.innerHTML='';JARVIS_FONTS.filter(function(n){return n.toLowerCase().includes(filter);}).forEach(function(n){var b=document.createElement('button');b.type='button';b.className='fontOption'+(n===selectedFontName?' active':'');b.style.setProperty('font-family',"'"+n+"', sans-serif",'important');b.innerHTML='<div class="fontOptionName"></div><div class="fontOptionPreview">JARVIS 0123 · System online</div>';b.querySelector('.fontOptionName').textContent=n;b.addEventListener('mouseenter',function(){loadGoogleFont(n);});b.addEventListener('click',function(){applyFont(n,true);});grid.appendChild(b);});}
 
   function openSettingsPage(name){
     var titles={memory:'MEMORY',voice:'VOICE',hands:'HAND TRACKING',ai:'AI PROVIDER',server:'SERVER SHARING',appearance:'COLOR COMBINATIONS',fonts:'INTERFACE FONTS'};
@@ -1885,12 +1907,30 @@
     if(typeof stopHandTracking === 'function') stopHandTracking();
     if(typeof applyHandZoom === 'function') applyHandZoom(1.0);
   }
+  function stopCameraHardware(){
+    hideCamera();
+    if(camStream){
+      try{ camStream.getTracks().forEach(function(track){ track.stop(); }); }catch(e){}
+    }
+    camStream = null;
+    var video = document.getElementById('camVideo');
+    if(video){
+      try{ video.pause(); }catch(e){}
+      video.srcObject = null;
+    }
+    state.perms.cam = false;
+    setBadge('badgeCam', false);
+    document.getElementById('dotCam').classList.remove('on');
+    document.getElementById('statCam').textContent = 'OFF';
+    lastHandLandmarks = null;
+    handPinchStates[0].isPinching = false;
+    handPinchStates[1].isPinching = false;
+    document.getElementById('globalHandCursor').classList.remove('visible','clicking','scrolling');
+    clearHandHoverTarget();
+  }
   function toggleCamera(){
-    var layer = document.getElementById('camLayer');
-    if(layer.classList.contains('on')){
-      hideCamera();
-    } else if(camStream){
-      showCamera();
+    if(camStream){
+      stopCameraHardware();
     } else {
       initCamera();
     }
@@ -2133,6 +2173,7 @@
       lastTwoHandDistance = null;
       setPinchActive(false);
       document.getElementById('globalHandCursor').classList.remove('visible');
+      clearHandHoverTarget();
       return;
     }
 
@@ -2358,6 +2399,7 @@
     }
     setPinchActive(false);
     document.getElementById('globalHandCursor').classList.remove('visible');
+    clearHandHoverTarget();
     updateHandStatus();
     document.getElementById('toggleHandTracking').textContent = 'Enable tracking';
   }
@@ -2479,6 +2521,7 @@
       cursorEl.style.left = smoothedCursorX + 'px';
       cursorEl.style.top = smoothedCursorY + 'px';
       cursorEl.classList.add('visible');
+      updateHandHoverTarget(smoothedCursorX, smoothedCursorY);
     }
   }
 
@@ -2495,6 +2538,39 @@
   }
 
   var lastCursorPageX = null, lastCursorPageY = null;
+  var handHoverTarget = null;
+  function clearHandHoverTarget(){
+    if(handHoverTarget){ handHoverTarget.classList.remove('hand-hover-target'); }
+    handHoverTarget = null;
+  }
+  function getHudControlAtPoint(x,y){
+    if(x === null || y === null) return null;
+    var raw = document.elementFromPoint(x,y);
+    if(!raw) return null;
+    var selector = 'button,a[href],input,textarea,select,label,[role="button"],#settingsBtn,#micBtn,#camBtn,#screenBtn,#newTabBtn,.browseCloseBtn';
+    var target = raw.closest ? raw.closest(selector) : null;
+    if(!target || target.disabled) return null;
+    if(target.closest && target.closest('.browsePanel')) return null;
+    var rect = target.getBoundingClientRect();
+    if(rect.width <= 0 || rect.height <= 0) return null;
+    return target;
+  }
+  function updateHandHoverTarget(x,y){
+    var next = getHudControlAtPoint(x,y);
+    if(next === handHoverTarget) return;
+    clearHandHoverTarget();
+    handHoverTarget = next;
+    if(handHoverTarget) handHoverTarget.classList.add('hand-hover-target');
+  }
+  function activateHudControlAtPoint(x,y){
+    var target = getHudControlAtPoint(x,y);
+    if(!target) return false;
+    try{
+      if(target.matches('input,textarea,select')) target.focus({preventScroll:true});
+      target.click();
+      return true;
+    }catch(e){ return false; }
+  }
   var wasFist = false;
   var pinchHoldStart = null;
   var pinchHoldStartY = null;
@@ -2516,6 +2592,8 @@
         var clickHit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
         if(clickHit){
           clickInTab(clickHit.id, lastCursorPageX, lastCursorPageY);
+        } else {
+          activateHudControlAtPoint(lastCursorPageX, lastCursorPageY);
         }
       }
     } else if(!fistNow && wasFist){
@@ -2982,10 +3060,35 @@
     document.getElementById('micBtn').classList.remove('live');
   }
 
+  function stopMicrophoneHardware(){
+    state.listening = false;
+    clearTimeout(restartTimer);
+    if(recognition){
+      try{ recognition.onend = null; recognition.stop(); recognition.abort(); }catch(e){}
+    }
+    recognition = null;
+    if(micStream){
+      try{ micStream.getTracks().forEach(function(track){ track.stop(); }); }catch(e){}
+    }
+    micStream = null;
+    analyser = null;
+    dataArray = null;
+    if(audioCtx){
+      try{ audioCtx.close(); }catch(e){}
+    }
+    audioCtx = null;
+    state.perms.mic = false;
+    setBadge('badgeMic', false);
+    document.getElementById('dotMic').classList.remove('on');
+    document.getElementById('statMic').textContent = 'OFF';
+    document.getElementById('micBtn').classList.remove('live');
+    audioRingEl.setAttribute('stroke-dashoffset', 374);
+    pupilEl.setAttribute('r', 4);
+  }
+
   document.getElementById('micBtn').addEventListener('click', function(){
-    if(!state.perms.mic){ initMic(); return; }
-    if(!recognition){ return; }
-    if(state.listening){ stopListening(); } else { startListening(); }
+    if(micStream){ stopMicrophoneHardware(); }
+    else { initMic(); }
   });
 
   // ---------- Command handling ----------
@@ -3162,6 +3265,29 @@
     return 'BALANCED MODE. Give a useful answer with moderate detail and clear reasoning, without unnecessary length.';
   }
   function effortConfig(level){if(level==='low')return {history:2,maxTokens:96,numPredict:96,temperature:.15};if(level==='high')return {history:24,maxTokens:1400,numPredict:1200,temperature:.45};return {history:12,maxTokens:500,numPredict:420,temperature:.3};}
+  var chatSoundContext = null;
+  function playChatSound(kind){
+    try{
+      if(!chatSoundContext) chatSoundContext = new (window.AudioContext || window.webkitAudioContext)();
+      if(chatSoundContext.state === 'suspended') chatSoundContext.resume();
+      var now = chatSoundContext.currentTime;
+      var notes = kind === 'received'
+        ? [{f:540,t:0,d:.07,g:.055},{f:760,t:.075,d:.10,g:.045}]
+        : [{f:760,t:0,d:.055,g:.045},{f:980,t:.055,d:.07,g:.035}];
+      notes.forEach(function(n){
+        var osc = chatSoundContext.createOscillator();
+        var gain = chatSoundContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(n.f, now+n.t);
+        gain.gain.setValueAtTime(0.0001, now+n.t);
+        gain.gain.exponentialRampToValueAtTime(n.g, now+n.t+.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now+n.t+n.d);
+        osc.connect(gain); gain.connect(chatSoundContext.destination);
+        osc.start(now+n.t); osc.stop(now+n.t+n.d+.02);
+      });
+    }catch(e){}
+  }
+
   function buildManualChatPrompt(chat,userText,effort){
     var cfg=effortConfig(effort);var prior=chat.messages.slice(-cfg.history).map(function(m){return (m.role==='assistant'?'JARVIS':'User')+': '+m.text;}).join('\n');
     return 'You are JARVIS in a manual text chat. You may use normal formatting when useful. '+effortInstruction(effort)+'\n\nConversation:\n'+prior+'\nUser: '+userText+'\nJARVIS:';
@@ -3171,18 +3297,23 @@
     if(!activeManualChatId)createManualChat(); var chat=getActiveManualChat(); if(!chat)return;
     var effort=document.getElementById('chatEffort').value;activeChatEffort=effort;
     chat.messages.push({role:'user',text:text}); if(chat.messages.length===1)chat.title=text.slice(0,38)+(text.length>38?'…':''); chat.updated=Date.now();
-    input.value=''; saveManualChats(); renderChatHistory(); chatThinkingForId=chat.id; renderManualChat();
+    input.value=''; saveManualChats(); renderChatHistory(); chatThinkingForId=chat.id; renderManualChat(); playChatSound('sent');
     chatBusy=true;document.getElementById('chatSendBtn').disabled=true;document.getElementById('chatStatus').textContent='THINKING · '+effort.toUpperCase();
     var savedHistory=conversationHistory; conversationHistory=[];
     callAIText(buildManualChatPrompt(chat,text,effort),function(reply,err){
       conversationHistory=savedHistory; chatBusy=false; chatThinkingForId=null; activeChatEffort='medium'; document.getElementById('chatSendBtn').disabled=false;document.getElementById('chatStatus').textContent='';
       if(!reply){ reply=err==='no_key'?'No AI provider is ready. Open Settings → AI and choose Claude, Gemini, Local, or Remote.':'Error: '+(err||'unknown error'); }
-      chat.messages.push({role:'assistant',text:reply});chat.updated=Date.now();saveManualChats();renderChatHistory();renderManualChat();
+      chat.messages.push({role:'assistant',text:reply});chat.updated=Date.now();saveManualChats();renderChatHistory();renderManualChat();playChatSound('received');
     });
   }
   function setMainMode(mode){
     var chatOpen=mode==='chat';document.getElementById('chatWorkspace').classList.toggle('open',chatOpen);document.getElementById('hudModeBtn').classList.toggle('active',!chatOpen);document.getElementById('chatModeBtn').classList.toggle('active',chatOpen);
-    if(chatOpen){if(!activeManualChatId&&manualChats.length)activeManualChatId=manualChats[0].id;renderChatHistory();renderManualChat();setTimeout(function(){document.getElementById('chatInput').focus();},0);}
+    if(chatOpen){
+      if(camStream) stopCameraHardware();
+      document.getElementById('globalHandCursor').classList.remove('visible','clicking','scrolling');
+      clearHandHoverTarget();
+      if(!activeManualChatId&&manualChats.length)activeManualChatId=manualChats[0].id;renderChatHistory();renderManualChat();setTimeout(function(){document.getElementById('chatInput').focus();},0);
+    }
   }
   document.getElementById('hudModeBtn').addEventListener('click',function(){setMainMode('hud');});
   document.getElementById('chatModeBtn').addEventListener('click',function(){setMainMode('chat');});
