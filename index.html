@@ -332,7 +332,7 @@
   .chatDeleteBtn{border:0;background:transparent;color:var(--text-dim);cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
   .chatDeleteBtn:hover{color:var(--red)}
   .chatMain{position:relative;min-width:0;min-height:0;height:100vh;display:flex;flex-direction:column;padding-top:72px;overflow:hidden;box-sizing:border-box}
-  .chatMessages{flex:1 1 auto;min-height:0;height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-behavior:smooth;padding:34px max(28px,calc((100vw - 920px)/2)) 170px;box-sizing:border-box;scrollbar-gutter:stable}
+  .chatMessages{flex:1 1 auto;min-height:0;height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-behavior:smooth;padding:34px 18px 170px;box-sizing:border-box;scrollbar-gutter:stable}
   .chatMessages::-webkit-scrollbar{width:8px}
   .chatMessages::-webkit-scrollbar-track{background:transparent}
   .chatMessages::-webkit-scrollbar-thumb{background:var(--cyan-dim);border-radius:10px}
@@ -350,8 +350,8 @@
   .typingDots span:nth-child(3){animation-delay:.36s}
   @keyframes chatMessageIn{to{opacity:1;transform:none}}
   @keyframes typingPulse{0%,80%,100%{transform:translateY(0);opacity:.28}40%{transform:translateY(-3px);opacity:1}}
-  .chatComposerWrap{position:absolute;left:230px;right:0;bottom:0;padding:18px max(28px,calc((100vw - 920px)/2)) 24px;background:linear-gradient(180deg,transparent,var(--void) 22%)}
-  .chatComposer{width:100%;max-width:920px;margin:auto;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09);box-sizing:border-box}
+  .chatComposerWrap{position:absolute;left:230px;right:0;bottom:0;padding:18px 18px 24px;background:linear-gradient(180deg,transparent,var(--void) 22%)}
+  .chatComposer{width:100%;max-width:none;margin:0;border:1px solid var(--cyan-dim);background:#071013;box-shadow:0 0 28px rgba(0,229,255,.09);box-sizing:border-box}
   #chatInput{display:block;width:100%;min-height:82px;max-height:190px;resize:none;border:0;background:transparent;color:#d4f8fb;font-family:'Rajdhani';font-size:16px;padding:15px 16px 8px;outline:none;box-sizing:border-box}
   #chatInput::placeholder{color:var(--text-dim)}
   .chatComposerBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px 10px}
