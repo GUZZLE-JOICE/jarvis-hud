@@ -515,129 +515,438 @@
 
 
 
-/* ===============================
-   HUD REDESIGN + CHAT ALIGN FIX
-   =============================== */
+/* =============================================
+   CLEAN NEURAL HUD + TRUE OPPOSITE-SIDE CHAT
+   ============================================= */
 #app{
   background:
-    radial-gradient(circle at 50% 46%,rgba(0,229,255,.055),transparent 30%),
-    radial-gradient(circle at 16% 78%,rgba(58,255,196,.035),transparent 28%),
-    linear-gradient(145deg,#020507 0%,#03090b 44%,#041215 100%);
+    radial-gradient(circle at 50% 45%,rgba(0,229,255,.075),transparent 25%),
+    radial-gradient(circle at 12% 78%,rgba(58,255,196,.035),transparent 28%),
+    radial-gradient(circle at 88% 18%,rgba(0,229,255,.025),transparent 25%),
+    linear-gradient(145deg,#020608 0%,#030b0e 50%,#041316 100%);
 }
 #app::before{
-  content:'';position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.17;
-  background-image:linear-gradient(rgba(0,229,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.055) 1px,transparent 1px);
-  background-size:46px 46px;
-  mask-image:radial-gradient(circle at 50% 48%,#000 18%,rgba(0,0,0,.82) 55%,transparent 92%);
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,transparent 0 49.95%,rgba(0,229,255,.035) 50%,transparent 50.05%),
+    linear-gradient(transparent 0 49.95%,rgba(0,229,255,.025) 50%,transparent 50.05%),
+    radial-gradient(circle at 50% 47%,transparent 0 205px,rgba(0,229,255,.025) 206px 207px,transparent 208px);
+  opacity:.7;
 }
-#hexbg{opacity:.34;filter:drop-shadow(0 0 16px rgba(0,229,255,.06));}
-#scanline{opacity:.18;mix-blend-mode:screen;}
-#hudCornerFrame{position:fixed;inset:12px;z-index:2;pointer-events:none}
-.hudCorner{position:absolute;width:28px;height:28px;border-color:rgba(0,229,255,.28)}
-.hudCornerTL{left:0;top:0;border-left:1px solid;border-top:1px solid}
-.hudCornerTR{right:0;top:0;border-right:1px solid;border-top:1px solid}
-.hudCornerBL{left:0;bottom:0;border-left:1px solid;border-bottom:1px solid}
-.hudCornerBR{right:0;bottom:0;border-right:1px solid;border-bottom:1px solid}
-#hudStatusRail{position:fixed;top:18px;left:18px;display:flex;gap:10px;z-index:4;pointer-events:none;flex-wrap:wrap;max-width:calc(100vw - 280px)}
-#hudStatusRail span{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid rgba(0,229,255,.18);background:linear-gradient(145deg,rgba(2,10,12,.88),rgba(6,18,22,.54));backdrop-filter:blur(8px);color:#8fcdd3;font:9px 'JetBrains Mono',monospace;letter-spacing:1.8px;text-transform:uppercase;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-#hudStatusRail i{display:block;width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px rgba(58,255,196,.5)}
-#modeSwitch{top:16px;padding:4px 5px;border:1px solid rgba(0,229,255,.24);background:linear-gradient(145deg,rgba(3,10,12,.96),rgba(6,16,20,.92));box-shadow:0 18px 44px rgba(0,0,0,.22),0 0 28px rgba(0,229,255,.06);border-radius:0;backdrop-filter:blur(12px)}
-.modeSwitchBtn{min-width:126px;padding:11px 18px;border:1px solid transparent;font-size:10px;letter-spacing:2.4px}
-.modeSwitchBtn.active{background:linear-gradient(145deg,rgba(0,229,255,.13),rgba(58,255,196,.08));border-color:rgba(0,229,255,.24);box-shadow:inset 0 0 0 1px rgba(0,229,255,.16),0 0 16px rgba(0,229,255,.08)}
-.neuralHudPanel{position:absolute;overflow:visible;border:1px solid rgba(0,229,255,.18);background:linear-gradient(145deg,rgba(4,12,15,.87),rgba(2,8,10,.52));box-shadow:0 18px 50px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.02);backdrop-filter:blur(10px)}
-.neuralHudPanel::before{content:attr(data-hud-panel);position:absolute;top:-12px;left:14px;padding:3px 9px;border:1px solid rgba(0,229,255,.16);background:linear-gradient(145deg,rgba(2,10,12,.98),rgba(8,20,23,.7));color:var(--cyan);font:8px 'JetBrains Mono',monospace;letter-spacing:2.3px;text-transform:uppercase;box-shadow:0 10px 24px rgba(0,0,0,.18)}
-.neuralHudPanel::after{content:'';position:absolute;inset:0;pointer-events:none;border:1px solid rgba(255,255,255,.02);mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);-webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);padding:1px}
-#topBar{top:80px;left:22px;right:22px;height:102px;padding:0 24px 0 22px;border-color:rgba(0,229,255,.20);display:block;background:linear-gradient(145deg,rgba(5,16,20,.86),rgba(3,9,12,.58));}
-#topBar::before{left:18px}
-#compassWrap{top:16px;width:340px;gap:8px}
-#compassTicks{border-bottom-color:rgba(0,229,255,.18)}
-#headingVal{font-size:26px;letter-spacing:2px;text-shadow:0 0 22px rgba(0,229,255,.12)}
-#topBarTitle{top:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:auto;pointer-events:none}
-.hudIdentityEyebrow{color:#8abdc2;font:8px 'JetBrains Mono',monospace;letter-spacing:3.5px;text-transform:uppercase;white-space:nowrap}
-.hudIdentityMain{font-family:var(--jarvis-display-font,'Orbitron');font-size:26px;letter-spacing:8px;color:var(--cyan);text-transform:uppercase;text-shadow:0 0 22px rgba(0,229,255,.16)}
-.hudIdentitySub{display:flex;align-items:center;gap:7px;color:#95d9de;font:9px 'JetBrains Mono',monospace;letter-spacing:3px;text-transform:uppercase;white-space:nowrap}
-.hudIdentityDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px rgba(58,255,196,.55)}
-#clockBlock{top:14px;right:2px;min-width:200px;padding:10px 12px 9px;border:1px solid rgba(0,229,255,.14);background:linear-gradient(145deg,rgba(0,229,255,.05),rgba(255,255,255,.01));box-shadow:inset 0 0 0 1px rgba(255,255,255,.015)}
-#clockTime{font-size:34px;line-height:1;letter-spacing:2px;text-shadow:0 0 16px rgba(0,229,255,.18)}
-#clockDate{margin-top:5px;font-size:11px;letter-spacing:2.2px}
-#permBadges{top:26px;right:248px;gap:8px}
-.permBadge{padding:8px 11px;border:1px solid rgba(0,229,255,.16);background:linear-gradient(145deg,rgba(0,229,255,.055),rgba(255,255,255,.01));color:#9fd4d8;box-shadow:0 12px 24px rgba(0,0,0,.16)}
-#settingsBtn{top:28px;left:22px;border-color:rgba(0,229,255,.18);background:linear-gradient(145deg,rgba(0,229,255,.055),rgba(255,255,255,.01));box-shadow:0 14px 32px rgba(0,0,0,.18)}
-#leftPanel{top:194px;left:22px;width:248px;padding:18px 14px 14px}
-#rightPanel{top:194px;right:22px;width:222px;padding:18px 14px 14px}
-#leftPanel .panel-inner,#rightPanel .panel-inner{gap:10px}
-#leftPanel .hud-label:first-child,#rightPanel .hud-label:first-child{font-size:11px;letter-spacing:2.2px;margin-bottom:4px;text-transform:uppercase;color:var(--cyan)}
-.metric-row{gap:8px;margin-bottom:5px}
-.metric-top{min-height:20px}
-.hud-label{font-size:11px;letter-spacing:1.8px;color:#9cc7cc}
-.hud-value{font-size:11px;color:#d9feff;text-shadow:0 0 8px rgba(0,229,255,.05)}
-.bar-track{height:7px;border:1px solid rgba(0,229,255,.08);background:linear-gradient(90deg,rgba(0,229,255,.055),rgba(255,255,255,.015))}
-.tile{padding:10px 11px;border:1px solid rgba(0,229,255,.12);background:linear-gradient(145deg,rgba(0,229,255,.04),rgba(255,255,255,.01));box-shadow:inset 0 1px 0 rgba(255,255,255,.012)}
-.tile-name{font-size:12px;letter-spacing:1.2px;color:#b0d5d8}
-.tile-stat{font-size:12px;color:#d9ffff}
-#reticleWrap{width:340px;height:340px;padding:0;background:radial-gradient(circle at 50% 50%,rgba(0,229,255,.04),rgba(0,0,0,0) 62%);border:0;box-shadow:none;backdrop-filter:none}
-#reticleWrap::before{left:50%;top:-18px;transform:translateX(-50%)}
-#reticleSvg{filter:drop-shadow(0 0 20px rgba(0,229,255,.08))}
-#reticleWrap.cam-active{transform:translate(calc(-50% + 520px), -50%) scale(.78);opacity:.56}
-.hudCoreReadout{position:absolute;display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid rgba(0,229,255,.14);background:linear-gradient(145deg,rgba(3,10,12,.85),rgba(255,255,255,.015));box-shadow:0 12px 28px rgba(0,0,0,.14);pointer-events:none}
-.hudCoreReadout span{font:8px 'JetBrains Mono',monospace;letter-spacing:2px;color:#88c0c5;text-transform:uppercase}
-.hudCoreReadout b{font:11px var(--jarvis-body-font,'Rajdhani');letter-spacing:1.4px;color:var(--cyan);text-transform:uppercase}
-.hudCoreReadoutLeft{left:-58px;top:78px;align-items:flex-start}
-.hudCoreReadoutRight{right:-58px;top:78px;align-items:flex-end}
-.hudCoreReadoutBottom{left:50%;bottom:-26px;transform:translateX(-50%);align-items:center}
-#wakeLabel{bottom:-64px;padding:8px 14px;border:1px solid rgba(0,229,255,.14);background:linear-gradient(145deg,rgba(3,10,12,.82),rgba(255,255,255,.01));color:#9fd7dc;font-size:9px;letter-spacing:3.2px;box-shadow:0 12px 26px rgba(0,0,0,.15)}
-#bottomBar{left:288px;right:268px;bottom:18px;padding:18px 20px 18px;align-items:flex-start;gap:10px}
-#bottomBar::before{left:18px}
-#captionBox{max-width:none;width:100%;text-align:left;font-size:18px;line-height:1.45;color:#dffeff;text-shadow:none}
-#tickerRow{width:100%;justify-content:space-between;gap:12px;font-size:11px}
-#tickerRow span{display:inline-flex;gap:7px;align-items:center;white-space:nowrap}
-#tickerRow span b{color:var(--cyan)}
-#micBtn,#camBtn,#screenBtn,#newTabBtn{bottom:34px;width:58px;height:58px;border-radius:16px;border:1px solid rgba(0,229,255,.20);background:linear-gradient(145deg,rgba(4,14,18,.92),rgba(0,229,255,.05));box-shadow:0 16px 36px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.02)}
-#micBtn svg,#camBtn svg,#screenBtn svg,#newTabBtn svg{width:24px;height:24px}
-#micBtn{right:26px}
-#camBtn{right:96px}
-#screenBtn{right:166px}
-#newTabBtn{right:236px}
-#micBtn::after,#camBtn::after,#screenBtn::after,#newTabBtn::after{content:attr(data-hud-action);position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);color:#9ed3d8;font:8px 'JetBrains Mono',monospace;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;pointer-events:none}
-#micBtn.live,#camBtn.live,#screenBtn.live{background:linear-gradient(145deg,rgba(0,229,255,.88),rgba(58,255,196,.6));box-shadow:0 0 24px rgba(0,229,255,.22),0 16px 36px rgba(0,0,0,.18)}
-#micBtn.live svg,#camBtn.live svg,#screenBtn.live svg{stroke:#032329}
+#hexbg{opacity:.09;filter:none}
+#scanline{opacity:.08;mix-blend-mode:screen}
 
-/* chat side fix: user messages on opposite side */
-.chatMessage{max-width:1080px;width:100%;display:flex;align-items:flex-start;justify-content:flex-start;gap:16px}
-.chatMessage.assistant{padding-right:96px}
-.chatMessage.user{justify-content:flex-end;padding-left:96px}
-.chatMessage.user .chatMessageMeta,.chatMessage.user .chatMessageActions{text-align:right;justify-content:flex-end}
-.chatMessage.user .chatBubble{text-align:left}
-.chatMessage.user .chatAvatar{order:2}
-.chatMessage.user .chatMessageColumn{order:1;align-items:flex-end}
+#modeSwitch{
+  top:14px;
+  padding:5px;
+  border:1px solid rgba(0,229,255,.24);
+  border-radius:13px;
+  background:rgba(3,12,15,.88);
+  box-shadow:0 18px 50px rgba(0,0,0,.28),0 0 28px rgba(0,229,255,.08);
+  backdrop-filter:blur(18px);
+}
+.modeSwitchBtn{
+  min-width:132px;
+  padding:11px 18px;
+  border:1px solid transparent;
+  border-radius:9px;
+  font-size:10px;
+  letter-spacing:2.2px;
+}
+.modeSwitchBtn.active{
+  color:#e8feff;
+  border-color:rgba(0,229,255,.30);
+  background:linear-gradient(145deg,rgba(0,229,255,.17),rgba(58,255,196,.07));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02),0 0 18px rgba(0,229,255,.08);
+}
+
+.neuralHudPanel{
+  border:1px solid rgba(0,229,255,.19);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(8,24,29,.91),rgba(3,12,15,.88));
+  box-shadow:0 24px 70px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter:blur(18px);
+  overflow:visible;
+}
+.neuralHudPanel::before{
+  content:attr(data-hud-panel);
+  position:absolute;
+  top:18px;
+  left:20px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--cyan);
+  font:9px 'JetBrains Mono',monospace;
+  letter-spacing:2.6px;
+  text-transform:uppercase;
+  box-shadow:none;
+}
+.neuralHudPanel::after{
+  content:'';
+  position:absolute;
+  left:20px;
+  right:20px;
+  top:38px;
+  height:1px;
+  background:linear-gradient(90deg,rgba(0,229,255,.32),rgba(0,229,255,.06),transparent);
+  pointer-events:none;
+}
+
+#topBar{
+  top:70px;
+  left:24px;
+  right:24px;
+  height:104px;
+  padding:0;
+  overflow:hidden;
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(8,24,29,.94),rgba(3,12,15,.90));
+}
+#topBar::before,#topBar::after{display:none}
+#topBarTitle{
+  left:76px;
+  top:19px;
+  transform:none;
+  width:380px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+}
+.hudIdentityEyebrow{
+  color:#7eaeb4;
+  font:8px 'JetBrains Mono',monospace;
+  letter-spacing:2.8px;
+  white-space:nowrap;
+}
+.hudIdentityMain{
+  color:#e8fdff;
+  font-family:var(--jarvis-display-font,'Orbitron');
+  font-size:25px;
+  font-weight:700;
+  letter-spacing:7px;
+  line-height:1.05;
+  text-shadow:0 0 18px rgba(0,229,255,.15);
+}
+.hudIdentitySub{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:#8fcdd3;
+  font:8px 'JetBrains Mono',monospace;
+  letter-spacing:2.3px;
+  white-space:nowrap;
+}
+.hudIdentityDot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--mint);
+  box-shadow:0 0 10px rgba(58,255,196,.65);
+}
+#compassWrap{
+  top:18px;
+  width:330px;
+}
+#compassTicks{
+  height:36px;
+  border-bottom-color:rgba(0,229,255,.13);
+}
+#headingVal{
+  margin-top:5px;
+  font-size:25px;
+  letter-spacing:2px;
+  color:#e6fdff;
+}
+#clockBlock{
+  right:18px;
+  top:17px;
+  min-width:208px;
+  padding:11px 14px 10px;
+  border:1px solid rgba(0,229,255,.14);
+  border-radius:13px;
+  background:rgba(0,229,255,.035);
+}
+#clockTime{
+  font-size:32px;
+  letter-spacing:2px;
+  line-height:1;
+  color:#eaffff;
+}
+#clockDate{margin-top:6px;font-size:10px;letter-spacing:2px}
+#settingsBtn{
+  top:91px;
+  left:41px;
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  border-color:rgba(0,229,255,.18);
+  background:rgba(0,229,255,.04);
+  color:var(--cyan);
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+}
+#permBadges{
+  top:91px;
+  right:257px;
+  width:auto;
+  gap:7px;
+  flex-wrap:nowrap;
+}
+.permBadge{
+  min-width:42px;
+  padding:7px 9px;
+  border:1px solid rgba(0,229,255,.14);
+  border-radius:9px;
+  background:rgba(0,229,255,.035);
+  color:#8fc8cd;
+  font-size:8px;
+  letter-spacing:1.4px;
+}
+
+#leftPanel,#rightPanel{
+  top:194px;
+  padding:52px 18px 18px;
+  box-sizing:border-box;
+}
+#leftPanel{left:24px;width:290px}
+#rightPanel{right:24px;width:264px}
+#leftPanel .panel-inner,#rightPanel .panel-inner{
+  padding:0;
+  border:0;
+  background:transparent;
+  backdrop-filter:none;
+}
+#leftPanel .panel-inner> .hud-label:first-child,
+#rightPanel .panel-inner> .hud-label:first-child{display:none}
+.metric-row{gap:8px;margin-bottom:8px}
+.metric-top{min-height:20px}
+.hud-label{font-size:11px;letter-spacing:1.5px;color:#8eb6bb}
+.hud-value{font-size:11px;color:#d8fbfd}
+.bar-track{
+  height:7px;
+  border:1px solid rgba(0,229,255,.07);
+  border-radius:999px;
+  background:rgba(0,229,255,.045);
+}
+.bar-fill{border-radius:999px}
+.tile{
+  min-height:38px;
+  padding:9px 11px;
+  border:1px solid rgba(0,229,255,.11);
+  border-radius:10px;
+  background:rgba(0,229,255,.028);
+}
+.tile-name{font-size:11px;letter-spacing:1.1px;color:#a8d1d5}
+.tile-stat{font-size:11px;color:#e2feff}
+
+#reticleWrap{
+  top:49%;
+  width:408px;
+  height:408px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(0,229,255,.065),rgba(0,229,255,.018) 45%,transparent 68%);
+  box-shadow:none;
+  backdrop-filter:none;
+}
+#reticleWrap::before{
+  top:-16px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:6px 11px;
+  border:1px solid rgba(0,229,255,.17);
+  border-radius:999px;
+  background:rgba(3,12,15,.88);
+}
+#reticleWrap::after{display:none}
+#reticleSvg{position:relative;z-index:3;filter:drop-shadow(0 0 22px rgba(0,229,255,.09))}
+.hudCoreHalo{
+  position:absolute;
+  left:50%;
+  top:50%;
+  border-radius:50%;
+  pointer-events:none;
+}
+.haloOne{
+  width:318px;
+  height:318px;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(0,229,255,.08);
+  box-shadow:0 0 55px rgba(0,229,255,.035),inset 0 0 35px rgba(0,229,255,.025);
+}
+.haloTwo{
+  width:366px;
+  height:366px;
+  transform:translate(-50%,-50%);
+  border:1px dashed rgba(0,229,255,.09);
+  animation:cleanHudSpin 28s linear infinite;
+}
+@keyframes cleanHudSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.hudCoreReadout{
+  position:absolute;
+  z-index:4;
+  min-width:82px;
+  padding:9px 11px;
+  border:1px solid rgba(0,229,255,.12);
+  border-radius:10px;
+  background:rgba(3,12,15,.80);
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.hudCoreReadout span{font:7px 'JetBrains Mono',monospace;letter-spacing:1.8px;color:#7faeb3}
+.hudCoreReadout b{font:10px var(--jarvis-body-font,'Rajdhani');letter-spacing:1.2px;color:#d9fdff}
+.hudCoreReadoutLeft{left:-56px;top:128px;align-items:flex-start}
+.hudCoreReadoutRight{right:-56px;top:128px;align-items:flex-end}
+.hudCoreReadoutBottom{left:50%;bottom:9px;transform:translateX(-50%);align-items:center}
+#wakeLabel{
+  bottom:-46px;
+  padding:8px 14px;
+  border:1px solid rgba(0,229,255,.14);
+  border-radius:999px;
+  background:rgba(3,12,15,.78);
+  color:#91c9ce;
+  font-size:9px;
+  letter-spacing:2.8px;
+}
+#reticleWrap.cam-active{transform:translate(calc(-50% + 430px),-50%) scale(.72);opacity:.62}
+
+#bottomBar{
+  left:340px;
+  right:340px;
+  bottom:24px;
+  min-height:88px;
+  padding:47px 20px 14px;
+  box-sizing:border-box;
+  align-items:flex-start;
+  gap:9px;
+}
+#bottomBar::before{top:18px;left:20px}
+#bottomBar::after{top:38px}
+#captionBox{
+  width:100%;
+  max-width:none;
+  min-height:22px;
+  text-align:left;
+  color:#dffbfc;
+  font-size:17px;
+  line-height:1.35;
+  text-shadow:none;
+}
+#tickerRow{
+  width:100%;
+  justify-content:space-between;
+  gap:12px;
+  font-size:9px;
+  letter-spacing:.6px;
+}
+#tickerRow span{white-space:nowrap}
+
+#micBtn,#camBtn,#screenBtn,#newTabBtn{
+  bottom:33px;
+  width:58px;
+  height:58px;
+  border-radius:16px;
+  border:1px solid rgba(0,229,255,.20);
+  background:linear-gradient(145deg,rgba(8,24,29,.93),rgba(3,12,15,.90));
+  box-shadow:0 18px 44px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.02);
+}
+#micBtn{right:24px}
+#camBtn{right:94px}
+#screenBtn{right:164px}
+#newTabBtn{right:234px}
+#micBtn::after,#camBtn::after,#screenBtn::after,#newTabBtn::after{
+  content:attr(data-hud-action);
+  position:absolute;
+  left:50%;
+  top:calc(100% + 7px);
+  transform:translateX(-50%);
+  color:#83b8bd;
+  font:7px 'JetBrains Mono',monospace;
+  letter-spacing:1.5px;
+  white-space:nowrap;
+}
+#micBtn svg,#camBtn svg,#screenBtn svg,#newTabBtn svg{width:24px;height:24px}
+
+/* User messages are now truly on the opposite side. */
+.chatMessages{padding-left:34px;padding-right:34px}
+.chatMessage{
+  width:min(860px,calc(100% - 110px));
+  max-width:none;
+  margin-top:0;
+  margin-bottom:24px;
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+}
+.chatMessage.assistant{
+  margin-left:0 !important;
+  margin-right:auto !important;
+  flex-direction:row !important;
+  justify-content:flex-start !important;
+}
+.chatMessage.user{
+  width:min(720px,calc(100% - 110px));
+  margin-left:auto !important;
+  margin-right:0 !important;
+  flex-direction:row !important;
+  justify-content:flex-end !important;
+}
+.chatMessage.user .chatMessageColumn{
+  order:1 !important;
+  align-items:flex-end !important;
+}
+.chatMessage.user .chatAvatar{order:2 !important}
+.chatMessage.user .chatMessageMeta,
+.chatMessage.user .chatMessageActions,
+.chatMessage.user .chatMessageAttachments{
+  justify-content:flex-end !important;
+  text-align:right;
+}
+.chatMessage.assistant .chatMessageColumn{align-items:flex-start}
+.chatMessage.user .chatBubble{
+  border-color:rgba(58,255,196,.28);
+  background:linear-gradient(145deg,rgba(58,255,196,.12),rgba(4,19,18,.94));
+}
 
 @media(max-width:1180px){
-  #topBarTitle{transform:translateX(-50%) scale(.93);transform-origin:center top}
-  #permBadges{right:210px}
-  #bottomBar{left:260px;right:240px}
+  #topBarTitle{left:68px;width:320px}
+  .hudIdentityEyebrow{display:none}
+  #leftPanel{width:252px}
+  #rightPanel{width:230px}
+  #bottomBar{left:294px;right:304px}
 }
 @media(max-width:980px){
-  #hudStatusRail{display:none}
-  #topBar{left:14px;right:14px;height:110px}
-  #leftPanel{width:220px;top:206px;left:14px}
-  #rightPanel{width:190px;top:206px;right:14px}
-  #bottomBar{left:248px;right:210px}
-  #topBarTitle{top:18px;transform:translateX(-50%) scale(.84)}
+  #topBar{left:14px;right:14px}
+  #topBarTitle{left:60px;transform:scale(.88);transform-origin:left top}
   #compassWrap{width:250px}
+  #clockBlock{min-width:170px}
+  #leftPanel{left:14px;width:220px}
+  #rightPanel{right:14px;width:200px}
+  #reticleWrap{width:340px;height:340px}
+  #bottomBar{left:250px;right:240px}
 }
 @media(max-width:760px){
-  #modeSwitch{top:10px}
-  .modeSwitchBtn{min-width:104px;padding:10px 12px}
-  #topBar{height:146px;padding:0 14px}
-  #topBarTitle{top:56px;transform:translateX(-50%) scale(.78)}
-  #clockBlock{right:0;top:10px;min-width:140px}
-  #permBadges{top:104px;right:14px}
+  #topBar{height:128px}
+  #topBarTitle{top:62px;left:50%;transform:translateX(-50%) scale(.78);align-items:center;text-align:center}
+  #clockBlock{top:16px;right:12px;min-width:140px}
+  #compassWrap{top:15px;left:96px;transform:none;width:160px}
+  #permBadges{display:none}
+  #settingsBtn{top:91px;left:28px}
   #leftPanel,#rightPanel{display:none}
-  #bottomBar{left:14px;right:14px;bottom:84px}
-  #reticleWrap.cam-active{transform:translate(-50%,-46%) scale(.65)}
-  #micBtn,#camBtn,#screenBtn,#newTabBtn{bottom:18px;width:50px;height:50px;border-radius:14px}
+  #reticleWrap{width:300px;height:300px;top:48%}
+  #bottomBar{left:14px;right:14px;bottom:86px}
+  #micBtn,#camBtn,#screenBtn,#newTabBtn{width:50px;height:50px;bottom:20px}
   #micBtn{right:12px}#camBtn{right:72px}#screenBtn{right:132px}#newTabBtn{right:192px}
-  .chatMessage.assistant{padding-right:20px}.chatMessage.user{padding-left:20px}
+  .chatMessages{padding-left:14px;padding-right:14px}
+  .chatMessage,.chatMessage.user{width:calc(100% - 18px)}
 }
 
 </style>
@@ -849,6 +1158,8 @@
 </div>
 <!-- CENTER -->
 <div class="hud-panel neuralHudPanel" data-hud-panel="NEURAL CORE" id="reticleWrap">
+<div class="hudCoreHalo haloOne"></div>
+<div class="hudCoreHalo haloTwo"></div>
 <svg id="reticleSvg" viewbox="0 0 260 260">
 <circle class="ring" cx="130" cy="130" r="118" stroke-dasharray="2 6" stroke-width="0.6"></circle>
 <circle class="ring" cx="130" cy="130" r="95" stroke-width="1"></circle>
@@ -911,18 +1222,6 @@
 <div id="browseTabsLayer"></div>
 <div id="globalHandCursor"></div>
 <canvas id="captureCanvas" style="display:none;"></canvas>
-<div aria-hidden="true" id="hudStatusRail">
-<span><i></i>NEURAL CORE</span>
-<span><i></i>OPTIC ARRAY</span>
-<span><i></i>VOICE LINK</span>
-<span><i></i>LOCAL BRIDGE</span>
-</div>
-<div aria-hidden="true" id="hudCornerFrame">
-<span class="hudCorner hudCornerTL"></span>
-<span class="hudCorner hudCornerTR"></span>
-<span class="hudCorner hudCornerBL"></span>
-<span class="hudCorner hudCornerBR"></span>
-</div>
 <div aria-label="Jarvis mode switch" id="modeSwitch">
 <button class="modeSwitchBtn active" id="hudModeBtn" type="button">J.A.R.V.I.S</button>
 <button class="modeSwitchBtn" id="chatModeBtn" type="button">CHAT</button>
