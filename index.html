@@ -8469,15 +8469,41 @@ body.jarvis-booting #startGate{
     return '';
   }
 
+  function isHostedJarvisPage(){
+    var hostname=String(location.hostname||'').toLowerCase();
+    return (
+      hostname.endsWith('.github.io')||
+      (
+        hostname!=='127.0.0.1'&&
+        hostname!=='localhost'&&
+        location.protocol!=='file:'
+      )
+    );
+  }
+
   function resolveProfileBase(force){
     var pageLocal=localProfileBaseFromPage();
     if(pageLocal)return Promise.resolve(pageLocal);
+
+    // GitHub Pages must use the public tunnel for account login and sync.
+    // Do not probe localhost first, because browsers can block loopback
+    // requests from a public HTTPS page and produce a misleading fetch error.
+    if(isHostedJarvisPage()){
+      return Promise.resolve(
+        normalizeServerUrl(
+          profileServerUrl||
+          remoteResearchBase()||
+          DEFAULT_REMOTE_SERVER
+        )
+      );
+    }
 
     return probeLocalResearchBridge(!!force).then(function(base){
       return normalizeServerUrl(
         base||
         profileServerUrl||
-        remoteResearchBase()
+        remoteResearchBase()||
+        DEFAULT_REMOTE_SERVER
       );
     });
   }
@@ -8505,8 +8531,8 @@ body.jarvis-booting #startGate{
       .catch(function(){
         throw new Error(
           isLocal
-            ?'Could not reach the local profile server. Keep jarvis_browser.py running and open Jarvis from http://127.0.0.1:5005.'
-            :'Could not reach the remote profile server. Start ngrok only when logging in from another computer.'
+            ?'Could not reach the local Jarvis bridge. Keep jarvis_browser.py running.'
+            :'Could not reach the public Jarvis profile server. Keep jarvis_browser.py and ngrok running, then retry from the same GitHub Pages link.'
         );
       });
   }
@@ -8514,7 +8540,21 @@ body.jarvis-booting #startGate{
   function profileFetch(path,options){
     return resolveProfileBase(false).then(function(base){
       return profileFetchAtBase(base,path,options).catch(function(error){
-        var remote=normalizeServerUrl(remoteResearchBase());
+        var remote=normalizeServerUrl(
+          profileServerUrl||
+          remoteResearchBase()||
+          DEFAULT_REMOTE_SERVER
+        );
+
+        // On GitHub Pages, stay on the public tunnel and never tell the user
+        // to reopen Jarvis from localhost.
+        if(isHostedJarvisPage()){
+          if(remote&&remote!==base){
+            return profileFetchAtBase(remote,path,options);
+          }
+          throw error;
+        }
+
         if(isLocalResearchBase(base)&&remote&&remote!==base){
           return profileFetchAtBase(remote,path,options);
         }
@@ -8572,6 +8612,13 @@ body.jarvis-booting #startGate{
       document.getElementById('profileSyncInfo').textContent=
         routeLabel+' · '+profileServerUrl+
         '\nChats and Jarvis memory are saved to your account.';
+    }else{
+      document.getElementById('profileDisplayName').textContent=
+        'NOT SIGNED IN';
+      document.getElementById('profileSyncInfo').textContent=
+        isHostedJarvisPage()
+          ?'GitHub Pages mode: account login and sync use the public ngrok bridge.'
+          :'Sign in or create an account to sync chat history and Jarvis memory.';
     }
   }
   function openProfileModal(){ document.getElementById('memPanel').classList.remove('settings-open'); document.getElementById('profileModal').classList.add('open'); document.getElementById('profileModal').setAttribute('aria-hidden','false'); updateProfileUI(); }
