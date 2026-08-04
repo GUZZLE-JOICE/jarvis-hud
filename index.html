@@ -40,8 +40,12 @@
 
   #camLayer{position:absolute;top:50%;left:50%;width:560px;height:420px;overflow:hidden;background:#000;border:1px solid var(--cyan-dim);z-index:15;display:block;opacity:0;transform:translate(-50%,-50%) scale(0.85);pointer-events:none;transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);}
 
-  .browsePanel{position:absolute;width:360px;height:300px;background:#050a0c;border:1px solid var(--cyan);z-index:40;opacity:0;transform:scale(0.9);transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 0 rgba(0,229,255,0);display:flex;flex-direction:column;}
+  .browsePanel{position:absolute;width:360px;height:300px;background:#050a0c;border:1px solid var(--cyan);z-index:40;opacity:0;transform:scale(0.9);transition:opacity .35s cubic-bezier(.2,.8,.3,1), transform .4s cubic-bezier(.2,.8,.3,1), border-color .18s ease, box-shadow .18s ease;box-shadow:0 0 0 rgba(0,229,255,0);display:flex;flex-direction:column;outline:none;}
   .browsePanel.on{opacity:1;transform:scale(1);box-shadow:0 0 45px rgba(0,229,255,0.3);}
+  .browsePanel.active{border-color:var(--mint);box-shadow:0 0 58px rgba(58,255,196,.34),inset 0 0 22px rgba(58,255,196,.035);}
+  .browsePanel.active .browseTabBar{background:linear-gradient(180deg,rgba(58,255,196,.12),transparent);}
+  .browsePanel.active .browseTabLabel,.browsePanel.active .browseFooter{color:var(--mint);}
+  .browsePanel.active .browseFooter::before{content:'ACTIVE INPUT · ';color:var(--mint);}
   .browseResizeHandle{position:absolute;bottom:2px;right:2px;width:14px;height:14px;cursor:nwse-resize;}
   .browseResizeHandle::after{content:'';position:absolute;bottom:2px;right:2px;width:8px;height:8px;border-right:2px solid var(--cyan-dim);border-bottom:2px solid var(--cyan-dim);}
   .browseTabBar{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--cyan-dim);background:linear-gradient(180deg, rgba(0,229,255,0.06), transparent);cursor:move;flex-shrink:0;}
@@ -1282,6 +1286,9 @@
   // ---------- Multi-tab browser panel system ----------
   var browseTabs = {};   // local_id -> live remote browser tab state
   var browseTabCount = 0;
+  var activeBrowseTabId = null;
+  var browseZCounter = 50;
+  var tabKeyboardState = {};
   // Frames arrive through one persistent NDJSON stream per tab instead of
   // thousands of GET/OPTIONS requests. Only the newest frame is painted.
   var LIVE_STREAM_RECONNECT_MIN_MS = 350;
@@ -1298,6 +1305,58 @@
     node.style.top = (100 + offset) + 'px';
 
     return node;
+  }
+
+  function getActiveBrowseTab(){
+    return activeBrowseTabId && browseTabs[activeBrowseTabId]
+      ? browseTabs[activeBrowseTabId]
+      : null;
+  }
+
+  function setActiveBrowseTab(localId, focusPanel){
+    var tab=browseTabs[localId];
+    if(!tab)return false;
+
+    Object.keys(browseTabs).forEach(function(id){
+      if(browseTabs[id]&&browseTabs[id].el){
+        browseTabs[id].el.classList.toggle('active',id===localId);
+      }
+    });
+
+    activeBrowseTabId=localId;
+    tab.lastActivatedAt=Date.now();
+    browseZCounter+=1;
+    tab.el.style.zIndex=String(browseZCounter);
+
+    if(focusPanel){
+      try{tab.el.focus({preventScroll:true});}catch(e){try{tab.el.focus();}catch(ignore){}}
+    }
+    return true;
+  }
+
+  function activateMostRecentRemainingTab(){
+    var ids=Object.keys(browseTabs);
+    if(!ids.length){
+      activeBrowseTabId=null;
+      return;
+    }
+    ids.sort(function(a,b){
+      return Number((browseTabs[b]&&browseTabs[b].lastActivatedAt)||0)-
+             Number((browseTabs[a]&&browseTabs[a].lastActivatedAt)||0);
+    });
+    setActiveBrowseTab(ids[0],false);
+  }
+
+  function browserPanelIdFromElement(element){
+    var panel=element&&element.closest?element.closest('.browsePanel'):null;
+    return panel&&panel.dataset?panel.dataset.localTabId:null;
+  }
+
+  function shouldKeepKeyboardInHud(target){
+    if(!target)return false;
+    if(target.closest&&target.closest('#memPanel.settings-open'))return true;
+    if(target.matches&&target.matches('input,textarea,select,button,a,[contenteditable="true"]'))return true;
+    return !!(target.closest&&target.closest('input,textarea,select,button,a,[contenteditable="true"]'));
   }
 
   function wirePanelDrag(panelEl){
@@ -1694,9 +1753,24 @@
       researchBase: null,
       lastFrameSeq: 0,
       answerSpoken: true,
-      navigationToken: 0
+      navigationToken: 0,
+      lastActivatedAt: Date.now(),
+      pendingTypedText: '',
+      typeFlushTimer: null,
+      keyboardQueue: Promise.resolve()
     };
+    el.dataset.localTabId=localId;
+    el.tabIndex=0;
+    el.setAttribute('role','application');
+    el.setAttribute('aria-label','Interactive Jarvis browser tab');
     setBrowseOverlay(browseTabs[localId], 'Opening DuckDuckGo…', false);
+    setActiveBrowseTab(localId,true);
+
+    el.addEventListener('mousedown',function(e){
+      var keepLocalFocus=!!(e.target&&e.target.closest&&e.target.closest('input,button'));
+      setActiveBrowseTab(localId,!keepLocalFocus);
+    });
+    el.addEventListener('focus',function(){setActiveBrowseTab(localId,false);});
 
     el.querySelector('.browseCloseBtn').addEventListener('click', function(){
       closeTabById(localId);
@@ -1719,10 +1793,12 @@
 
     var imgWrap = el.querySelector('.browseImageWrap');
     imgWrap.addEventListener('click', function(e){
+      setActiveBrowseTab(localId,true);
       clickInTab(localId, e.clientX, e.clientY);
     });
     imgWrap.addEventListener('wheel', function(e){
       e.preventDefault();
+      setActiveBrowseTab(localId,true);
       scrollInTab(localId, e.deltaY);
     }, { passive: false });
 
@@ -1792,9 +1868,15 @@
         body: JSON.stringify({tab_id: tab.backendTabId})
       },tab.researchBase).catch(function(){});
     }
-    tab.el.classList.remove('on');
+    tab.el.classList.remove('on','active');
     setTimeout(function(){ tab.el.remove(); }, 400);
+    if(tab.typeFlushTimer)clearTimeout(tab.typeFlushTimer);
+    delete tabKeyboardState[localId];
     delete browseTabs[localId];
+    if(activeBrowseTabId===localId){
+      activeBrowseTabId=null;
+      activateMostRecentRemainingTab();
+    }
   }
 
   function closeMostRecentTab(){
@@ -1808,12 +1890,17 @@
   }
 
   function findTabUnderPoint(clientX, clientY){
-    var ids = Object.keys(browseTabs);
-    for(var i = ids.length - 1; i >= 0; i--){
-      var tab = browseTabs[ids[i]];
-      var rect = tab.el.getBoundingClientRect();
-      if(clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom){
-        return { id: ids[i], tab: tab, rect: rect };
+    if(clientX===null||clientY===null)return null;
+    var stack=document.elementsFromPoint(clientX,clientY);
+    for(var i=0;i<stack.length;i++){
+      var panel=stack[i].closest?stack[i].closest('.browsePanel'):null;
+      var localId=panel&&panel.dataset?panel.dataset.localTabId:null;
+      if(localId&&browseTabs[localId]){
+        return {
+          id:localId,
+          tab:browseTabs[localId],
+          rect:panel.getBoundingClientRect()
+        };
       }
     }
     return null;
@@ -1822,6 +1909,7 @@
   function clickInTab(localId, clientX, clientY){
     var tab = browseTabs[localId];
     if(!tab || !tab.backendTabId) return;
+    setActiveBrowseTab(localId,true);
     var img = tab.el.querySelector('.browseScreenshot');
     var rect = img.getBoundingClientRect();
     var relX = clientX - rect.left, relY = clientY - rect.top;
@@ -1830,7 +1918,7 @@
     researchFetch('/click', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({tab_id: tab.backendTabId, x: Math.round(relX*scaleX), y: Math.round(relY*scaleY)})
-    }).then(function(r){ return r.json(); }).then(function(data){
+    },tab.researchBase).then(function(r){ return r.json(); }).then(function(data){
       if(data.screenshot){
         setBrowseScreenshot(tab, data.screenshot);
         tab.el.querySelector('.browseTabLabel').textContent = data.title || '';
@@ -1845,6 +1933,7 @@
   function scrollInTab(localId, deltaY){
     var tab = browseTabs[localId];
     if(!tab || !tab.backendTabId || !isFinite(deltaY)) return;
+    setActiveBrowseTab(localId,false);
 
     var st = scrollRequestState[localId];
     if(!st){
@@ -1870,7 +1959,7 @@
       researchFetch('/scroll', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({tab_id: tab.backendTabId, delta_y: amount})
-      }).then(function(r){ return r.json(); }).then(function(data){
+      },tab.researchBase).then(function(r){ return r.json(); }).then(function(data){
         if(data.screenshot && browseTabs[localId]){
           setBrowseScreenshot(tab, data.screenshot);
         }
@@ -1885,13 +1974,147 @@
     sendNext();
   }
 
+  function applyBrowserActionResult(localId,data){
+    var tab=browseTabs[localId];
+    if(!tab||!data)return;
+    if(data.screenshot)setBrowseScreenshot(tab,data.screenshot);
+    if(data.title)tab.el.querySelector('.browseTabLabel').textContent=data.title;
+    var input=tab.el.querySelector('.browseSearchInput');
+    if(input&&document.activeElement!==input&&data.url)input.value=data.url;
+  }
+
+  function queueBrowserRequest(localId,path,payload){
+    var tab=browseTabs[localId];
+    if(!tab||!tab.backendTabId)return Promise.resolve();
+
+    tab.keyboardQueue=(tab.keyboardQueue||Promise.resolve())
+      .catch(function(){})
+      .then(function(){
+        var current=browseTabs[localId];
+        if(!current||!current.backendTabId)return;
+        return researchFetch(path,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(Object.assign({tab_id:current.backendTabId},payload||{}))
+        },current.researchBase)
+          .then(function(r){return r.json();})
+          .then(function(data){
+            if(data&&data.error)throw new Error(data.error);
+            applyBrowserActionResult(localId,data);
+          });
+      })
+      .catch(function(){});
+    return tab.keyboardQueue;
+  }
+
+  function flushBrowserTypedText(localId){
+    var tab=browseTabs[localId];
+    if(!tab)return;
+    tab.typeFlushTimer=null;
+    var text=tab.pendingTypedText||'';
+    tab.pendingTypedText='';
+    if(!text)return;
+    queueBrowserRequest(localId,'/type',{text:text});
+  }
+
+  function queueBrowserTypedText(localId,text){
+    var tab=browseTabs[localId];
+    if(!tab||!text)return;
+    tab.pendingTypedText=(tab.pendingTypedText||'')+text;
+    if(tab.pendingTypedText.length>=64){
+      if(tab.typeFlushTimer)clearTimeout(tab.typeFlushTimer);
+      flushBrowserTypedText(localId);
+      return;
+    }
+    if(!tab.typeFlushTimer){
+      tab.typeFlushTimer=setTimeout(function(){
+        flushBrowserTypedText(localId);
+      },18);
+    }
+  }
+
+  function sendBrowserKey(localId,event){
+    return queueBrowserRequest(localId,'/key',{
+      key:event.key||'',
+      code:event.code||'',
+      ctrl:!!event.ctrlKey,
+      alt:!!event.altKey,
+      shift:!!event.shiftKey,
+      meta:!!event.metaKey,
+      repeat:!!event.repeat
+    });
+  }
+
+  document.addEventListener('keydown',function(e){
+    var tab=getActiveBrowseTab();
+    if(!tab||!tab.backendTabId)return;
+    if(shouldKeepKeyboardInHud(e.target))return;
+    if(document.getElementById('memPanel').classList.contains('settings-open'))return;
+    if(e.isComposing)return;
+
+    setActiveBrowseTab(activeBrowseTabId,false);
+
+    var commandModifier=e.ctrlKey||e.metaKey;
+    if(commandModifier&&String(e.key).toLowerCase()==='v'){
+      e.preventDefault();
+      e.stopPropagation();
+      if(navigator.clipboard&&navigator.clipboard.readText){
+        navigator.clipboard.readText().then(function(text){
+          if(text)queueBrowserTypedText(activeBrowseTabId,text);
+        }).catch(function(){
+          sendBrowserKey(activeBrowseTabId,e);
+        });
+      }else{
+        sendBrowserKey(activeBrowseTabId,e);
+      }
+      return;
+    }
+
+    if(e.key&&e.key.length===1&&!e.ctrlKey&&!e.altKey&&!e.metaKey){
+      e.preventDefault();
+      e.stopPropagation();
+      queueBrowserTypedText(activeBrowseTabId,e.key);
+      return;
+    }
+
+    var forwardedKeys=[
+      'Enter','Backspace','Delete','Tab','Escape','ArrowUp','ArrowDown',
+      'ArrowLeft','ArrowRight','Home','End','PageUp','PageDown','Insert',
+      ' ','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'
+    ];
+    if(commandModifier||e.altKey||forwardedKeys.indexOf(e.key)!==-1){
+      e.preventDefault();
+      e.stopPropagation();
+      sendBrowserKey(activeBrowseTabId,e);
+    }
+  },true);
+
+  document.addEventListener('paste',function(e){
+    var tab=getActiveBrowseTab();
+    if(!tab||!tab.backendTabId||shouldKeepKeyboardInHud(e.target))return;
+    var text=e.clipboardData?e.clipboardData.getData('text'):'';
+    if(!text)return;
+    e.preventDefault();
+    e.stopPropagation();
+    queueBrowserTypedText(activeBrowseTabId,text);
+  },true);
+
+  document.addEventListener('compositionend',function(e){
+    var tab=getActiveBrowseTab();
+    if(!tab||!tab.backendTabId||shouldKeepKeyboardInHud(e.target))return;
+    if(e.data){
+      e.preventDefault();
+      queueBrowserTypedText(activeBrowseTabId,e.data);
+    }
+  },true);
+
   // --- Pinch-zoom hook: directional resize. The angle of the line between
   // your two pinch points decides whether width, height, or both change -
   // horizontal line = width, vertical line = height, diagonal = both.
   var lastZoomTargetTab = null;
   window.__onHandZoomChangeDirectional = function(dxRatio, dyRatio, cursorX, cursorY){
     var hit = findTabUnderPoint(cursorX, cursorY);
-    var targetId = hit ? hit.id : lastZoomTargetTab;
+    var targetId = hit ? hit.id : (activeBrowseTabId||lastZoomTargetTab);
     if(!targetId || !browseTabs[targetId]) return;
     lastZoomTargetTab = targetId;
     var el = browseTabs[targetId].el;
@@ -2838,9 +3061,11 @@
 
       if(!twoHandResizeSession){
         var openIds = Object.keys(browseTabs);
-        var targetId = lastZoomTargetTab && browseTabs[lastZoomTargetTab]
-          ? lastZoomTargetTab
-          : (openIds.length ? openIds[openIds.length - 1] : null);
+        var targetId = activeBrowseTabId && browseTabs[activeBrowseTabId]
+          ? activeBrowseTabId
+          : (lastZoomTargetTab && browseTabs[lastZoomTargetTab]
+              ? lastZoomTargetTab
+              : (openIds.length ? openIds[openIds.length - 1] : null));
 
         if(targetId && browseTabs[targetId]){
           var startRect = browseTabs[targetId].el.getBoundingClientRect();
@@ -3191,6 +3416,7 @@
       if(lastCursorPageX !== null){
         var clickHit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
         if(clickHit){
+          setActiveBrowseTab(clickHit.id,true);
           clickInTab(clickHit.id, lastCursorPageX, lastCursorPageY);
         } else {
           activateHudControlAtPoint(lastCursorPageX, lastCursorPageY);
@@ -3209,7 +3435,8 @@
         pinchHoldStart = Date.now();
         pinchHoldStartY = lastCursorPageY;
         var startHit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
-        pinchScrollTabId = startHit ? startHit.id : null;
+        pinchScrollTabId = startHit ? startHit.id : activeBrowseTabId;
+        if(pinchScrollTabId)setActiveBrowseTab(pinchScrollTabId,false);
         pinchLastScrollAt = 0;
       } else if(Date.now() - pinchHoldStart > PINCH_HOLD_MS &&
                 lastCursorPageY !== null && pinchHoldStartY !== null){
