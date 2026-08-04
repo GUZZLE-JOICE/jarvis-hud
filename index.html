@@ -58,8 +58,12 @@
   .browseAddressBar{padding:7px 8px;border-bottom:1px solid var(--cyan-dim);background:rgba(0,229,255,0.03);flex-shrink:0;display:flex;gap:6px;align-items:center;}
   .browseSearchInput{flex:1;min-width:0;background:rgba(0,0,0,0.45);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono';font-size:10.5px;padding:6px 8px;outline:none;}
   .browseSearchInput:focus{border-color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,0.18);}
-  .browseGoBtn{flex:0 0 auto;background:rgba(0,229,255,0.08);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'Orbitron';font-size:9px;letter-spacing:1px;padding:6px 9px;cursor:pointer;}
-  .browseGoBtn:hover{border-color:var(--cyan);background:rgba(0,229,255,0.14);}
+  .browseNavBtn,.browseGoBtn{flex:0 0 auto;background:rgba(0,229,255,0.08);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'Orbitron';font-size:12px;line-height:1;padding:6px 8px;cursor:pointer;min-width:30px;height:29px;display:inline-flex;align-items:center;justify-content:center;}
+  .browseGoBtn{font-size:9px;letter-spacing:1px;padding:6px 9px;}
+  .browseNavBtn:hover,.browseGoBtn:hover{border-color:var(--cyan);background:rgba(0,229,255,0.14);}
+  .browseNavBtn:active,.browseGoBtn:active{transform:scale(.94);border-color:var(--mint);color:var(--mint);}
+  .browseNavBtn.busy{opacity:.55;pointer-events:none;}
+  .browseNavBtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   .browseImageWrap{position:relative;flex:1;line-height:0;background:#000;overflow:hidden;}
   .browseImageWrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,229,255,0.05), transparent 15%, transparent 85%, rgba(0,229,255,0.05));pointer-events:none;}
   .browseScreenshot{width:100%;height:100%;object-fit:contain;display:none;filter:saturate(0.9) brightness(0.95);}
@@ -498,8 +502,15 @@
 <div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z"></path></svg>Voice Output</h3><p class="settingsHint">Choose the system voice Jarvis uses.</p><select class="settingsField" id="voiceSelect"></select></div>
 </div>
 <div class="settingsPage" data-page="hands">
-<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">The cursor follows wrist landmark 0. Curl at least 3 fingers into your palm for a fist click. Pinch to scroll and use two pinches to resize browser panels.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
-<div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input id="manualPinchSlider" max="0.15" min="0.02" step="0.005" style="width:100%;margin-bottom:12px;" type="range"/><label class="settingsLabel">Skeleton X alignment</label><input id="alignOffsetX" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><label class="settingsLabel">Skeleton Y alignment</label><input id="alignOffsetY" max="40" min="-40" step="1" style="width:100%;" type="range" value="0"/><div class="settingsActions"><button class="smallBtn" id="resetAlignBtn">Reset alignment</button></div></div>
+<div class="settingsCard"><h3><svg fill="none" viewbox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v5-7a2 2 0 014 0v7-5a2 2 0 014 0v8"></path></svg>Hand Tracking</h3><p class="settingsHint">Curl at least 3 fingers into your palm for a fist click. A pinch requires your thumb and index fingertips to touch while still obeying your saved sensitivity.</p><div class="settingsActions"><button class="smallBtn" id="toggleHandTracking">Enable tracking</button><button class="smallBtn" id="calibratePinchBtn">Calibrate pinch</button></div><div class="statusLine" id="handStatus"></div></div>
+<div class="settingsCard"><label class="settingsLabel">Manual pinch sensitivity</label><input id="manualPinchSlider" max="0.15" min="0.02" step="0.005" style="width:100%;margin-bottom:12px;" type="range"/>
+<label class="settingsLabel">Alignment controls</label>
+<select class="settingsField" id="alignmentHandSelect"><option value="both">Edit both hands together</option><option value="left">Edit left hand only</option><option value="right">Edit right hand only</option></select>
+<label class="settingsLabel">Skeleton X alignment</label><input id="alignOffsetX" max="80" min="-80" step="1" style="width:100%;" type="range" value="0"/>
+<label class="settingsLabel">Skeleton Y alignment</label><input id="alignOffsetY" max="80" min="-80" step="1" style="width:100%;" type="range" value="0"/>
+<div class="statusLine" id="alignmentValue" style="margin-top:7px"></div>
+<div class="settingsActions"><button class="smallBtn" id="calibrateLeftAlignBtn" type="button">Calibrate left</button><button class="smallBtn" id="calibrateRightAlignBtn" type="button">Calibrate right</button><button class="smallBtn" id="calibrateBothAlignBtn" type="button">Calibrate both</button><button class="smallBtn" id="resetAlignBtn" type="button">Reset selected</button></div>
+<p class="settingsHint" style="margin-top:10px">Place the wrist/base square on the glowing target. Both-hand calibration gives the left and right hands separate targets and saves separate offsets.</p></div>
 </div>
 <div class="settingsPage" data-page="mouse">
 <div class="settingsCard">
@@ -651,6 +662,8 @@
 <div class="browseCloseBtn">×</div>
 </div>
 <div class="browseAddressBar">
+<button aria-label="Go back" class="browseNavBtn browseBackBtn" title="Back" type="button"><svg viewbox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></svg></button>
+<button aria-label="Refresh page" class="browseNavBtn browseRefreshBtn" title="Refresh" type="button"><svg viewbox="0 0 24 24"><path d="M20 11a8 8 0 10-2.34 5.66"></path><path d="M20 4v7h-7"></path></svg></button>
 <input autocomplete="off" class="browseSearchInput" placeholder="Search DuckDuckGo or enter a URL" type="text"/>
 <button class="browseGoBtn" type="button">GO</button>
 </div>
@@ -1778,6 +1791,19 @@
 
     var searchInput = el.querySelector('.browseSearchInput');
     var goBtn = el.querySelector('.browseGoBtn');
+    var backBtn = el.querySelector('.browseBackBtn');
+    var refreshBtn = el.querySelector('.browseRefreshBtn');
+
+    backBtn.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      navigateBrowserTab(localId,'back');
+    });
+    refreshBtn.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      navigateBrowserTab(localId,'refresh');
+    });
     function runManualSearch(){
       var query = (searchInput.value || '').trim();
       if(!query) return;
@@ -1904,6 +1930,37 @@
       }
     }
     return null;
+  }
+
+  function setBrowserNavBusy(tab,busy){
+    if(!tab||!tab.el)return;
+    var buttons=tab.el.querySelectorAll('.browseNavBtn');
+    buttons.forEach(function(button){button.classList.toggle('busy',!!busy);});
+    var dot=tab.el.querySelector('.browseDot');
+    if(dot)dot.classList.toggle('busy',!!busy);
+  }
+
+  function navigateBrowserTab(localId,action){
+    var tab=browseTabs[localId];
+    if(!tab||!tab.backendTabId)return;
+    setActiveBrowseTab(localId,true);
+    setBrowserNavBusy(tab,true);
+
+    var route=action==='back'?'/back':'/refresh';
+    researchFetch(route,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tab_id:tab.backendTabId})
+    },tab.researchBase)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.error)throw new Error(data.error);
+        applyBrowserActionResult(localId,data);
+      })
+      .catch(function(err){
+        setBrowseOverlay(tab,(action==='back'?'Back':'Refresh')+' failed.\n'+(err.message||err),true);
+      })
+      .finally(function(){setBrowserNavBusy(tab,false);});
   }
 
   function clickInTab(localId, clientX, clientY){
@@ -2680,37 +2737,146 @@
     if(savedThreshold) pinchThreshold = parseFloat(savedThreshold);
   }catch(e){}
 
-  var ALIGN_OFFSET_STORAGE = 'jarvis_align_offset_v1';
-  var alignOffset = { x:0, y:0 };
+  var HAND_ALIGNMENT_STORAGE = 'jarvis_hand_alignment_v2';
+  var LEGACY_ALIGN_STORAGE = 'jarvis_align_offset_v1';
+  var handAlignment = {
+    left:{x:0,y:0},
+    right:{x:0,y:0}
+  };
+  var alignmentEditMode='both';
+  var alignmentCalibration=null;
+
+  function cloneOffset(offset){
+    return {x:Number(offset&&offset.x)||0,y:Number(offset&&offset.y)||0};
+  }
+
+  function saveHandAlignment(){
+    try{
+      localStorage.setItem(HAND_ALIGNMENT_STORAGE,JSON.stringify(handAlignment));
+    }catch(e){}
+  }
+
   try{
-    var savedAlign = JSON.parse(localStorage.getItem(ALIGN_OFFSET_STORAGE) || 'null');
-    if(savedAlign) alignOffset = savedAlign;
+    var savedHandAlignment=JSON.parse(
+      localStorage.getItem(HAND_ALIGNMENT_STORAGE)||'null'
+    );
+    if(savedHandAlignment){
+      if(savedHandAlignment.left){
+        handAlignment.left=cloneOffset(savedHandAlignment.left);
+      }
+      if(savedHandAlignment.right){
+        handAlignment.right=cloneOffset(savedHandAlignment.right);
+      }
+    }else{
+      var legacy=JSON.parse(
+        localStorage.getItem(LEGACY_ALIGN_STORAGE)||'null'
+      );
+      if(legacy){
+        handAlignment.right={
+          x:Number(legacy.x)||0,
+          y:Number(legacy.y)||0
+        };
+        handAlignment.left={
+          x:-(Number(legacy.x)||0),
+          y:-(Number(legacy.y)||0)
+        };
+        saveHandAlignment();
+      }
+    }
   }catch(e){}
 
+  function alignmentOffsetFor(handKey){
+    return handKey==='left'?handAlignment.left:handAlignment.right;
+  }
+
+  function selectedAlignmentOffset(){
+    if(alignmentEditMode==='left')return cloneOffset(handAlignment.left);
+    if(alignmentEditMode==='right')return cloneOffset(handAlignment.right);
+    return {
+      x:(handAlignment.left.x+handAlignment.right.x)/2,
+      y:(handAlignment.left.y+handAlignment.right.y)/2
+    };
+  }
+
+  function renderAlignmentControls(){
+    var ox=document.getElementById('alignOffsetX');
+    var oy=document.getElementById('alignOffsetY');
+    var value=document.getElementById('alignmentValue');
+    var selected=selectedAlignmentOffset();
+    ox.value=String(Math.round(selected.x));
+    oy.value=String(Math.round(selected.y));
+    var label=alignmentEditMode==='both'
+      ?'Both hands'
+      :(alignmentEditMode==='left'?'Left hand':'Right hand');
+    value.textContent=
+      label+' · X '+Math.round(selected.x)+' px · Y '+
+      Math.round(selected.y)+' px';
+  }
+
+  function applyManualAlignment(){
+    var x=parseFloat(document.getElementById('alignOffsetX').value)||0;
+    var y=parseFloat(document.getElementById('alignOffsetY').value)||0;
+    if(alignmentEditMode==='both'){
+      handAlignment.left={x:x,y:y};
+      handAlignment.right={x:x,y:y};
+    }else{
+      handAlignment[alignmentEditMode]={x:x,y:y};
+    }
+    saveHandAlignment();
+    renderAlignmentControls();
+  }
+
   function initManualControls(){
-    var slider = document.getElementById('manualPinchSlider');
-    slider.value = pinchThreshold || 0.055;
-    slider.addEventListener('input', function(){
-      pinchThreshold = parseFloat(slider.value);
-      try{ localStorage.setItem(PINCH_THRESHOLD_STORAGE, pinchThreshold.toString()); }catch(e){}
+    var slider=document.getElementById('manualPinchSlider');
+    slider.value=pinchThreshold||0.055;
+    slider.addEventListener('input',function(){
+      pinchThreshold=parseFloat(slider.value);
+      try{
+        localStorage.setItem(
+          PINCH_THRESHOLD_STORAGE,
+          pinchThreshold.toString()
+        );
+      }catch(e){}
       updateHandStatus();
     });
 
-    var ox = document.getElementById('alignOffsetX');
-    var oy = document.getElementById('alignOffsetY');
-    ox.value = alignOffset.x;
-    oy.value = alignOffset.y;
-    function saveAlign(){
-      alignOffset = { x: parseFloat(ox.value), y: parseFloat(oy.value) };
-      try{ localStorage.setItem(ALIGN_OFFSET_STORAGE, JSON.stringify(alignOffset)); }catch(e){}
-    }
-    ox.addEventListener('input', saveAlign);
-    oy.addEventListener('input', saveAlign);
-    document.getElementById('resetAlignBtn').addEventListener('click', function(){
-      alignOffset = { x:0, y:0 };
-      ox.value = 0; oy.value = 0;
-      try{ localStorage.setItem(ALIGN_OFFSET_STORAGE, JSON.stringify(alignOffset)); }catch(e){}
+    var select=document.getElementById('alignmentHandSelect');
+    var ox=document.getElementById('alignOffsetX');
+    var oy=document.getElementById('alignOffsetY');
+    select.addEventListener('change',function(){
+      alignmentEditMode=this.value;
+      renderAlignmentControls();
     });
+    ox.addEventListener('input',applyManualAlignment);
+    oy.addEventListener('input',applyManualAlignment);
+
+    document.getElementById('resetAlignBtn').addEventListener(
+      'click',
+      function(){
+        if(alignmentEditMode==='both'){
+          handAlignment.left={x:0,y:0};
+          handAlignment.right={x:0,y:0};
+        }else{
+          handAlignment[alignmentEditMode]={x:0,y:0};
+        }
+        saveHandAlignment();
+        renderAlignmentControls();
+      }
+    );
+
+    document.getElementById('calibrateLeftAlignBtn').addEventListener(
+      'click',
+      function(){startAlignmentCalibration('left');}
+    );
+    document.getElementById('calibrateRightAlignBtn').addEventListener(
+      'click',
+      function(){startAlignmentCalibration('right');}
+    );
+    document.getElementById('calibrateBothAlignBtn').addEventListener(
+      'click',
+      function(){startAlignmentCalibration('both');}
+    );
+    renderAlignmentControls();
   }
   initManualControls();
 
@@ -2730,6 +2896,14 @@
     var lines = [];
     lines.push('Tracking: ' + (handTrackingActive ? 'ON' : 'OFF'));
     lines.push('Pinch threshold: ' + (pinchThreshold ? pinchThreshold.toFixed(3) : 'not calibrated (using default)'));
+    lines.push(
+      'Left alignment: X '+Math.round(handAlignment.left.x)+
+      ' · Y '+Math.round(handAlignment.left.y)
+    );
+    lines.push(
+      'Right alignment: X '+Math.round(handAlignment.right.x)+
+      ' · Y '+Math.round(handAlignment.right.y)
+    );
     if(handTrackingActive){
       lines.push('Two pinches resize the newest tab: horizontal spread changes width, vertical spread changes height.');
     }
@@ -2739,6 +2913,62 @@
   function distance3D(a, b){
     var dx = a.x - b.x, dy = a.y - b.y, dz = (a.z||0) - (b.z||0);
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
+  }
+
+  function clampNumber(value,min,max){
+    return Math.max(min,Math.min(max,value));
+  }
+
+  function getPinchContactMetrics(landmarks,threshold,wasActive){
+    var thumbTip=landmarks[4];
+    var indexTip=landmarks[8];
+    var distance=distance3D(thumbTip,indexTip);
+    var palmScale=Math.max(0.045,getPalmScale(landmarks));
+    var ratio=distance/palmScale;
+
+    // Manual/calibrated pinch sensitivity remains the main control.
+    var sensitivity=clampNumber((threshold||0.055)/0.055,0.36,2.73);
+    var releaseBoost=wasActive?1.24:1;
+    var rawLimit=(threshold||0.055)*releaseBoost;
+    var ratioLimit=clampNumber(0.31*sensitivity,0.13,0.66)*releaseBoost;
+
+    var thumbSegment=distance3D(landmarks[4],landmarks[3]);
+    var indexSegment=distance3D(landmarks[8],landmarks[7]);
+    var fingertipScale=Math.max(0.012,(thumbSegment+indexSegment)/2);
+    var fingertipLimit=fingertipScale*
+      clampNumber(0.82+sensitivity*0.34,0.96,1.62)*releaseBoost;
+
+    return {
+      touching:
+        distance<=rawLimit||
+        (ratio<=ratioLimit&&distance<=fingertipLimit),
+      distance:distance,
+      ratio:ratio
+    };
+  }
+
+  function updatePinchContactState(handIndex,landmarks,threshold,fistGesture){
+    var state=handPinchStates[handIndex];
+    var metrics=getPinchContactMetrics(
+      landmarks,
+      threshold,
+      state.isPinching
+    );
+    state.distance=metrics.distance;
+    state.ratio=metrics.ratio;
+
+    if(metrics.touching&&!fistGesture){
+      state.contactScore=Math.min(8,state.contactScore+2);
+    }else{
+      state.contactScore=Math.max(0,state.contactScore-1);
+    }
+
+    if(!state.isPinching&&state.contactScore>=3){
+      state.isPinching=true;
+    }else if(state.isPinching&&(state.contactScore<=1||fistGesture)){
+      state.isPinching=false;
+    }
+    return state.isPinching;
   }
 
   var CURSOR_MARGIN_X = 0.22;
@@ -2862,8 +3092,8 @@
   }
 
   var handPinchStates = [
-    { isPinching:false, point:null },
-    { isPinching:false, point:null }
+    { isPinching:false, point:null, contactScore:0, distance:999, ratio:999 },
+    { isPinching:false, point:null, contactScore:0, distance:999, ratio:999 }
   ];
   var twoHandZoomActive = false;
   var lastTwoHandDistance = null;
@@ -2886,19 +3116,27 @@
     };
   }
 
-  function mapNormalizedPoint(nx, ny, mapping, handSign){
-    var sign = handSign || 1;
+  function mapNormalizedPointRaw(nx,ny,mapping){
     return {
-      x: nx * mapping.videoW * mapping.scale - mapping.offsetX + (alignOffset.x || 0) * sign,
-      y: ny * mapping.videoH * mapping.scale - mapping.offsetY + (alignOffset.y || 0) * sign
+      x:nx*mapping.videoW*mapping.scale-mapping.offsetX,
+      y:ny*mapping.videoH*mapping.scale-mapping.offsetY
     };
   }
 
-  function drawHandSkeleton(ctx, landmarks, mapping, handSign){
+  function mapNormalizedPoint(nx,ny,mapping,handKey){
+    var raw=mapNormalizedPointRaw(nx,ny,mapping);
+    var offset=alignmentOffsetFor(handKey);
+    return {
+      x:raw.x+(offset.x||0),
+      y:raw.y+(offset.y||0)
+    };
+  }
+
+  function drawHandSkeleton(ctx,landmarks,mapping,handKey){
     ctx.lineCap = 'round';
     HAND_CONNECTIONS.forEach(function(pair){
-      var a = mapNormalizedPoint(landmarks[pair[0]].x, landmarks[pair[0]].y, mapping, handSign);
-      var b = mapNormalizedPoint(landmarks[pair[1]].x, landmarks[pair[1]].y, mapping, handSign);
+      var a = mapNormalizedPoint(landmarks[pair[0]].x, landmarks[pair[0]].y, mapping, handKey);
+      var b = mapNormalizedPoint(landmarks[pair[1]].x, landmarks[pair[1]].y, mapping, handKey);
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(0,229,255,0.18)';
       ctx.lineWidth = 7;
@@ -2907,8 +3145,8 @@
       ctx.stroke();
     });
     HAND_CONNECTIONS.forEach(function(pair){
-      var a = mapNormalizedPoint(landmarks[pair[0]].x, landmarks[pair[0]].y, mapping, handSign);
-      var b = mapNormalizedPoint(landmarks[pair[1]].x, landmarks[pair[1]].y, mapping, handSign);
+      var a = mapNormalizedPoint(landmarks[pair[0]].x, landmarks[pair[0]].y, mapping, handKey);
+      var b = mapNormalizedPoint(landmarks[pair[1]].x, landmarks[pair[1]].y, mapping, handKey);
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(0,229,255,0.85)';
       ctx.lineWidth = 2.5;
@@ -2931,7 +3169,7 @@
     landmarks.forEach(function(pt, i){
       var isTip = (i===4 || i===8 || i===12 || i===16 || i===20);
       var isKnuckle = (i===0 || i===5 || i===9 || i===13 || i===17);
-      var mapped = mapNormalizedPoint(pt.x, pt.y, mapping, handSign);
+      var mapped = mapNormalizedPoint(pt.x, pt.y, mapping, handKey);
       var x = mapped.x, y = mapped.y;
       var size = isTip ? 7 : (isKnuckle ? 6 : 4.5);
 
@@ -2962,16 +3200,22 @@
     // No web-view panel target wired up yet — zoom scale is tracked but has no visible effect until that's built.
   }
 
-  function getHandSign(results, hIdx){
+  function getHandKey(results,hIdx){
     try{
-      if(results.handednesses && results.handednesses[hIdx] && results.handednesses[hIdx][0]){
-        var label = results.handednesses[hIdx][0].categoryName || results.handednesses[hIdx][0].label;
-        if(label === 'Left') return -1;
-        if(label === 'Right') return 1;
+      if(
+        results.handednesses&&
+        results.handednesses[hIdx]&&
+        results.handednesses[hIdx][0]
+      ){
+        var label=
+          results.handednesses[hIdx][0].categoryName||
+          results.handednesses[hIdx][0].label;
+        label=String(label||'').toLowerCase();
+        if(label==='left')return 'left';
+        if(label==='right')return 'right';
       }
     }catch(e){}
-    // Fallback: no reliable handedness data, just alternate by detection order.
-    return hIdx === 0 ? 1 : -1;
+    return hIdx===0?'right':'left';
   }
 
   function onHandResults(results){
@@ -2989,10 +3233,35 @@
     var mapping = getCoverMapping(video, canvas.width, canvas.height);
     if(!mapping) return;
 
+    if(alignmentCalibration){
+      if(
+        alignmentCalibration.mode==='both'||
+        alignmentCalibration.mode==='left'
+      ){
+        drawAlignmentTarget(
+          ctx,
+          alignmentTargetFor('left',canvas),
+          'left'
+        );
+      }
+      if(
+        alignmentCalibration.mode==='both'||
+        alignmentCalibration.mode==='right'
+      ){
+        drawAlignmentTarget(
+          ctx,
+          alignmentTargetFor('right',canvas),
+          'right'
+        );
+      }
+    }
+
     if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0){
       lastHandLandmarks = null;
       handPinchStates[0].isPinching = false;
       handPinchStates[1].isPinching = false;
+      handPinchStates[0].contactScore = 0;
+      handPinchStates[1].contactScore = 0;
       primaryFistTracker.score = 0;
       primaryFistTracker.active = false;
       primaryFistTracker.contactCount = 0;
@@ -3012,35 +3281,66 @@
 
     for(var hIdx = 0; hIdx < Math.min(hands.length, 2); hIdx++){
       var landmarks = hands[hIdx];
-      var handSign = getHandSign(results, hIdx);
-      drawHandSkeleton(ctx, landmarks, mapping, handSign);
+      var handKey = getHandKey(results, hIdx);
+      drawHandSkeleton(ctx, landmarks, mapping, handKey);
+      if(alignmentCalibration){
+        collectAlignmentCalibration(
+          handKey,
+          landmarks,
+          mapping,
+          canvas
+        );
+      }
 
       var thumbTip = landmarks[4];
       var indexTip = landmarks[8];
       var pinchDist = distance3D(thumbTip, indexTip);
 
-      // A closed fist naturally brings the thumb and index landmarks close
-      // together. Detect the fist first, then suppress pinch detection so a
-      // fist cannot accidentally become a scroll gesture.
+      // Fist is checked first so a closed hand cannot become a pinch.
       var fistGesture = hIdx === 0
         ? updatePrimaryFistState(landmarks)
         : countFingersTouchingPalm(landmarks) >= 3;
-      var isPinching = pinchDist < threshold && !fistGesture;
+      var isPinching = updatePinchContactState(
+        hIdx,
+        landmarks,
+        threshold,
+        fistGesture
+      );
 
-      handPinchStates[hIdx].isPinching = isPinching;
-      handPinchStates[hIdx].point = { x:(thumbTip.x+indexTip.x)/2, y:(thumbTip.y+indexTip.y)/2 };
+      handPinchStates[hIdx].point = {
+        x:(thumbTip.x+indexTip.x)/2,
+        y:(thumbTip.y+indexTip.y)/2
+      };
 
-      var mappedThumb = mapNormalizedPoint(thumbTip.x, thumbTip.y, mapping, handSign);
-      var mappedIndex = mapNormalizedPoint(indexTip.x, indexTip.y, mapping, handSign);
+      var mappedThumb = mapNormalizedPoint(thumbTip.x, thumbTip.y, mapping, handKey);
+      var mappedIndex = mapNormalizedPoint(indexTip.x, indexTip.y, mapping, handKey);
       ctx.strokeStyle = isPinching ? '#3affc4' : 'rgba(0,229,255,0.35)';
-      ctx.lineWidth = isPinching ? 3 : 1.5;
+      ctx.lineWidth = isPinching ? 4 : 1.5;
       ctx.beginPath();
       ctx.moveTo(mappedThumb.x, mappedThumb.y);
       ctx.lineTo(mappedIndex.x, mappedIndex.y);
       ctx.stroke();
 
+      if(isPinching){
+        var touchX=(mappedThumb.x+mappedIndex.x)/2;
+        var touchY=(mappedThumb.y+mappedIndex.y)/2;
+        ctx.beginPath();
+        ctx.fillStyle='rgba(58,255,196,.40)';
+        ctx.arc(touchX,touchY,12,0,Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.strokeStyle='#3affc4';
+        ctx.lineWidth=2;
+        ctx.arc(touchX,touchY,15,0,Math.PI*2);
+        ctx.stroke();
+        ctx.fillStyle='#3affc4';
+        ctx.font='bold 9px Orbitron, sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('TOUCH',touchX,touchY-20);
+      }
+
       if(hIdx === 0){
-        updateHandCursor(landmarks, mapping, handSign, fistGesture);
+        updateHandCursor(landmarks, mapping, handKey, fistGesture);
         handleFistAndScrollGestures(landmarks, fistGesture);
       }
     }
@@ -3049,11 +3349,9 @@
     // on the two WRIST/base points. Finger movement therefore cannot cancel
     // or scramble the resize. Spreading the wrists left/right changes width;
     // spreading them up/down changes height.
-    var resizeThreshold = Math.max(threshold * 1.45, 0.075);
-    var hand0PinchDistance = hands.length > 0 ? distance3D(hands[0][4], hands[0][8]) : 999;
-    var hand1PinchDistance = hands.length > 1 ? distance3D(hands[1][4], hands[1][8]) : 999;
     var bothHandsPinching = hands.length >= 2 &&
-      hand0PinchDistance < resizeThreshold && hand1PinchDistance < resizeThreshold;
+      handPinchStates[0].isPinching &&
+      handPinchStates[1].isPinching;
 
     if(bothHandsPinching){
       twoHandZoomActive = true;
@@ -3065,8 +3363,8 @@
       var absDx = Math.abs(p2Page.x - p1Page.x);
       var absDy = Math.abs(p2Page.y - p1Page.y);
 
-      var p1Canvas = mapNormalizedPoint(wrist0.x, wrist0.y, mapping, getHandSign(results, 0));
-      var p2Canvas = mapNormalizedPoint(wrist1.x, wrist1.y, mapping, getHandSign(results, 1));
+      var p1Canvas = mapNormalizedPoint(wrist0.x, wrist0.y, mapping, getHandKey(results, 0));
+      var p2Canvas = mapNormalizedPoint(wrist1.x, wrist1.y, mapping, getHandKey(results, 1));
       ctx.strokeStyle = 'rgba(58,255,196,0.9)';
       ctx.lineWidth = 3;
       ctx.setLineDash([7,5]);
@@ -3159,7 +3457,7 @@
       indicator.classList.toggle('active', showFist || isPinching);
       indicator.textContent = showFist
         ? ('FIST · ' + primaryFistTracker.contactCount + '/4 FINGERS')
-        : (isPinching ? 'PINCH · SCROLL' : '');
+        : (isPinching ? 'PINCH · THUMB + INDEX TOUCH' : '');
     }
 
     if(isPinching && !wasPinching){
@@ -3254,6 +3552,158 @@
     if(handTrackingActive){ stopHandTracking(); } else { startHandTracking(); }
   });
 
+  function alignmentTargetFor(handKey,canvas){
+    return {
+      x:canvas.width*(handKey==='left'?0.34:0.66),
+      y:canvas.height*0.70
+    };
+  }
+
+  function drawAlignmentTarget(ctx,target,label){
+    ctx.save();
+    ctx.strokeStyle='#ffb020';
+    ctx.fillStyle='rgba(255,176,32,.14)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(target.x,target.y,22,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(target.x-32,target.y);
+    ctx.lineTo(target.x+32,target.y);
+    ctx.moveTo(target.x,target.y-32);
+    ctx.lineTo(target.x,target.y+32);
+    ctx.stroke();
+    ctx.fillStyle='#ffb020';
+    ctx.font='bold 10px Orbitron, sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(
+      label.toUpperCase()+' WRIST',
+      target.x,
+      target.y-40
+    );
+    ctx.restore();
+  }
+
+  function medianValue(values){
+    var sorted=values.slice().sort(function(a,b){return a-b;});
+    if(!sorted.length)return 0;
+    var mid=Math.floor(sorted.length/2);
+    return sorted.length%2
+      ?sorted[mid]
+      :(sorted[mid-1]+sorted[mid])/2;
+  }
+
+  function startAlignmentCalibration(mode){
+    if(!camStream){
+      document.getElementById('handStatus').textContent=
+        'Turn the camera on first.';
+      return;
+    }
+    if(!handTrackingActive)startHandTracking();
+
+    alignmentCalibration={
+      mode:mode,
+      samples:{left:[],right:[]},
+      timeout:null
+    };
+    var names=mode==='both'?'both wrists':(mode+' wrist');
+    document.getElementById('handStatus').textContent=
+      'Alignment calibration: place '+names+
+      ' on the glowing target'+(mode==='both'?'s':'')+
+      ' and hold still.';
+    alignmentCalibration.timeout=setTimeout(
+      finishAlignmentCalibration,
+      9000
+    );
+  }
+
+  function collectAlignmentCalibration(
+    handKey,
+    landmarks,
+    mapping,
+    canvas
+  ){
+    var session=alignmentCalibration;
+    if(!session)return;
+    if(session.mode!=='both'&&session.mode!==handKey)return;
+    var samples=session.samples[handKey];
+    if(samples.length>=36)return;
+
+    var raw=mapNormalizedPointRaw(
+      landmarks[0].x,
+      landmarks[0].y,
+      mapping
+    );
+    var target=alignmentTargetFor(handKey,canvas);
+    samples.push({
+      x:target.x-raw.x,
+      y:target.y-raw.y
+    });
+
+    var count=session.mode==='both'
+      ?Math.min(
+          session.samples.left.length,
+          session.samples.right.length
+        )
+      :samples.length;
+    document.getElementById('handStatus').textContent=
+      'Alignment calibration '+session.mode+
+      ': hold wrist on target · '+
+      Math.min(100,Math.round(count/36*100))+'%';
+
+    var done=session.mode==='both'
+      ?(
+          session.samples.left.length>=36&&
+          session.samples.right.length>=36
+        )
+      :samples.length>=36;
+    if(done)finishAlignmentCalibration();
+  }
+
+  function finishAlignmentCalibration(){
+    var session=alignmentCalibration;
+    if(!session)return;
+    if(session.timeout)clearTimeout(session.timeout);
+    alignmentCalibration=null;
+
+    var keys=session.mode==='both'
+      ?['left','right']
+      :[session.mode];
+    var completed=[];
+    keys.forEach(function(key){
+      var samples=session.samples[key];
+      if(samples.length>=12){
+        handAlignment[key]={
+          x:clampNumber(
+            medianValue(samples.map(function(s){return s.x;})),
+            -80,
+            80
+          ),
+          y:clampNumber(
+            medianValue(samples.map(function(s){return s.y;})),
+            -80,
+            80
+          )
+        };
+        completed.push(key);
+      }
+    });
+
+    if(!completed.length){
+      document.getElementById('handStatus').textContent=
+        'Alignment calibration did not see the requested hand clearly. '+
+        'Try again with your wrist on the target.';
+      return;
+    }
+    saveHandAlignment();
+    renderAlignmentControls();
+    updateHandStatus();
+    document.getElementById('handStatus').innerHTML+=
+      '<br><span style="color:var(--mint)">Calibrated '+
+      completed.join(' + ')+' alignment separately.</span>';
+  }
+
   // ---------- Calibration ----------
   var isCalibrating = false;
   var calibrationSamples = [];
@@ -3310,14 +3760,14 @@
     return { x:wrist.x, y:wrist.y, z:wrist.z || 0 };
   }
 
-  function updateHandCursor(landmarks, mapping, handSign, fistNow){
+  function updateHandCursor(landmarks, mapping, handKey, fistNow){
     var indexTip = landmarks[8];
     var palmPoint = getStablePalmPoint(landmarks);
     handCursorX = palmPoint.x;
     handCursorY = palmPoint.y;
 
     if(mapping && handCanvasCtx){
-      var mapped = mapNormalizedPoint(palmPoint.x, palmPoint.y, mapping, handSign);
+      var mapped = mapNormalizedPoint(palmPoint.x, palmPoint.y, mapping, handKey);
       var ctx = handCanvasCtx;
       var isPinch = handPinchStates[0].isPinching;
       var isPrecisionGesture = isPinch || !!fistNow;
@@ -3498,6 +3948,21 @@
       return true;
     }catch(e){ return false; }
   }
+  function activateBrowserChromeAtPoint(x,y){
+    if(x===null||y===null)return false;
+    var stack=document.elementsFromPoint(x,y);
+    for(var i=0;i<stack.length;i++){
+      var target=stack[i].closest
+        ? stack[i].closest('.browseBackBtn,.browseRefreshBtn,.browseGoBtn,.browseCloseBtn')
+        : null;
+      if(!target||target.disabled)continue;
+      var panel=target.closest('.browsePanel');
+      var localId=panel&&panel.dataset?panel.dataset.localTabId:null;
+      if(localId)setActiveBrowseTab(localId,true);
+      try{target.click();return true;}catch(e){return false;}
+    }
+    return false;
+  }
   var wasFist = false;
   var pinchHoldStart = null;
   var pinchHoldStartY = null;
@@ -3515,12 +3980,14 @@
     if(fistNow && !wasFist && !isPinchingNow && !twoHandZoomActive){
       cursorEl.classList.add('clicking');
       if(lastCursorPageX !== null){
-        var clickHit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
-        if(clickHit){
-          setActiveBrowseTab(clickHit.id,true);
-          clickInTab(clickHit.id, lastCursorPageX, lastCursorPageY);
-        } else {
-          activateHudControlAtPoint(lastCursorPageX, lastCursorPageY);
+        if(!activateBrowserChromeAtPoint(lastCursorPageX,lastCursorPageY)){
+          var clickHit = findTabUnderPoint(lastCursorPageX, lastCursorPageY);
+          if(clickHit){
+            setActiveBrowseTab(clickHit.id,true);
+            clickInTab(clickHit.id, lastCursorPageX, lastCursorPageY);
+          } else {
+            activateHudControlAtPoint(lastCursorPageX, lastCursorPageY);
+          }
         }
       }
     } else if(!fistNow && wasFist){
