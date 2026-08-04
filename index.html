@@ -1282,11 +1282,10 @@
   // ---------- Multi-tab browser panel system ----------
   var browseTabs = {};   // local_id -> live remote browser tab state
   var browseTabCount = 0;
-  // Six parallel polling lanes reduce ngrok round-trip waiting. The bridge
-  // targets 120 FPS, while actual delivery depends on screenshot time,
-  // bandwidth, page complexity, and tunnel latency.
-  var LIVE_TAB_POLL_DELAY_MS = 0;
-  var LIVE_TAB_POLLERS = 6;
+  // Frames arrive through one persistent NDJSON stream per tab instead of
+  // thousands of GET/OPTIONS requests. Only the newest frame is painted.
+  var LIVE_STREAM_RECONNECT_MIN_MS = 350;
+  var LIVE_STREAM_RECONNECT_MAX_MS = 5000;
 
   function createTabPanel(){
     var template = document.getElementById('browsePanelTemplate');
@@ -1362,14 +1361,24 @@
     if(!tab || !tab.el) return;
     var img = tab.el.querySelector('.browseScreenshot');
     if(!img) return;
-    if(b64){
-      tab.screenshotB64 = b64;
-      img.src = 'data:image/jpeg;base64,' + b64;
+    if(!b64){
+      img.classList.remove('ready');
+      return;
+    }
+
+    tab.screenshotB64 = b64;
+    tab.pendingFrameB64 = b64;
+    if(tab.framePaintScheduled) return;
+
+    tab.framePaintScheduled = true;
+    requestAnimationFrame(function(){
+      tab.framePaintScheduled = false;
+      if(!tab.el || !tab.pendingFrameB64) return;
+      img.src = 'data:image/jpeg;base64,' + tab.pendingFrameB64;
+      tab.pendingFrameB64 = null;
       img.classList.add('ready');
       setBrowseOverlay(tab, '', false);
-    } else {
-      img.classList.remove('ready');
-    }
+    });
   }
 
   function researchBridgeBase(){
@@ -1402,108 +1411,167 @@
     });
   }
 
-  function pollTabStatus(localId, laneId){
+  function updateTabFromStream(localId, data){
     var tab = browseTabs[localId];
-    if(!tab || !tab.backendTabId || tab.stopLivePolling) return Promise.resolve();
+    if(!tab || !data || data.heartbeat) return;
 
-    tab.pollGeneration = tab.pollGeneration || 1;
-    var generation = tab.pollGeneration;
-    var after = Number(tab.lastFrameSeq || 0);
+    var el = tab.el;
+    var dot = el.querySelector('.browseDot');
+    var label = el.querySelector('.browseTabLabel');
+    var searchInput = el.querySelector('.browseSearchInput');
+    var footer = el.querySelector('.browseFooter');
+    var busy = (data.status !== 'ready' && data.status !== 'error');
 
-    return researchFetch(
-      '/status/' + encodeURIComponent(tab.backendTabId) +
-      '?after=' + encodeURIComponent(after) +
-      '&lane=' + encodeURIComponent(laneId || 0) +
-      '&ts=' + Date.now()
-    )
-      .then(function(r){
-        if(!r.ok) throw new Error('Status request failed: ' + r.status);
-        return r.json();
-      })
-      .then(function(data){
-        var current = browseTabs[localId];
-        if(!current || current.pollGeneration !== generation) return;
+    dot.classList.toggle('busy', busy);
+    label.textContent = busy ?
+      String(data.status || 'working…').toUpperCase() :
+      String(data.title || 'DuckDuckGo');
 
-        var el = current.el;
-        var dot = el.querySelector('.browseDot');
-        var label = el.querySelector('.browseTabLabel');
-        var searchInput = el.querySelector('.browseSearchInput');
-        var busy = (data.status !== 'ready' && data.status !== 'error');
+    if(searchInput && document.activeElement !== searchInput && data.url){
+      searchInput.value = data.url;
+    }
 
-        dot.classList.toggle('busy', busy);
-        label.textContent = busy ?
-          (data.status || 'working…').toUpperCase() :
-          (data.title || 'DuckDuckGo');
+    var incomingSeq = Number(data.frame_seq || data.seq || 0);
+    if(incomingSeq > Number(tab.lastFrameSeq || 0)){
+      tab.lastFrameSeq = incomingSeq;
+      if(data.image) setBrowseScreenshot(tab, data.image);
+    }
 
-        if(searchInput && document.activeElement !== searchInput && data.url){
-          searchInput.value = data.url;
-        }
+    if(footer){
+      var measured = Number(data.capture_fps || 0);
+      footer.textContent = measured > 0 ?
+        ('JARVIS · LIVE STREAM · ' + measured.toFixed(1) + ' FPS') :
+        'JARVIS · LIVE STREAM';
+    }
 
-        var incomingSeq = Number(data.frame_seq || 0);
-        if(incomingSeq > Number(current.lastFrameSeq || 0)){
-          current.lastFrameSeq = incomingSeq;
-          if(data.screenshot){
-            setBrowseScreenshot(current, data.screenshot);
-          }
-        } else if(!current.screenshotB64 && busy){
-          setBrowseOverlay(current, 'Status: ' + (data.status || 'waiting') + '…', false);
-        }
+    if(data.status === 'ready' && data.answer && !tab.answerSpoken){
+      tab.answerSpoken = true;
+      speak(data.answer);
+    }
 
-        if(data.status === 'ready' && data.answer && !current.answerSpoken){
-          current.answerSpoken = true;
-          speak(data.answer);
-        }
+    if(data.status === 'error'){
+      tab.stopLivePolling = true;
+      setBrowseOverlay(tab, 'Research error:\n' + (data.error || 'Unknown error'), true);
+      speak('Browsing hit a problem: ' + (data.error || 'unknown error'));
+    }
+  }
 
-        if(data.status === 'error'){
-          current.stopLivePolling = true;
-          setBrowseOverlay(current, 'Research error:\n' + (data.error || 'Unknown error'), true);
-          speak('Browsing hit a problem: ' + (data.error || 'unknown error'));
-        }
-      })
-      .catch(function(err){
-        var current = browseTabs[localId];
-        if(!current || current.pollGeneration !== generation) return;
-        current.consecutivePollErrors = (current.consecutivePollErrors || 0) + 1;
-        if(current.consecutivePollErrors >= 12){
-          setBrowseOverlay(current, 'Could not poll browser bridge.\n' + err.message, true);
-        }
-      })
-      .finally(function(){
-        var current = browseTabs[localId];
-        if(
-          current &&
-          current.pollGeneration === generation &&
-          !current.stopLivePolling
-        ){
-          setTimeout(function(){
-            pollTabStatus(localId, laneId);
-          }, LIVE_TAB_POLL_DELAY_MS);
-        }
+  async function runTabFrameStream(localId, generation){
+    var tab = browseTabs[localId];
+    if(!tab || !tab.backendTabId || tab.streamGeneration !== generation) return;
+
+    try{
+      var tokenResponse = await researchFetch(
+        '/stream_token/' + encodeURIComponent(tab.backendTabId),
+        {method:'POST'}
+      );
+      var tokenData = await tokenResponse.json();
+      if(!tokenData.token) throw new Error(tokenData.error || 'Could not create stream token.');
+
+      tab = browseTabs[localId];
+      if(!tab || tab.streamGeneration !== generation) return;
+
+      var controller = new AbortController();
+      tab.streamAbortController = controller;
+      var base = researchBridgeBase();
+      var streamUrl = base +
+        '/frame_stream/' + encodeURIComponent(tab.backendTabId) +
+        '?token=' + encodeURIComponent(tokenData.token) +
+        '&after=' + encodeURIComponent(Number(tab.lastFrameSeq || 0));
+
+      var headers = {};
+      if(base.indexOf('localhost:5005') === -1 && base.indexOf('127.0.0.1:5005') === -1){
+        headers['ngrok-skip-browser-warning'] = 'true';
+      }
+
+      var response = await fetch(streamUrl, {
+        method:'GET',
+        headers:headers,
+        cache:'no-store',
+        signal:controller.signal
       });
+      if(!response.ok || !response.body){
+        throw new Error('Frame stream returned ' + response.status + '.');
+      }
+
+      tab.streamReconnectDelay = LIVE_STREAM_RECONNECT_MIN_MS;
+      tab.streamFailures = 0;
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+
+      while(true){
+        var chunk = await reader.read();
+        if(chunk.done) break;
+
+        buffer += decoder.decode(chunk.value, {stream:true});
+        var newlineIndex;
+        while((newlineIndex = buffer.indexOf('\n')) !== -1){
+          var line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
+          if(!line) continue;
+          try{ updateTabFromStream(localId, JSON.parse(line)); }catch(e){}
+        }
+
+        tab = browseTabs[localId];
+        if(!tab || tab.streamGeneration !== generation || tab.stopLivePolling){
+          try{controller.abort();}catch(e){}
+          return;
+        }
+      }
+
+      throw new Error('Frame stream ended.');
+    }catch(err){
+      tab = browseTabs[localId];
+      if(!tab || tab.streamGeneration !== generation || tab.stopLivePolling) return;
+      if(err && err.name === 'AbortError') return;
+
+      tab.streamFailures = Number(tab.streamFailures || 0) + 1;
+      if(tab.streamFailures >= 3 && !tab.screenshotB64){
+        setBrowseOverlay(
+          tab,
+          'Live stream reconnecting…\n' + (err.message || 'Connection interrupted.'),
+          false
+        );
+      }
+
+      var delay = Number(tab.streamReconnectDelay || LIVE_STREAM_RECONNECT_MIN_MS);
+      tab.streamReconnectDelay = Math.min(
+        LIVE_STREAM_RECONNECT_MAX_MS,
+        Math.max(LIVE_STREAM_RECONNECT_MIN_MS, delay * 1.6)
+      );
+      tab.streamReconnectTimer = setTimeout(function(){
+        runTabFrameStream(localId, generation);
+      }, delay);
+    }
   }
 
   function startTabLivePolling(localId){
     var tab = browseTabs[localId];
-    if(!tab) return;
-
+    if(!tab || !tab.backendTabId) return;
+    stopTabLivePolling(localId);
     tab.stopLivePolling = false;
-    tab.pollGeneration = Number(tab.pollGeneration || 0) + 1;
-    tab.consecutivePollErrors = 0;
-
-    for(var lane=0; lane<LIVE_TAB_POLLERS; lane++){
-      (function(laneId){
-        setTimeout(function(){
-          pollTabStatus(localId, laneId);
-        }, laneId);
-      })(lane);
-    }
+    tab.streamGeneration = Number(tab.streamGeneration || 0) + 1;
+    tab.streamFailures = 0;
+    tab.streamReconnectDelay = LIVE_STREAM_RECONNECT_MIN_MS;
+    runTabFrameStream(localId, tab.streamGeneration);
   }
 
   function stopTabLivePolling(localId){
     var tab = browseTabs[localId];
     if(!tab) return;
+
     tab.stopLivePolling = true;
-    tab.pollGeneration = Number(tab.pollGeneration || 0) + 1;
+    tab.streamGeneration = Number(tab.streamGeneration || 0) + 1;
+
+    if(tab.streamReconnectTimer){
+      clearTimeout(tab.streamReconnectTimer);
+      tab.streamReconnectTimer = null;
+    }
+    if(tab.streamAbortController){
+      try{tab.streamAbortController.abort();}catch(e){}
+      tab.streamAbortController = null;
+    }
   }
 
   function openNewTab(initialLabel){
@@ -1517,7 +1585,13 @@
     browseTabs[localId] = {
       el: el,
       stopLivePolling: false,
-      pollGeneration: 0,
+      streamGeneration: 0,
+      streamAbortController: null,
+      streamReconnectTimer: null,
+      streamReconnectDelay: LIVE_STREAM_RECONNECT_MIN_MS,
+      streamFailures: 0,
+      pendingFrameB64: null,
+      framePaintScheduled: false,
       screenshotB64: null,
       backendTabId: null,
       lastFrameSeq: 0,
