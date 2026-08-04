@@ -1469,7 +1469,7 @@
     localResearchLastProbe=now;
     localResearchProbePromise=new Promise(function(resolve){
       var controller=new AbortController();
-      var timeout=setTimeout(function(){controller.abort();},2800);
+      var timeout=setTimeout(function(){controller.abort();},6500);
       var probeOptions={
         method:'GET',
         cache:'no-store',
@@ -1478,7 +1478,7 @@
       };
       // Chromium-based browsers use this hint for the one-time local-network
       // permission prompt. Browsers that do not support it simply ignore it.
-      probeOptions.targetAddressSpace='local';
+      probeOptions.targetAddressSpace='loopback';
 
       fetch(LOCAL_RESEARCH_BASE+'/health?local_probe='+now,probeOptions)
         .then(function(r){
@@ -1511,7 +1511,7 @@
     requestOptions.headers=Object.assign({},(options&&options.headers)||{});
 
     if(isLocal){
-      requestOptions.targetAddressSpace='local';
+      requestOptions.targetAddressSpace='loopback';
     }else{
       if(!remoteAccessCode){
         return Promise.reject(new Error('This computer is not the Jarvis host. Enter the access code in Settings → Server to use the remote bridge.'));
@@ -1644,7 +1644,7 @@
         cache:'no-store',
         signal:controller.signal
       };
-      if(isLocalResearchBase(base))streamOptions.targetAddressSpace='local';
+      if(isLocalResearchBase(base))streamOptions.targetAddressSpace='loopback';
       var response = await fetch(streamUrl,streamOptions);
       if(!response.ok || !response.body){
         throw new Error('Frame stream returned ' + response.status + '.');
@@ -2220,7 +2220,7 @@
           currentTab.el.querySelector('.browseDot').classList.remove('busy');
           setBrowseOverlay(currentTab, 'Could not start search.\n' + err.message, true);
         }
-        if(speakResult) speak('I could not start browsing. On the host PC, keep Python running and allow local-network access if the browser asks. Other computers also need ngrok and the access code.');
+        if(speakResult) speak('I could not start browsing. On this PC, open Jarvis from http://127.0.0.1:5005 and keep Python running. Other computers need ngrok and the access code.');
       });
   }
 
