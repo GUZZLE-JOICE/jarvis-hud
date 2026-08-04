@@ -647,7 +647,7 @@
 <div class="browseCloseBtn">×</div>
 </div>
 <div class="browseAddressBar">
-<input autocomplete="off" class="browseSearchInput" placeholder="Search Bing or enter a URL" type="text"/>
+<input autocomplete="off" class="browseSearchInput" placeholder="Search DuckDuckGo or enter a URL" type="text"/>
 <button class="browseGoBtn" type="button">GO</button>
 </div>
 <div class="browseImageWrap">
@@ -1433,7 +1433,7 @@
         dot.classList.toggle('busy', busy);
         label.textContent = busy ?
           (data.status || 'working…').toUpperCase() :
-          (data.title || 'Bing');
+          (data.title || 'DuckDuckGo');
 
         if(searchInput && document.activeElement !== searchInput && data.url){
           searchInput.value = data.url;
@@ -1511,7 +1511,7 @@
     wirePanelDrag(el);
     wirePanelResize(el);
     el.classList.add('on');
-    el.querySelector('.browseTabLabel').textContent = initialLabel || 'BING';
+    el.querySelector('.browseTabLabel').textContent = initialLabel || 'DUCKDUCKGO';
 
     var localId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
     browseTabs[localId] = {
@@ -1521,9 +1521,10 @@
       screenshotB64: null,
       backendTabId: null,
       lastFrameSeq: 0,
-      answerSpoken: true
+      answerSpoken: true,
+      navigationToken: 0
     };
-    setBrowseOverlay(browseTabs[localId], 'Opening Bing…', false);
+    setBrowseOverlay(browseTabs[localId], 'Opening DuckDuckGo…', false);
 
     el.querySelector('.browseCloseBtn').addEventListener('click', function(){
       closeTabById(localId);
@@ -1553,8 +1554,9 @@
       scrollInTab(localId, e.deltaY);
     }, { passive: false });
 
-    // A new HUD tab now creates a real Playwright page and immediately opens
-    // Bing instead of waiting for the first search.
+    // A new HUD tab opens the lightweight HTML version of DuckDuckGo inside
+    // the hidden browser bridge. No separate Edge/Chromium window is shown.
+    var homeToken = ++browseTabs[localId].navigationToken;
     researchFetch('/new_tab', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1563,25 +1565,38 @@
       .then(function(r){ return r.json().then(function(data){ return {ok:r.ok,data:data}; }); })
       .then(function(result){
         if(!result.ok || result.data.error){
-          throw new Error(result.data.error || 'Could not open Bing.');
+          throw new Error(result.data.error || 'Could not open DuckDuckGo.');
         }
         var tab = browseTabs[localId];
         if(!tab) return;
+
+        // A search may have started while the home page was loading. Close
+        // this stale home-page backend tab instead of letting it replace the
+        // newer search tab.
+        if(tab.navigationToken !== homeToken){
+          researchFetch('/close_tab', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({tab_id:String(result.data.tab_id)})
+          }).catch(function(){});
+          return;
+        }
+
         tab.backendTabId = String(result.data.tab_id);
         tab.lastFrameSeq = Number(result.data.frame_seq || 0);
         if(result.data.screenshot) setBrowseScreenshot(tab, result.data.screenshot);
         var input = tab.el.querySelector('.browseSearchInput');
-        if(input) input.value = result.data.url || 'https://www.bing.com/';
-        tab.el.querySelector('.browseTabLabel').textContent = result.data.title || 'Bing';
+        if(input) input.value = result.data.url || 'https://html.duckduckgo.com/html/';
+        tab.el.querySelector('.browseTabLabel').textContent = result.data.title || 'DuckDuckGo';
         startTabLivePolling(localId);
       })
       .catch(function(err){
         var tab = browseTabs[localId];
-        if(!tab) return;
+        if(!tab || tab.navigationToken !== homeToken) return;
         tab.el.querySelector('.browseDot').classList.remove('busy');
         setBrowseOverlay(
           tab,
-          'Could not open Bing.\n' + err.message +
+          'Could not open DuckDuckGo.\n' + err.message +
           '\n\nMake sure Python and ngrok are running, then reconnect using the access code.',
           true
         );
@@ -1633,8 +1648,8 @@
     var img = tab.el.querySelector('.browseScreenshot');
     var rect = img.getBoundingClientRect();
     var relX = clientX - rect.left, relY = clientY - rect.top;
-    // Map from displayed image size back to the real 1000x700 screenshot space
-    var scaleX = 1000 / rect.width, scaleY = 700 / rect.height;
+    // Map from the displayed HUD image back to the Python browser viewport.
+    var scaleX = 960 / rect.width, scaleY = 540 / rect.height;
     researchFetch('/click', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({tab_id: tab.backendTabId, x: Math.round(relX*scaleX), y: Math.round(relY*scaleY)})
@@ -1712,7 +1727,7 @@
 
   // --- New Tab button ---
   document.getElementById('newTabBtn').addEventListener('click', function(){
-    openNewTab('BING');
+    openNewTab('DUCKDUCKGO');
   });
 
   // --- Voice command: "Jarvis, close the tab" ---
@@ -1759,6 +1774,7 @@
     var tab = browseTabs[localId];
     if(!tab || !query) return;
 
+    tab.navigationToken = Number(tab.navigationToken || 0) + 1;
     stopTabLivePolling(localId);
     if(tab.backendTabId){
       researchFetch('/close_tab', {
@@ -1775,7 +1791,7 @@
     img.removeAttribute('src');
     tab.el.querySelector('.browseTabLabel').textContent = 'SEARCHING…';
     tab.el.querySelector('.browseDot').classList.add('busy');
-    setBrowseOverlay(tab, 'Opening Bing…\n' + query, false);
+    setBrowseOverlay(tab, 'Opening DuckDuckGo…\n' + query, false);
 
     researchFetch('/browse', {
       method:'POST',
@@ -1791,7 +1807,7 @@
         var currentTab = browseTabs[localId];
         if(!currentTab) return;
         currentTab.backendTabId = String(data.tab_id);
-        setBrowseOverlay(currentTab, 'Bing opened.\nSearching for:\n' + query, false);
+        setBrowseOverlay(currentTab, 'DuckDuckGo opened.\nSearching for:\n' + query, false);
         currentTab.lastFrameSeq = Number(data.frame_seq || 0);
         startTabLivePolling(localId);
       })
