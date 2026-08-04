@@ -152,9 +152,14 @@
   #clockDate{font-family:'Rajdhani';color:var(--text-dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
 
   /* LEFT DIAGNOSTICS */
-  #leftPanel{top:156px;left:16px;width:190px;display:flex;flex-direction:column;gap:10px;}
-  .metric-row{display:flex;flex-direction:column;gap:3px;}
-  .metric-top{display:flex;justify-content:space-between;align-items:baseline;}
+  #leftPanel{top:156px;left:16px;width:230px;display:flex;flex-direction:column;gap:12px;}
+  #leftPanel .panel-inner{padding:15px 17px;}
+  #leftPanel .panel-inner>div:first-child{margin-bottom:3px;}
+  #leftPanel .panel-inner>div[style*='border-top']{gap:9px!important;padding-top:13px!important;margin-top:3px;}
+  .metric-row{display:flex;flex-direction:column;gap:6px;margin-bottom:2px;}
+  .metric-top{display:flex;justify-content:space-between;align-items:baseline;gap:14px;min-height:18px;}
+  #leftPanel .metric-top .hud-label{flex:0 0 auto;}
+  #leftPanel .metric-top .hud-value{text-align:right;line-height:1.25;}
   .bar-track{height:5px;background:rgba(0,229,255,0.08);position:relative;overflow:hidden;}
   .bar-fill{height:100%;background:var(--cyan);box-shadow:0 0 8px var(--cyan-glow);transition:width .6s ease;}
   .bar-fill.warn{background:var(--amber);box-shadow:0 0 8px rgba(255,176,32,0.5);}
@@ -223,7 +228,9 @@
 
   #topBarTitle{position:absolute;left:50%;transform:translateX(-50%);top:54px;text-align:center;white-space:nowrap;pointer-events:none;}
   @media (max-width:640px){
-    #leftPanel, #rightPanel{width:150px;font-size:11px;top:150px;}
+    #leftPanel{width:190px;font-size:11px;top:150px;}
+    #rightPanel{width:150px;font-size:11px;top:150px;}
+    #leftPanel .panel-inner{padding:12px 13px;}
     #topBar{top:66px;height:82px;}
     #compassWrap{width:210px;}
     #compassTicks{width:210px;}
@@ -465,13 +472,13 @@
             <div id="claudeKeySection" style="margin-top:10px"><input class="settingsField" type="password" id="apiKeyInputClaude" placeholder="sk-ant-..."></div>
             <div id="geminiKeySection" style="display:none;margin-top:10px"><input class="settingsField" type="password" id="apiKeyInputGemini" placeholder="AIza..."></div>
             <div id="localKeySection" style="display:none;margin-top:10px"><input class="settingsField" type="text" id="localModelInput" placeholder="llava:7b"></div>
-            <div id="remoteKeySection" style="display:none;margin-top:10px"><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="remoteServerUrl" placeholder="http://192.168.1.50:5005"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="remoteAccessCode" type="password" placeholder="Shared code"></div></div></div>
+            <div id="remoteKeySection" style="display:none;margin-top:10px"><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="remoteServerUrl" placeholder="https://your-current-link.trycloudflare.com"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="remoteAccessCode" type="password" placeholder="Shared code"></div></div></div>
             <div class="settingsActions"><button class="smallBtn" id="saveKeyBtn">Save</button><button class="smallBtn" id="clearKeyBtn">Remove</button><button class="smallBtn" id="testRemoteBtn" style="display:none">Test connection</button></div><div id="keyStatus" class="statusLine"></div>
           </div>
         </div>
         <div class="settingsPage" data-page="server">
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div id="ownerCodeStatus" class="statusLine"></div></div>
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to Someone Else</h3><p class="settingsHint">Enter their server address and access code. They need Ollama; you do not. Choose Remote on the AI page after saving.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="http://192.168.1.50:5005"></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" placeholder="Their shared code"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to Someone Else</h3><p class="settingsHint">Enter their server address and access code. They need Ollama; you do not. Choose Remote on the AI page after saving.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="https://your-current-link.trycloudflare.com"><div class="statusLine" style="margin-top:5px">Use the host PC's current Cloudflare base URL. Do not paste the GitHub Pages URL or add /health.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" placeholder="Their shared code"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
           <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 17l5 3 5-3V7l-5-3-5 3v10z"/><path d="M7 7l5 3 5-3"/><path d="M12 10v10"/></svg>Cloudflare Quick Tunnel</h3><p class="settingsHint">For internet sharing without giving anyone your IP, run the two commands below in separate terminals. Paste the <code>.trycloudflare.com</code> address here so you can copy it again anytime from settings.</p><div class="settingsGrid"><div><label class="settingsLabel">Start Jarvis server</label><input class="settingsField" id="cloudflareCmdServer" readonly value='python "C:\\Users\\Oguz\\OneDrive\\Desktop\\Games\\jarvis_browser.py"'></div><div><label class="settingsLabel">Start Cloudflare tunnel</label><input class="settingsField" id="cloudflareCmdTunnel" readonly value='cloudflared tunnel --url http://127.0.0.1:5005'></div></div><div class="settingsActions"><button class="smallBtn" id="copyServerRunCmdBtn">Copy server cmd</button><button class="smallBtn" id="copyTunnelCmdBtn">Copy tunnel cmd</button></div><label class="settingsLabel" style="margin-top:10px">Current public tunnel URL</label><div class="codeDisplay"><input class="settingsField" id="cloudflarePublicUrl" placeholder="https://your-name.trycloudflare.com"><button class="smallBtn" id="saveCloudflareUrlBtn">Save</button><button class="smallBtn" id="copyCloudflareUrlBtn">Copy</button><button class="smallBtn" id="clearCloudflareUrlBtn">Clear</button></div><div id="cloudflareStatus" class="statusLine"></div></div>
         </div>
@@ -1666,11 +1673,69 @@
   document.getElementById('saveOwnerCodeBtn').addEventListener('click',function(){var c=document.getElementById('ownerAccessCode').value.trim();fetch(bridgeBase()+'/owner/access-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){document.getElementById('ownerCodeStatus').textContent=x.ok?'Custom code saved. The old code no longer works.':(x.d.error||'Could not save code.');});});
   document.getElementById('generateOwnerCodeBtn').addEventListener('click',function(){fetch(bridgeBase()+'/owner/access-code/refresh',{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('ownerAccessCode').value=d.code||'';document.getElementById('ownerCodeStatus').textContent='New code generated. The old code was disabled.';});});
   document.getElementById('copyOwnerCodeBtn').addEventListener('click',function(){var i=document.getElementById('ownerAccessCode');i.select();try{document.execCommand('copy');document.getElementById('ownerCodeStatus').textContent='Code copied.';}catch(e){document.getElementById('ownerCodeStatus').textContent='Select and copy the code manually.';}});
-  function testRemoteConnection(url,code,statusEl){url=(url||'').trim().replace(/\/$/,'');fetch(url+'/remote/health',{method:'POST',headers:{'Content-Type':'application/json','X-Jarvis-Code':code}}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){statusEl.textContent=x.ok?'Connected. Model: '+(x.d.model||'Ollama'):(x.d.error||'Connection rejected.');statusEl.style.color=x.ok?'var(--mint)':'var(--amber)';}).catch(function(e){statusEl.textContent='Could not reach that server: '+e.message;statusEl.style.color='var(--amber)';});}
+  function testRemoteConnection(url,code,statusEl,onSuccess){
+    url=(url||'').trim().replace(/\/$/,'');
+    code=(code||'').trim();
+    if(!url){
+      statusEl.textContent='Enter the host computer\'s Cloudflare URL first. The access code alone cannot locate the server.';
+      statusEl.style.color='var(--amber)';
+      return;
+    }
+    if(!/^https?:\/\//i.test(url)){
+      statusEl.textContent='Server address must start with https:// or http://. For another network, use the current https://....trycloudflare.com address.';
+      statusEl.style.color='var(--amber)';
+      return;
+    }
+    if(code.length<8){
+      statusEl.textContent='Enter the complete Jarvis access code.';
+      statusEl.style.color='var(--amber)';
+      return;
+    }
+    statusEl.textContent='CONNECTING…';
+    statusEl.style.color='var(--text-dim)';
+    fetch(url+'/remote/health',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Jarvis-Code':code}
+    }).then(function(r){
+      return r.text().then(function(raw){
+        var d=null;
+        try{d=raw?JSON.parse(raw):{};}catch(parseError){
+          var looksLikeHtml=/^\s*</.test(raw||'');
+          throw new Error(looksLikeHtml
+            ? 'That address returned a webpage instead of the Jarvis server. Use the Cloudflare tunnel base URL, not the GitHub Pages URL and not a /health link.'
+            : 'The server returned an invalid response.');
+        }
+        return {ok:r.ok,d:d};
+      });
+    }).then(function(x){
+      if(!x.ok){
+        statusEl.textContent=(x.d&&x.d.error)||'Connection rejected.';
+        statusEl.style.color='var(--amber)';
+        return;
+      }
+      statusEl.textContent='Connected. Model: '+((x.d&&x.d.model)||'Ollama');
+      statusEl.style.color='var(--mint)';
+      if(typeof onSuccess==='function')onSuccess(url,code,x.d||{});
+    }).catch(function(e){
+      statusEl.textContent='Could not connect: '+e.message;
+      statusEl.style.color='var(--amber)';
+    });
+  }
   function savePublicTunnelUrl(){ var input=document.getElementById('cloudflarePublicUrl'); var status=document.getElementById('cloudflareStatus'); if(!input||!status) return; var url=(input.value||'').trim().replace(/\/$/,''); publicTunnelUrl=url; try{ if(url) localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,url); else localStorage.removeItem(PUBLIC_TUNNEL_URL_STORAGE); }catch(e){} status.textContent=url?'Saved public tunnel URL. Share this URL plus your access code.':'Cleared the saved public tunnel URL.'; status.style.color=url?'var(--mint)':'var(--text-dim)'; loadOwnerCode(); }
   function copyTextValue(v,statusEl,msg){ if(!v) return; navigator.clipboard.writeText(v).then(function(){ if(statusEl){statusEl.textContent=msg||'Copied.'; statusEl.style.color='var(--mint)'; }}).catch(function(){ if(statusEl){statusEl.textContent='Copy failed.'; statusEl.style.color='var(--amber)'; }}); }
   document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(document.getElementById('remoteServerUrl').value,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
-  document.getElementById('connectRemoteBtn').addEventListener('click',function(){var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');var c=document.getElementById('serverConnectCode').value.trim();remoteServerUrl=u;remoteAccessCode=c;try{localStorage.setItem(REMOTE_URL_STORAGE,u);localStorage.setItem(REMOTE_CODE_STORAGE,c);}catch(e){}document.getElementById('remoteServerUrl').value=u;document.getElementById('remoteAccessCode').value=c;setProviderTab('remote');testRemoteConnection(u,c,document.getElementById('serverConnectStatus'));});
+  document.getElementById('connectRemoteBtn').addEventListener('click',function(){
+    var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');
+    var c=document.getElementById('serverConnectCode').value.trim();
+    testRemoteConnection(u,c,document.getElementById('serverConnectStatus'),function(validUrl,validCode){
+      remoteServerUrl=validUrl;
+      remoteAccessCode=validCode;
+      try{localStorage.setItem(REMOTE_URL_STORAGE,validUrl);localStorage.setItem(REMOTE_CODE_STORAGE,validCode);}catch(e){}
+      document.getElementById('remoteServerUrl').value=validUrl;
+      document.getElementById('remoteAccessCode').value=validCode;
+      setProviderTab('remote');
+    });
+  });
   updateBridgeBadge();
 
   document.getElementById('settingsBtn').addEventListener('click', function(e){ e.stopPropagation(); var p=document.getElementById('memPanel'); p.classList.toggle('settings-open'); if(p.classList.contains('settings-open')){openSettingsPage('memory');updateBridgeBadge();} });
