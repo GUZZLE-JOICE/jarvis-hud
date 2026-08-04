@@ -478,7 +478,7 @@
         </div>
         <div class="settingsPage" data-page="server">
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>Share This Computer's Ollama</h3><p class="settingsHint">This code is stored by the Python bridge, so it survives browser and computer restarts. Only people with the server address and code can send prompts. Refreshing the code immediately disables the old one.</p><label class="settingsLabel">Your custom access code</label><div class="codeDisplay"><input class="settingsField" id="ownerAccessCode" placeholder="At least 8 characters"><button class="smallBtn" id="saveOwnerCodeBtn">Save</button><button class="smallBtn" id="generateOwnerCodeBtn">Refresh</button><button class="smallBtn" id="copyOwnerCodeBtn">Copy</button></div><div id="ownerCodeStatus" class="statusLine"></div></div>
-          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to This Jarvis Server</h3><p class="settingsHint">The server address is already filled in. Enter the access code that the owner gives you, then connect. The access code is not included in this public GitHub file.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" value="https://banana-cup-codes-engaged.trycloudflare.com"><div class="statusLine" style="margin-top:5px">Only change this when the Cloudflare Quick Tunnel gives the owner a new address.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
+          <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg>Connect to This Jarvis Server</h3><p class="settingsHint">The server address is already filled in. Enter the access code that the owner gives you, then connect. The access code is not included in this public GitHub file.</p><div class="settingsGrid"><div><label class="settingsLabel">Server address</label><input class="settingsField" id="serverConnectUrl" placeholder="Loading current Cloudflare address…"><div class="statusLine" style="margin-top:5px">This address updates automatically from <code>server.json</code>. The access code is still entered manually.</div></div><div><label class="settingsLabel">Access code</label><input class="settingsField" id="serverConnectCode" type="password" autocomplete="off" placeholder="Enter the code the owner gives you"></div></div><div class="settingsActions"><button class="smallBtn" id="connectRemoteBtn">Connect and use</button></div><div id="serverConnectStatus" class="statusLine"></div></div>
           <div class="settingsCard"><p class="settingsHint" style="margin:0"><b style="color:var(--amber)">Network note:</b> this works immediately on the same Wi-Fi using your PC's local IP. Internet sharing still requires a secure tunnel or router setup; the access code alone cannot make a private PC reachable from outside your network.</p></div>
           <div class="settingsCard"><h3><svg viewBox="0 0 24 24" fill="none"><path d="M7 17l5 3 5-3V7l-5-3-5 3v10z"/><path d="M7 7l5 3 5-3"/><path d="M12 10v10"/></svg>Cloudflare Quick Tunnel</h3><p class="settingsHint">For internet sharing without giving anyone your IP, run the two commands below in separate terminals. Paste the <code>.trycloudflare.com</code> address here so you can copy it again anytime from settings.</p><div class="settingsGrid"><div><label class="settingsLabel">Start Jarvis server</label><input class="settingsField" id="cloudflareCmdServer" readonly value='python "C:\\Users\\Oguz\\OneDrive\\Desktop\\Games\\jarvis_browser.py"'></div><div><label class="settingsLabel">Start Cloudflare tunnel</label><input class="settingsField" id="cloudflareCmdTunnel" readonly value='cloudflared tunnel --url http://127.0.0.1:5005'></div></div><div class="settingsActions"><button class="smallBtn" id="copyServerRunCmdBtn">Copy server cmd</button><button class="smallBtn" id="copyTunnelCmdBtn">Copy tunnel cmd</button></div><label class="settingsLabel" style="margin-top:10px">Current public tunnel URL</label><div class="codeDisplay"><input class="settingsField" id="cloudflarePublicUrl" placeholder="https://your-name.trycloudflare.com"><button class="smallBtn" id="saveCloudflareUrlBtn">Save</button><button class="smallBtn" id="copyCloudflareUrlBtn">Copy</button><button class="smallBtn" id="clearCloudflareUrlBtn">Clear</button></div><div id="cloudflareStatus" class="statusLine"></div></div>
         </div>
@@ -760,7 +760,7 @@
   var REMOTE_URL_STORAGE = 'jarvis_remote_url_v1';
   var REMOTE_CODE_STORAGE = 'jarvis_remote_code_v1';
   var PUBLIC_TUNNEL_URL_STORAGE = 'jarvis_public_tunnel_url_v1';
-  var DEFAULT_REMOTE_SERVER = 'https://banana-cup-codes-engaged.trycloudflare.com';
+  var DEFAULT_REMOTE_SERVER = '';
   var claudeKey = null, geminiKey = null, localModel = null, remoteServerUrl = null, remoteAccessCode = null, publicTunnelUrl = null;
   var activeProvider = 'claude';
   try{
@@ -770,7 +770,7 @@
     activeProvider = localStorage.getItem(PROVIDER_STORAGE) || 'claude';
     remoteServerUrl = localStorage.getItem(REMOTE_URL_STORAGE) || DEFAULT_REMOTE_SERVER;
     remoteAccessCode = localStorage.getItem(REMOTE_CODE_STORAGE) || null;
-    publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || DEFAULT_REMOTE_SERVER;
+    publicTunnelUrl = localStorage.getItem(PUBLIC_TUNNEL_URL_STORAGE) || '';
   }catch(e){}
 
   function currentKey(){
@@ -1774,6 +1774,43 @@
   }
   function savePublicTunnelUrl(){ var input=document.getElementById('cloudflarePublicUrl'); var status=document.getElementById('cloudflareStatus'); if(!input||!status) return; var url=(input.value||'').trim().replace(/\/$/,''); publicTunnelUrl=url; try{ if(url) localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,url); else localStorage.removeItem(PUBLIC_TUNNEL_URL_STORAGE); }catch(e){} status.textContent=url?'Saved public tunnel URL. Share this URL plus your access code.':'Cleared the saved public tunnel URL.'; status.style.color=url?'var(--mint)':'var(--text-dim)'; loadOwnerCode(); }
   function copyTextValue(v,statusEl,msg){ if(!v) return; navigator.clipboard.writeText(v).then(function(){ if(statusEl){statusEl.textContent=msg||'Copied.'; statusEl.style.color='var(--mint)'; }}).catch(function(){ if(statusEl){statusEl.textContent='Copy failed.'; statusEl.style.color='var(--amber)'; }}); }
+
+  function loadPublishedTunnelUrl(){
+    var status=document.getElementById('serverConnectStatus');
+    return fetch('./server.json?ts='+Date.now(),{cache:'no-store'})
+      .then(function(r){
+        if(!r.ok) throw new Error('server.json returned '+r.status);
+        return r.json();
+      })
+      .then(function(data){
+        var url=((data&&data.server)||'').trim().replace(/\/$/,'');
+        if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(url)){
+          throw new Error('server.json does not contain a valid Quick Tunnel address');
+        }
+        DEFAULT_REMOTE_SERVER=url;
+        remoteServerUrl=url;
+        publicTunnelUrl=url;
+        try{
+          localStorage.setItem(REMOTE_URL_STORAGE,url);
+          localStorage.setItem(PUBLIC_TUNNEL_URL_STORAGE,url);
+        }catch(e){}
+        var ids=['serverConnectUrl','remoteServerUrl','cloudflarePublicUrl','profileServerUrl'];
+        ids.forEach(function(id){var input=document.getElementById(id);if(input)input.value=url;});
+        if(status){
+          status.textContent='Latest Cloudflare address loaded automatically. Enter the access code the owner gives you.';
+          status.style.color='var(--mint)';
+        }
+        updateBridgeBadge();
+        return url;
+      })
+      .catch(function(err){
+        if(status){
+          status.textContent='Could not load the latest server address automatically: '+err.message;
+          status.style.color='var(--amber)';
+        }
+        return '';
+      });
+  }
   document.getElementById('testRemoteBtn').addEventListener('click',function(){testRemoteConnection(document.getElementById('remoteServerUrl').value,document.getElementById('remoteAccessCode').value,document.getElementById('keyStatus'));});
   document.getElementById('connectRemoteBtn').addEventListener('click',function(){
     var u=document.getElementById('serverConnectUrl').value.trim().replace(/\/$/,'');
@@ -1790,9 +1827,10 @@
   var cfInput=document.getElementById('cloudflarePublicUrl'); if(cfInput && publicTunnelUrl) cfInput.value=publicTunnelUrl;
   if(document.getElementById('cloudflareStatus')) document.getElementById('cloudflareStatus').textContent='Paste your current .trycloudflare.com link here if you want quick access later.';
   var presetRemoteUrl=remoteServerUrl||DEFAULT_REMOTE_SERVER;
-  if(document.getElementById('serverConnectUrl'))document.getElementById('serverConnectUrl').value=presetRemoteUrl;
-  if(document.getElementById('remoteServerUrl'))document.getElementById('remoteServerUrl').value=presetRemoteUrl;
+  if(document.getElementById('serverConnectUrl')&&presetRemoteUrl)document.getElementById('serverConnectUrl').value=presetRemoteUrl;
+  if(document.getElementById('remoteServerUrl')&&presetRemoteUrl)document.getElementById('remoteServerUrl').value=presetRemoteUrl;
   if(document.getElementById('serverConnectCode'))document.getElementById('serverConnectCode').value='';
+  loadPublishedTunnelUrl();
   document.getElementById('saveCloudflareUrlBtn').addEventListener('click', savePublicTunnelUrl);
   document.getElementById('clearCloudflareUrlBtn').addEventListener('click', function(){ document.getElementById('cloudflarePublicUrl').value=''; savePublicTunnelUrl(); });
   document.getElementById('copyCloudflareUrlBtn').addEventListener('click', function(){ copyTextValue((document.getElementById('cloudflarePublicUrl').value||'').trim(), document.getElementById('cloudflareStatus'), 'Public tunnel URL copied.'); });
