@@ -647,7 +647,7 @@
 <div class="browseCloseBtn">×</div>
 </div>
 <div class="browseAddressBar">
-<input autocomplete="off" class="browseSearchInput" placeholder="Search DuckDuckGo or enter a URL" type="text"/>
+<input autocomplete="off" class="browseSearchInput" placeholder="Search Bing or enter a URL" type="text"/>
 <button class="browseGoBtn" type="button">GO</button>
 </div>
 <div class="browseImageWrap">
@@ -1282,9 +1282,11 @@
   // ---------- Multi-tab browser panel system ----------
   var browseTabs = {};   // local_id -> live remote browser tab state
   var browseTabCount = 0;
-  // Poll again almost immediately after the previous request finishes.
-  // Actual FPS is limited by screenshot encoding, PC speed and ngrok latency.
-  var LIVE_TAB_POLL_DELAY_MS = 18;
+  // Six parallel polling lanes reduce ngrok round-trip waiting. The bridge
+  // targets 120 FPS, while actual delivery depends on screenshot time,
+  // bandwidth, page complexity, and tunnel latency.
+  var LIVE_TAB_POLL_DELAY_MS = 0;
+  var LIVE_TAB_POLLERS = 6;
 
   function createTabPanel(){
     var template = document.getElementById('browsePanelTemplate');
@@ -1400,68 +1402,82 @@
     });
   }
 
-  function pollTabStatus(localId){
+  function pollTabStatus(localId, laneId){
     var tab = browseTabs[localId];
-    if(!tab || !tab.backendTabId || tab.pollInFlight) return Promise.resolve();
+    if(!tab || !tab.backendTabId || tab.stopLivePolling) return Promise.resolve();
 
-    tab.pollInFlight = true;
+    tab.pollGeneration = tab.pollGeneration || 1;
+    var generation = tab.pollGeneration;
     var after = Number(tab.lastFrameSeq || 0);
+
     return researchFetch(
-      '/status/' + encodeURIComponent(tab.backendTabId) + '?after=' + encodeURIComponent(after)
+      '/status/' + encodeURIComponent(tab.backendTabId) +
+      '?after=' + encodeURIComponent(after) +
+      '&lane=' + encodeURIComponent(laneId || 0) +
+      '&ts=' + Date.now()
     )
       .then(function(r){
         if(!r.ok) throw new Error('Status request failed: ' + r.status);
         return r.json();
       })
       .then(function(data){
-        if(!browseTabs[localId]) return;
+        var current = browseTabs[localId];
+        if(!current || current.pollGeneration !== generation) return;
 
-        var el = tab.el;
+        var el = current.el;
         var dot = el.querySelector('.browseDot');
         var label = el.querySelector('.browseTabLabel');
         var searchInput = el.querySelector('.browseSearchInput');
         var busy = (data.status !== 'ready' && data.status !== 'error');
 
         dot.classList.toggle('busy', busy);
-        label.textContent = busy ? (data.status || 'working…').toUpperCase() : (data.title || 'DuckDuckGo');
+        label.textContent = busy ?
+          (data.status || 'working…').toUpperCase() :
+          (data.title || 'Bing');
+
         if(searchInput && document.activeElement !== searchInput && data.url){
           searchInput.value = data.url;
         }
 
-        if(Number.isFinite(Number(data.frame_seq))){
-          tab.lastFrameSeq = Number(data.frame_seq);
-        }
-        if(data.screenshot){
-          setBrowseScreenshot(tab, data.screenshot);
-        } else if(!tab.screenshotB64 && busy){
-          setBrowseOverlay(tab, 'Status: ' + (data.status || 'waiting') + '…', false);
+        var incomingSeq = Number(data.frame_seq || 0);
+        if(incomingSeq > Number(current.lastFrameSeq || 0)){
+          current.lastFrameSeq = incomingSeq;
+          if(data.screenshot){
+            setBrowseScreenshot(current, data.screenshot);
+          }
+        } else if(!current.screenshotB64 && busy){
+          setBrowseOverlay(current, 'Status: ' + (data.status || 'waiting') + '…', false);
         }
 
-        if(data.status === 'ready' && data.answer && !tab.answerSpoken){
-          tab.answerSpoken = true;
+        if(data.status === 'ready' && data.answer && !current.answerSpoken){
+          current.answerSpoken = true;
           speak(data.answer);
         }
+
         if(data.status === 'error'){
-          tab.stopLivePolling = true;
-          setBrowseOverlay(tab, 'Research error:\n' + (data.error || 'Unknown error'), true);
+          current.stopLivePolling = true;
+          setBrowseOverlay(current, 'Research error:\n' + (data.error || 'Unknown error'), true);
           speak('Browsing hit a problem: ' + (data.error || 'unknown error'));
         }
       })
       .catch(function(err){
-        if(!browseTabs[localId]) return;
-        tab.consecutivePollErrors = (tab.consecutivePollErrors || 0) + 1;
-        if(tab.consecutivePollErrors >= 4){
-          setBrowseOverlay(tab, 'Could not poll browser bridge.\n' + err.message, true);
+        var current = browseTabs[localId];
+        if(!current || current.pollGeneration !== generation) return;
+        current.consecutivePollErrors = (current.consecutivePollErrors || 0) + 1;
+        if(current.consecutivePollErrors >= 12){
+          setBrowseOverlay(current, 'Could not poll browser bridge.\n' + err.message, true);
         }
       })
       .finally(function(){
-        if(browseTabs[localId]){
-          tab.pollInFlight = false;
-          if(!tab.stopLivePolling){
-            tab.pollTimer = setTimeout(function(){
-              pollTabStatus(localId);
-            }, LIVE_TAB_POLL_DELAY_MS);
-          }
+        var current = browseTabs[localId];
+        if(
+          current &&
+          current.pollGeneration === generation &&
+          !current.stopLivePolling
+        ){
+          setTimeout(function(){
+            pollTabStatus(localId, laneId);
+          }, LIVE_TAB_POLL_DELAY_MS);
         }
       });
   }
@@ -1469,21 +1485,25 @@
   function startTabLivePolling(localId){
     var tab = browseTabs[localId];
     if(!tab) return;
-    if(tab.pollTimer) clearTimeout(tab.pollTimer);
+
     tab.stopLivePolling = false;
-    tab.pollInFlight = false;
+    tab.pollGeneration = Number(tab.pollGeneration || 0) + 1;
     tab.consecutivePollErrors = 0;
-    pollTabStatus(localId);
+
+    for(var lane=0; lane<LIVE_TAB_POLLERS; lane++){
+      (function(laneId){
+        setTimeout(function(){
+          pollTabStatus(localId, laneId);
+        }, laneId);
+      })(lane);
+    }
   }
 
   function stopTabLivePolling(localId){
     var tab = browseTabs[localId];
     if(!tab) return;
     tab.stopLivePolling = true;
-    if(tab.pollTimer){
-      clearTimeout(tab.pollTimer);
-      tab.pollTimer = null;
-    }
+    tab.pollGeneration = Number(tab.pollGeneration || 0) + 1;
   }
 
   function openNewTab(initialLabel){
@@ -1491,20 +1511,19 @@
     wirePanelDrag(el);
     wirePanelResize(el);
     el.classList.add('on');
-    el.querySelector('.browseTabLabel').textContent = initialLabel || 'DUCKDUCKGO';
+    el.querySelector('.browseTabLabel').textContent = initialLabel || 'BING';
 
     var localId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
     browseTabs[localId] = {
       el: el,
-      pollTimer: null,
-      pollInFlight: false,
       stopLivePolling: false,
+      pollGeneration: 0,
       screenshotB64: null,
       backendTabId: null,
       lastFrameSeq: 0,
       answerSpoken: true
     };
-    setBrowseOverlay(browseTabs[localId], 'Opening DuckDuckGo…', false);
+    setBrowseOverlay(browseTabs[localId], 'Opening Bing…', false);
 
     el.querySelector('.browseCloseBtn').addEventListener('click', function(){
       closeTabById(localId);
@@ -1535,7 +1554,7 @@
     }, { passive: false });
 
     // A new HUD tab now creates a real Playwright page and immediately opens
-    // DuckDuckGo instead of waiting for the first search.
+    // Bing instead of waiting for the first search.
     researchFetch('/new_tab', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1544,7 +1563,7 @@
       .then(function(r){ return r.json().then(function(data){ return {ok:r.ok,data:data}; }); })
       .then(function(result){
         if(!result.ok || result.data.error){
-          throw new Error(result.data.error || 'Could not open DuckDuckGo.');
+          throw new Error(result.data.error || 'Could not open Bing.');
         }
         var tab = browseTabs[localId];
         if(!tab) return;
@@ -1552,8 +1571,8 @@
         tab.lastFrameSeq = Number(result.data.frame_seq || 0);
         if(result.data.screenshot) setBrowseScreenshot(tab, result.data.screenshot);
         var input = tab.el.querySelector('.browseSearchInput');
-        if(input) input.value = result.data.url || 'https://duckduckgo.com/';
-        tab.el.querySelector('.browseTabLabel').textContent = result.data.title || 'DuckDuckGo';
+        if(input) input.value = result.data.url || 'https://www.bing.com/';
+        tab.el.querySelector('.browseTabLabel').textContent = result.data.title || 'Bing';
         startTabLivePolling(localId);
       })
       .catch(function(err){
@@ -1562,7 +1581,7 @@
         tab.el.querySelector('.browseDot').classList.remove('busy');
         setBrowseOverlay(
           tab,
-          'Could not open DuckDuckGo.\n' + err.message +
+          'Could not open Bing.\n' + err.message +
           '\n\nMake sure Python and ngrok are running, then reconnect using the access code.',
           true
         );
@@ -1693,7 +1712,7 @@
 
   // --- New Tab button ---
   document.getElementById('newTabBtn').addEventListener('click', function(){
-    openNewTab('DUCKDUCKGO');
+    openNewTab('BING');
   });
 
   // --- Voice command: "Jarvis, close the tab" ---
@@ -1756,7 +1775,7 @@
     img.removeAttribute('src');
     tab.el.querySelector('.browseTabLabel').textContent = 'SEARCHING…';
     tab.el.querySelector('.browseDot').classList.add('busy');
-    setBrowseOverlay(tab, 'Opening DuckDuckGo…\n' + query, false);
+    setBrowseOverlay(tab, 'Opening Bing…\n' + query, false);
 
     researchFetch('/browse', {
       method:'POST',
@@ -1772,7 +1791,7 @@
         var currentTab = browseTabs[localId];
         if(!currentTab) return;
         currentTab.backendTabId = String(data.tab_id);
-        setBrowseOverlay(currentTab, 'DuckDuckGo opened.\nSearching for:\n' + query, false);
+        setBrowseOverlay(currentTab, 'Bing opened.\nSearching for:\n' + query, false);
         currentTab.lastFrameSeq = Number(data.frame_seq || 0);
         startTabLivePolling(localId);
       })
